@@ -207,7 +207,7 @@ def main():
         print(time)
 
     gp_kernel_periodic = GaussianProcessKernel(kernel_type='periodic',
-                                               sigma=10, l=1E-4, p=1E-4)
+                                               sigma=10, l=0.1, p=0.01)
 
 
     prediction = gp_predict(time, force_response, time_test, gp_kernel_periodic.compute_kernel,0.1)
