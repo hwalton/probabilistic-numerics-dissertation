@@ -8,7 +8,7 @@ from scipy.special import kv
 import numpy.linalg as npla
 import time
 
-developer = True
+developer = False
 
 
 def load_data(start = 0, length = 65536):
@@ -26,11 +26,11 @@ def load_data(start = 0, length = 65536):
 
     return input, output, time
 
-def plot_data(input, output, prediction, time, time_test):
+def plot_data(force_input, force_response, prediction, time, time_test):
     plt.figure(figsize=(12, 6))
 
     plt.subplot(2, 1, 1)  # 2 rows, 1 column, plot 1
-    plt.scatter(time, input, label='Input', color='blue')
+    plt.scatter(time, force_input, label='Input', color='blue')
     plt.xlabel('Time')
     plt.ylabel('Input')
     plt.title('Input over Time')
@@ -38,12 +38,12 @@ def plot_data(input, output, prediction, time, time_test):
     plt.grid(True)
 
     plt.subplot(2, 1, 2)  # 2 rows, 1 column, plot 2
-    plt.scatter(time, output, label='Output', color='green')
-    plt.scatter(time_test, prediction[0], label='Output', color='red')
-    plt.scatter(time_test, prediction[1], label='Output', color='blue')
+    plt.scatter(time, force_response, label='Force Response', color='green')
+    plt.scatter(time_test, prediction[0], label='Predicted Mean', color='red')
+    plt.scatter(time_test, prediction[1], label='Predicted Std Dev', color='blue')
     plt.xlabel('Time')
-    plt.ylabel('Output')
-    plt.title('Output over Time')
+    plt.ylabel('Force Response')
+    plt.title('Force Response over Time')
     plt.legend()
     plt.grid(True)
 
@@ -207,7 +207,7 @@ def main():
         print(time)
 
     gp_kernel_periodic = GaussianProcessKernel(kernel_type='periodic',
-                                               sigma=10, l=8E-4, p=8E-4)
+                                               sigma=10, l=1E-4, p=1E-4)
 
 
     prediction = gp_predict(time, force_response, time_test, gp_kernel_periodic.compute_kernel,0.1)
