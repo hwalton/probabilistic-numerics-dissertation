@@ -39,6 +39,7 @@ def plot_data(input, output, prediction, time, time_test):
     plt.subplot(2, 1, 2)  # 2 rows, 1 column, plot 2
     plt.scatter(time, output, label='Output', color='green')
     plt.scatter(time_test, prediction[0], label='Output', color='red')
+    plt.scatter(time_test, prediction[1], label='Output', color='blue')
     plt.xlabel('Time')
     plt.ylabel('Output')
     plt.title('Output over Time')
@@ -151,11 +152,12 @@ def gp_predict(X_train, y_train, X_test, kernel_func, sigma_n=0.1):
             K_X_X[:, :, i] + 1e-10 * np.eye(K_X_X.shape[0]))
 
         # Compute the mean at our test points.
-        Lk = np.squeeze(npla.solve(np.squeeze(L[:, :, i]), K_star_X.T))
-        mu[:, i] = np.dot(np.squeeze(Lk.T), npla.solve(np.squeeze(L[:, :, i]), y_train)).flatten()
+        Lk = np.squeeze(npla.solve(L[:, :, i], K_star_X.T))
+        mu[:, i] = np.dot(Lk.T, npla.solve(L[:, :, i], y_train)).flatten()
+
 
         # Compute the standard deviation
-        s2[:, i] = np.diag(np.squeeze(K_star_star[:, :, i])) - np.sum(Lk ** 2, axis=0)
+        s2[:, i] = np.diag(K_star_star[:, :, i]) - np.sum(Lk ** 2, axis=0)
         stdv = np.sqrt(s2)
 
     return mu, stdv
