@@ -5,8 +5,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.special import kv
+import numpy.linalg as npla
 
-developer = False
+developer = True
 
 
 def load_data(start = 0, length = 65536):
@@ -46,8 +47,6 @@ def plot_data(input, output, time):
     plt.tight_layout()  # Adjusts subplot params for better layout
     plt.show()
 
-
-
 class GaussianProcessKernel:
     def __init__(self, kernel_type='linear', **kwargs):
         self.kernel_type = kernel_type
@@ -55,10 +54,11 @@ class GaussianProcessKernel:
 
     def compute_kernel(self, X1, X2):
         if developer == True: X1_shape_before = X1.shape
-        X1 = X1.reshape(-1,1)
+        if X1.ndim == 1: X1 = X1.reshape(-1,1)
         if developer == True: X1_shape_after = X1.shape
-        print(X1.shape)
-        X2 = X2.reshape(-1,1)
+        if developer == True: X2_shape_before = X2.shape
+        if X2.ndim == 1: X2 = X2.reshape(-1,1)
+        if developer == True: X2_shape_after = X2.shape
         if self.kernel_type == 'linear':
             return self.linear_kernel(X1, X2)
         elif self.kernel_type == 'periodic':
@@ -86,8 +86,9 @@ class GaussianProcessKernel:
 
     def periodic_kernel(self, X1, X2, sigma, l, p):
         delta_X = X1[:, None, :] - X2[None, :, :]
-        return sigma ** 2 * np.exp(
+        out = sigma ** 2 * np.exp(
             -2 * np.sin(np.pi * np.abs(delta_X) / p) ** 2 / l ** 2)
+        return out
 
     def squared_exponential_kernel(self, X1, X2, sigma, l):
         delta_X = X1[:, None, :] - X2[None, :, :]
@@ -123,8 +124,65 @@ class GaussianProcessKernel:
     def polynomial_kernel(self, X1, X2, alpha, beta, d):
         return (alpha + beta * np.dot(X1, X2.T)) ** d
 
+def gp_predict(X_train, y_train, X_test, kernel_func, sigma_n=0.1):
+
+    # Kernel matrix for training data plus noise term
+    K_X_X = kernel_func(X_train, X_train) + sigma_n ** 2 * np.eye(len(X_train))
+    assert is_positive_definite(K_X_X), "Warning: K_X_X is not positive definite!"
+
+    # Kernel matrix between test and training data
+    K_star_X = kernel_func(X_test, X_train)
+   # assert is_positive_definite(K_star_X), "Warning: K_star_X is not positive definite!"
+
+
+    # Kernel matrix for test data
+    K_star_star = kernel_func(X_test, X_test)
+    assert is_positive_definite(K_star_star), "Warning: K_star_X is not positive definite!"
+
+    # Cholesky decomposition
+    L = npla.cholesky(K_X_X + 1e-10 * np.eye(
+        len(X_train)))  # Small jitter for numerical stability
+
+    # # Compute the mean at our test points.
+    Lk = npla.solve(L, K_star_X.T)
+    mu = np.dot(Lk.T, npla.solve(L, y_train))
+
+   # mu = np.dot(np.dot(K_star_X.T,np.transpose(npla.inv(L)).T),np.dot(npla.inv(L),y_train))
+
+    # Compute the standard deviation
+    s2 = np.diag(K_star_star) - np.sum(Lk ** 2, axis=0)
+    stdv = np.sqrt(s2)
+
+    return mu, stdv
+
+
+def is_positive_definite(K):
+    # Ensure K is at most 3D
+    if K.ndim > 3:
+        raise ValueError("Input must be at most 3D.")
+
+    # If K is 2D, add an extra dimension to make the logic below work for both 2D and 3D cases
+    if K.ndim == 2:
+        K = K[:, :, np.newaxis]
+
+    # Check if the 2D slices are square
+    if K.shape[0] != K.shape[1]:
+        raise ValueError("The first two dimensions must be equal.")
+
+    # Check each 2D slice for positive definiteness
+    for i in range(K.shape[2]):
+        if not np.all(np.linalg.eigvals(K[:, :, i]) > 0):
+            return False
+
+    return True
+
 def main():
-    force_input, force_response, time = load_data(1000, 1000)
+    sample_start_index = 10000
+    sample_length = 51
+
+    force_input, force_response, time = load_data(sample_start_index, sample_length)
+    time_test = np.linspace(time[0],time[-1], num=50, endpoint = True)
+
     if developer == True:
         print(force_input)
         print(force_response)
@@ -136,8 +194,8 @@ def main():
                                                sigma=10, l=8E-4, p=8E-4)
 
 
-    out = gp_kernel_periodic.compute_kernel(force_input,force_input)
-    print(out)
+    prediction = gp_predict(time, force_response, time_test, gp_kernel_periodic.compute_kernel,0.1)
+    print(prediction)
 
 
 if __name__ == "__main__":
