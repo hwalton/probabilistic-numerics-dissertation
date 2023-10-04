@@ -80,9 +80,26 @@ class GaussianProcessKernel:
             return self.white_noise_kernel(X1, X2, **self.params)
         elif self.kernel_type == 'polynomial':
             return self.polynomial_kernel(X1, X2, **self.params)
+        elif self.kernel_type == 'composite':
+            return self.composite_kernel(X1, X2, **self.params)
         # Add more kernel types as needed
         else:
             raise ValueError(f"Unknown kernel type: {self.kernel_type}")
+
+    def composite_kernel(self, X1, X2, periodic_params_list, se_params):
+
+        # Sum of periodic kernels
+        periodic_sum = np.zeros((X1.shape[0], X2.shape[0], X1.shape[1]))
+        for params in periodic_params_list:
+            periodic_sum += self.periodic_kernel(X1, X2, **params)
+
+        # Squared exponential kernel
+        se_kernel = self.squared_exponential_kernel(X1, X2, **se_params)
+
+        # Multiplying the sum of periodic kernels with the squared exponential kernel
+        composite_kernel = np.multiply(periodic_sum, se_kernel)
+
+        return composite_kernel
 
     def linear_kernel(self, X1, X2):
         return np.dot(X1, X2.T)
@@ -95,8 +112,9 @@ class GaussianProcessKernel:
 
     def squared_exponential_kernel(self, X1, X2, sigma, l):
         delta_X = X1[:, None, :] - X2[None, :, :]
-        return sigma ** 2 * np.exp(
-            -0.5 * np.sum(delta_X ** 2, axis=-1) / l ** 2)
+        out = sigma ** 2 * np.exp(
+            -0.5 * (delta_X ** 2) / l ** 2)
+        return out
 
     def matern_kernel(self, X1, X2, sigma, nu, l):
         delta_X = np.sqrt(
@@ -196,21 +214,27 @@ def is_positive_definite(K):
 
 def main():
     sample_start_index = 10000
-    sample_length = 51
+    sample_length = 500
 
     force_input, force_response, time = load_data(sample_start_index, sample_length)
-    time_test = np.linspace(time[0],time[-1], num=50, endpoint = True)
+    time_test = np.linspace(time[0],time[-1], num=250, endpoint = True)
 
     if developer == True:
         print(force_input)
         print(force_response)
         print(time)
 
-    gp_kernel_periodic = GaussianProcessKernel(kernel_type='periodic',
-                                               sigma=10, l=0.1, p=0.01)
+    periodic_params_list = [
+        {'sigma': 1, 'l': 0.01, 'p': 1E-1},
+        {'sigma':1, 'l': 0.02, 'p': 1E-1}
+        ]
+
+    se_params = {'sigma': 1, 'l': 0.01}
+
+    gp_kernel = GaussianProcessKernel(kernel_type='composite', periodic_params_list = periodic_params_list, se_params = se_params)
 
 
-    prediction = gp_predict(time, force_response, time_test, gp_kernel_periodic.compute_kernel,0.1)
+    prediction = gp_predict(time, force_response, time_test, gp_kernel.compute_kernel,0.1)
     plot_data(force_input,force_response, prediction, time, time_test)
 
 
