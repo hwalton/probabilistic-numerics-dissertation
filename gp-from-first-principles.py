@@ -25,7 +25,7 @@ def load_data(start = 0, length = 65536):
 
     return input, output, time
 
-def plot_data(input, output, time):
+def plot_data(input, output, prediction, time, time_test):
     plt.figure(figsize=(12, 6))
 
     plt.subplot(2, 1, 1)  # 2 rows, 1 column, plot 1
@@ -38,6 +38,7 @@ def plot_data(input, output, time):
 
     plt.subplot(2, 1, 2)  # 2 rows, 1 column, plot 2
     plt.scatter(time, output, label='Output', color='green')
+    plt.scatter(time_test, prediction[0], label='Output', color='red')
     plt.xlabel('Time')
     plt.ylabel('Output')
     plt.title('Output over Time')
@@ -127,7 +128,7 @@ class GaussianProcessKernel:
 def gp_predict(X_train, y_train, X_test, kernel_func, sigma_n=0.1):
 
     # Kernel matrix for training data plus noise term
-    K_X_X = kernel_func(X_train, X_train) + sigma_n ** 2 * np.eye(len(X_train))
+    K_X_X = kernel_func(X_train, X_train) + np.array(sigma_n ** 2 * np.eye(len(X_train)))[:,:,None]
     assert is_positive_definite(K_X_X), "Warning: K_X_X is not positive definite!"
 
     # Kernel matrix between test and training data
@@ -139,19 +140,23 @@ def gp_predict(X_train, y_train, X_test, kernel_func, sigma_n=0.1):
     K_star_star = kernel_func(X_test, X_test)
     assert is_positive_definite(K_star_star), "Warning: K_star_X is not positive definite!"
 
-    # Cholesky decomposition
-    L = npla.cholesky(K_X_X + 1e-10 * np.eye(
-        len(X_train)))  # Small jitter for numerical stability
+    # Initialize arrays to store the Cholesky decompositions, means, and variances
+    L = np.zeros_like(K_X_X)
+    mu = np.zeros((K_star_X.shape[0], K_X_X.shape[2]))
+    s2 = np.zeros((K_star_X.shape[0], K_X_X.shape[2]))
 
-    # # Compute the mean at our test points.
-    Lk = npla.solve(L, K_star_X.T)
-    mu = np.dot(Lk.T, npla.solve(L, y_train))
+    # Loop through the third dimension and compute the Cholesky decomposition for each 2D slice
+    for i in range(K_X_X.shape[2]):
+        L[:, :, i] = npla.cholesky(
+            K_X_X[:, :, i] + 1e-10 * np.eye(K_X_X.shape[0]))
 
-   # mu = np.dot(np.dot(K_star_X.T,np.transpose(npla.inv(L)).T),np.dot(npla.inv(L),y_train))
+        # Compute the mean at our test points.
+        Lk = np.squeeze(npla.solve(np.squeeze(L[:, :, i]), K_star_X.T))
+        mu[:, i] = np.dot(np.squeeze(Lk.T), npla.solve(np.squeeze(L[:, :, i]), y_train)).flatten()
 
-    # Compute the standard deviation
-    s2 = np.diag(K_star_star) - np.sum(Lk ** 2, axis=0)
-    stdv = np.sqrt(s2)
+        # Compute the standard deviation
+        s2[:, i] = np.diag(np.squeeze(K_star_star[:, :, i])) - np.sum(Lk ** 2, axis=0)
+        stdv = np.sqrt(s2)
 
     return mu, stdv
 
@@ -188,14 +193,12 @@ def main():
         print(force_response)
         print(time)
 
-    plot_data(force_input,force_response,time)
-
     gp_kernel_periodic = GaussianProcessKernel(kernel_type='periodic',
                                                sigma=10, l=8E-4, p=8E-4)
 
 
     prediction = gp_predict(time, force_response, time_test, gp_kernel_periodic.compute_kernel,0.1)
-    print(prediction)
+    plot_data(force_input,force_response, prediction, time, time_test)
 
 
 if __name__ == "__main__":
