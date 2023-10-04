@@ -224,14 +224,15 @@ def main():
         print(force_response)
         print(time)
 
-    periodic_params_list = [
-        {'sigma': 1, 'l': 0.01, 'p': 1E-1},
-        {'sigma':1, 'l': 0.02, 'p': 1E-1}
-        ]
-
-    se_params = {'sigma': 1, 'l': 0.01}
-
-    gp_kernel = GaussianProcessKernel(kernel_type='composite', periodic_params_list = periodic_params_list, se_params = se_params)
+     #  periodic_params_list = [
+     #    {'sigma': 1, 'l': 0.01, 'p': 1E-1},
+     #    {'sigma':1, 'l': 0.02, 'p': 1E-1}
+     #    ]
+     #
+     # se_params = {'sigma': 1, 'l': 0.01}
+     #
+     # gp_kernel = GaussianProcessKernel(kernel_type='composite', periodic_params_list = periodic_params_list, se_params = se_params)
+    gp_kernel = GaussianProcessKernel(kernel_type='periodic', sigma = 1, l = 0.01, p = 1E-1)
 
 
     prediction = gp_predict(time, force_response, time_test, gp_kernel.compute_kernel,0.1)
