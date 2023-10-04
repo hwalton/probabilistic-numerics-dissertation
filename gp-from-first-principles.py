@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.special import kv
 import numpy.linalg as npla
+import time
 
 developer = True
 
@@ -133,7 +134,7 @@ def gp_predict(X_train, y_train, X_test, kernel_func, sigma_n=0.1):
     assert is_positive_definite(K_X_X), "Warning: K_X_X is not positive definite!"
 
     # Kernel matrix between test and training data
-    K_star_X = kernel_func(X_test, X_train)
+    K_star_X = kernel_func(X_train, X_test)
    # assert is_positive_definite(K_star_X), "Warning: K_star_X is not positive definite!"
 
 
@@ -143,8 +144,8 @@ def gp_predict(X_train, y_train, X_test, kernel_func, sigma_n=0.1):
 
     # Initialize arrays to store the Cholesky decompositions, means, and variances
     L = np.zeros_like(K_X_X)
-    mu = np.zeros((K_star_X.shape[0], K_X_X.shape[2]))
-    s2 = np.zeros((K_star_X.shape[0], K_X_X.shape[2]))
+    mu = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
+    s2 = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
 
     # Loop through the third dimension and compute the Cholesky decomposition for each 2D slice
     for i in range(K_X_X.shape[2]):
@@ -152,9 +153,19 @@ def gp_predict(X_train, y_train, X_test, kernel_func, sigma_n=0.1):
             K_X_X[:, :, i] + 1e-10 * np.eye(K_X_X.shape[0]))
 
         # Compute the mean at our test points.
-        Lk = np.squeeze(npla.solve(L[:, :, i], K_star_X.T))
+
+        if developer == True: start_time = time.time()
+
+        Lk = np.squeeze(npla.solve(L[:, :, i], K_star_X[:,:,i]))
         mu[:, i] = np.dot(Lk.T, npla.solve(L[:, :, i], y_train)).flatten()
 
+       #L_inv = npla.inv(L[:,:,i])
+       #mu[:,i] = np.dot(np.dot(np.transpose(K_star_X[:,:,i]),L_inv.T), np.dot(L_inv,y_train)) #alternate function (slower?)
+
+        if developer == True:
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            print(f"The code ran in {elapsed_time} seconds")
 
         # Compute the standard deviation
         s2[:, i] = np.diag(K_star_star[:, :, i]) - np.sum(Lk ** 2, axis=0)
