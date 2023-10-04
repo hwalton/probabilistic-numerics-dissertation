@@ -3,8 +3,9 @@ import os
 import csv
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
-developer = True
+developer = False
 
 
 def load_data(start = 0, length = 65536):
@@ -51,10 +52,30 @@ def plot_data(data):
     plt.tight_layout()  # Adjusts subplot params for better layout
     plt.show()
 
+
+def periodic_kernel(X1, X2, sigma, l, p):
+
+    X1 = np.array(X1)
+    X2 = np.array(X2)
+
+    # Compute the pairwise differences between input vectors
+    delta_X = X1[:, None, :] - X2[None, :, :]
+
+    # Compute the periodic kernel matrix
+    K = sigma ** 2 * np.exp(
+        -2 * np.sin(np.pi * np.abs(delta_X) / p) ** 2 / l ** 2)
+
+    return K
+
 def main():
     data = load_data(1000, 1000)
     if developer == True: print(data)
+
     plot_data(data)
+
+    input_data = np.array(data['input']).reshape(-1, 1)
+    periodic_kernel_test = periodic_kernel(input_data,input_data, sigma = 10, l = 8E-4, p = 8E-4 )
+    print(periodic_kernel_test)
 
 
 if __name__ == "__main__":
