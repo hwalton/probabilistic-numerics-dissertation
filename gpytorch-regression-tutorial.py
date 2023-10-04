@@ -1,4 +1,4 @@
-# Code from https://docs.gpytorch.ai/en/v1.6.0/examples/02_Scalable_Exact_GPs/Simple_GP_Regression_CUDA.html
+# Code from https://richardcsuwandi.medium.com/gaussian-process-regression-using-gpytorch-2c174286f9cc
 
 
 import math
