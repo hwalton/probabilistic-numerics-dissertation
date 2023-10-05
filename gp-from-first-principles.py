@@ -4,6 +4,7 @@ import csv
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy
 from scipy.special import kv
 import numpy.linalg as npla
 import time as timer
@@ -266,7 +267,11 @@ def compute_nll(X, y, kernel, hyperparameters):
 
     for i in range(K.shape[2]):
         # Compute negative log marginal likelihood
-        nll = 0.5 * y.T @ np.linalg.inv(K[:,:,i]) @ y + 0.5 * np.log(np.linalg.det(K[:,:,i])) + 0.5 * len(X) * np.log(2 * np.pi)
+        # nll = 0.5 * y.T @ np.linalg.inv(K[:,:,i]) @ y + 0.5 * np.log(np.linalg.det(K[:,:,i])) + 0.5 * len(X) * np.log(2 * np.pi)
+        L = scipy.linalg.cholesky(K[:, :, i], lower=True)
+        alpha = scipy.linalg.cho_solve((L, True), y)
+
+        nll = 0.5 * y.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * len(X) * np.log(2 * np.pi)
 
     return nll.item()
 
@@ -359,7 +364,7 @@ def main():
     if developer == True: start_time = timer.time()
 
     sample_start_index = 1000
-    sample_length = 100
+    sample_length = 500
     kernel_type = ('composite')
     n_iter = 10
 
@@ -382,8 +387,8 @@ def main():
             'kernel_type': 'periodic',
             'sigma': 1,
             'l': 0.1,
-            'p': 0.1,
-            'noise_level': 0.001
+            'p': 0.08,
+            'noise_level': 0.1
             }
 
         hyperparameter_bounds = {
