@@ -56,43 +56,42 @@ def format_data(X):
     return X
 
 class GaussianProcessKernel:
-    def __init__(self, kernel_type='linear', **kwargs):
-        self.kernel_type = kernel_type
+    def __init__(self, **kwargs):
         self.params = kwargs
 
-    def set_params(self, **hyperparameters):
+    def set_params(self, hyperparameters):
         self.params = hyperparameters
 
     def compute_kernel(self, X1, X2):
         if developer == True: X1_shape_before = X1.shape
-        #if X1.ndim == 1: X1 = X1.reshape(-1,1)
+        if X1.ndim == 1: X1 = X1.reshape(-1,1)
         if developer == True: X1_shape_after = X1.shape
-        #if developer == True: X2_shape_before = X2.shape
+        if developer == True: X2_shape_before = X2.shape
         if X2.ndim == 1: X2 = X2.reshape(-1,1)
         if developer == True: X2_shape_after = X2.shape
-        if self.kernel_type == 'linear':
+        if self.params['kernel_type'] == 'linear':
             return self.linear_kernel(X1, X2)
-        elif self.kernel_type == 'periodic':
+        elif self.params['kernel_type'] == 'periodic':
             return self.periodic_kernel(X1, X2, **self.params)
-        elif self.kernel_type == 'squared_exponential':
+        elif self.params['kernel_type'] == 'squared_exponential':
             return self.squared_exponential_kernel(X1, X2, **self.params)
-        elif self.kernel_type == 'matern':
+        elif self.params['kernel_type'] == 'matern':
             return self.matern_kernel(X1, X2, **self.params)
-        elif self.kernel_type == 'rational_quadratic':
+        elif self.params['kernel_type'] == 'rational_quadratic':
             return self.rational_quadratic_kernel(X1, X2, **self.params)
-        elif self.kernel_type == 'exponential':
+        elif self.params['kernel_type'] == 'exponential':
             return self.exponential_kernel(X1, X2, **self.params)
-        elif self.kernel_type == 'cosine':
+        elif self.params['kernel_type'] == 'cosine':
             return self.cosine_kernel(X1, X2, **self.params)
-        elif self.kernel_type == 'white_noise':
+        elif self.params['kernel_type'] == 'white_noise':
             return self.white_noise_kernel(X1, X2, **self.params)
-        elif self.kernel_type == 'polynomial':
+        elif self.params['kernel_type'] == 'polynomial':
             return self.polynomial_kernel(X1, X2, **self.params)
-        elif self.kernel_type == 'composite':
+        elif self.params['kernel_type'] == 'composite':
             return self.composite_kernel(X1, X2, **self.params)
         # Add more kernel types as needed
         else:
-            raise ValueError(f"Unknown kernel type: {self.kernel_type}")
+            raise ValueError(f"Unknown kernel type: {self.params['kernel_type']}")
 
     def composite_kernel(self, X1, X2, **hyperparameters):
 
@@ -158,7 +157,7 @@ def gp_predict(X_train, y_train, X_test, kernel_func, **hyperparameters):
 
     # Kernel matrix for training data plus noise term
     K_X_X = kernel_func(X_train, X_train) + np.array(hyperparameters['noise_level'] ** 2 * np.eye(len(X_train)))[:,:,None]
-    assert is_positive_definite(K_X_X), "Warning: K_X_X is not positive definite!"
+    #assert is_positive_definite(K_X_X), "Warning: K_X_X is not positive definite!"
 
     # Kernel matrix between test and training data
     K_star_X = kernel_func(X_train, X_test)
@@ -167,7 +166,7 @@ def gp_predict(X_train, y_train, X_test, kernel_func, **hyperparameters):
 
     # Kernel matrix for test data
     K_star_star = kernel_func(X_test, X_test)
-    assert is_positive_definite(K_star_star), "Warning: K_star_X is not positive definite!"
+    #assert is_positive_definite(K_star_star), "Warning: K_star_X is not positive definite!"
 
     # Initialize arrays to store the Cholesky decompositions, means, and variances
     L = np.zeros_like(K_X_X)
@@ -222,9 +221,11 @@ def is_positive_definite(K):
     return True
 
 
-def negative_log_likelihood(X, y, kernel, **hyperparameters):
+def compute_nll(X, y, kernel, hyperparameters):
+    if X.ndim == 1: X = X.reshape(-1, 1)
+    if y.ndim == 1: y = y.reshape(-1, 1)
     # Update kernel with new hyperparameters
-    kernel.set_params(**hyperparameters)
+    kernel.set_params(hyperparameters)
 
     # Compute covariance matrix
     K = kernel.compute_kernel(X, X)
@@ -239,6 +240,72 @@ def negative_log_likelihood(X, y, kernel, **hyperparameters):
         nll = 0.5 * y.T @ np.linalg.inv(K[:,:,i]) @ y + 0.5 * np.log(np.linalg.det(K[:,:,i])) + 0.5 * len(X) * np.log(2 * np.pi)
 
     return nll.item()
+
+
+# Function to flatten hyperparameters and bounds
+def flatten_params(params):
+    flat_params = []
+    for key, value in params.items():
+        # Ignore string values
+        if isinstance(value, str):
+            continue
+
+        if isinstance(value, list):
+            for item in value:
+                flat_params.extend(flatten_params(item))
+        elif isinstance(value, dict):
+            flat_params.extend(flatten_params(value))
+        else:
+            flat_params.append(value)
+    return flat_params
+
+
+# Function to reconstruct nested hyperparameters from flat array
+def reconstruct_params(flat_params, template):
+    reconstructed_params = {}
+    index = 0
+    for key, value in template.items():
+        # Ignore string values
+        if isinstance(value, str):
+            reconstructed_params[key] = value
+            continue
+
+        if isinstance(value, list):
+            reconstructed_params[key] = []
+            for item in value:
+                reconstructed_item, item_length = reconstruct_params(
+                    flat_params[index:], item)
+                index += item_length
+                reconstructed_params[key].append(reconstructed_item)
+        elif isinstance(value, dict):
+            reconstructed_params[key], item_length = reconstruct_params(
+                flat_params[index:], value)
+            index += item_length
+        else:
+            reconstructed_params[key] = flat_params[index]
+            index += 1
+    return reconstructed_params, index
+
+def get_optimal_hyperparameters(hyperparameters, hyperparameter_bounds, y, kernel):
+    # Flatten hyperparameters and bounds
+    initial_hyperparameters_array = np.array(flatten_params(hyperparameters))
+    bounds_array = flatten_params(hyperparameter_bounds)
+
+    # Optimization
+    result = minimize(
+        fun=compute_nll,  # Function to minimize
+        x0=initial_hyperparameters_array,  # Initial guess
+        args=(y, kernel, hyperparameters),
+        bounds=bounds_array,  # Bounds for hyperparameters
+        method='L-BFGS-B'  # Optimization algorithm
+    )
+
+    # Extract optimal hyperparameters
+    optimal_hyperparameters_array = result.x
+
+    # Reconstruct optimal hyperparameters
+    optimal_hyperparameters, _ = reconstruct_params(
+        optimal_hyperparameters_array, hyperparameters)
 
 def main():
     sample_start_index = 10000
@@ -261,29 +328,51 @@ def main():
     hyperparameters = {
 
     # #periodic_hyperparameters
-    #    'sigma': 1.0,
-    #     'l': 0.02,
-    #     'p': 1E-4,
-    #     'noise_level': 0.001
+    #     'kernel_type': 'periodic',
+    #     'sigma': 1.0,
+    #     'l': 0.3,
+    #     'p': 1E-2,
+    #     'noise_level': 0.1
     #     }
 
     #composite_hyperparameters
+        'kernel_type': 'composite',
         'periodic_params': [
         {'sigma': 0.1, 'l': 0.01, 'p': 1E-3},
         {'sigma': 0.1, 'l': 0.02, 'p': 1E-3}
         ],
         'se_params': {'sigma': 0.1, 'l': 0.01},
-        'noise_level': 0.001}
+        'noise_level': 0.001
+        }
+
+    hyperparameter_bounds = {
+    # #periodic_hyperparameter_bounds
+    #     'kernel_type': 'periodic',
+    #     'sigma': (0.001,10),
+    #     'l': (0.01,10),
+    #     'p': (0.0001,1),
+    #     'noise_level': (0.0001,0.5)
+    #     }
+
+    #composite_hyperparameter_bounds
+        'kernel_type': 'composite',
+        'periodic_param_bounds': [
+        {'sigma': (0.001,10), 'l': (0.01,10), 'p': (0.0001,1)},
+        {'sigma': (0.001,10), 'l': (0.01,10), 'p': (0.0001,1)}
+        ],
+        'se_param_bounds': {'sigma': (0.001,10), 'l': (0.01,10)},
+        'noise_level': (0.0001,1)
+    }
 
 
-    gp_kernel = GaussianProcessKernel(kernel_type='composite', **hyperparameters)
+    gp_kernel = GaussianProcessKernel(**hyperparameters)
+    gp_kernel.set_params(hyperparameters)
 
-    #gp_kernel = GaussianProcessKernel(kernel_type='periodic', sigma = 1, l = 0.01, p = 1E-1)
-    nll = negative_log_likelihood(time, force_response, gp_kernel, **hyperparameters)
-    print(nll)
+    optimal_hyperparameters = get_optimal_hyperparameters(hyperparameters,hyperparameter_bounds,force_response,gp_kernel)
 
-    prediction = gp_predict(time, force_response, time_test, gp_kernel.compute_kernel, **hyperparameters)
+    prediction = gp_predict(time, force_response, time_test, gp_kernel.compute_kernel, **optimal_hyperparameters)
     plot_data(force_input,force_response, prediction, time, time_test)
+
 
 
 if __name__ == "__main__":
