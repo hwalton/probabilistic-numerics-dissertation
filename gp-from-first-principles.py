@@ -261,7 +261,7 @@ def flatten_params(params):
 
 
 # Function to reconstruct nested hyperparameters from flat array
-def reconstruct_params(flat_params, template):
+def reconstruct_params_implementation(flat_params, template):
     reconstructed_params = {}
     index = 0
     for key, value in template.items():
@@ -273,12 +273,12 @@ def reconstruct_params(flat_params, template):
         if isinstance(value, list):
             reconstructed_params[key] = []
             for item in value:
-                reconstructed_item, item_length = reconstruct_params(
+                reconstructed_item, item_length = reconstruct_params_implementation(
                     flat_params[index:], item)
                 index += item_length
                 reconstructed_params[key].append(reconstructed_item)
         elif isinstance(value, dict):
-            reconstructed_params[key], item_length = reconstruct_params(
+            reconstructed_params[key], item_length = reconstruct_params_implementation(
                 flat_params[index:], value)
             index += item_length
         else:
@@ -286,26 +286,60 @@ def reconstruct_params(flat_params, template):
             index += 1
     return reconstructed_params, index
 
-def get_optimal_hyperparameters(hyperparameters, hyperparameter_bounds, y, kernel):
+def reconstruct_params(flat_params,template):
+    reconstructed_params, index = reconstruct_params_implementation(flat_params, template)
+    return reconstructed_params
+
+def iterative_search(initial_hyperparameters_array, bounds_array, template, X,
+                     y, kernel, compute_nll, reconstruct_params, n_iter=100):
+    """
+    Perform a simple iterative search for hyperparameter optimization.
+
+    Parameters:
+    - initial_hyperparameters_array: Initial flat array of hyperparameters.
+    - bounds_array: Array of (lower, upper) bounds for each hyperparameter.
+    - template: Template for reconstructing structured hyperparameters.
+    - X, y: Training data and targets.
+    - kernel: Kernel class or function.
+    - compute_nll: Function to compute negative log-likelihood.
+    - reconstruct_params: Function to reconstruct hyperparameters from flat array.
+    - n_iter: Number of iterations for the search.
+
+    Returns:
+    - best_hyperparameters: Best found hyperparameters.
+    """
+    best_hyperparameters = initial_hyperparameters_array
+    reconstruct_params_test = reconstruct_params(initial_hyperparameters_array,template)
+    best_nll = compute_nll(X, y, kernel,reconstruct_params_test)
+
+    for _ in range(n_iter):
+        for i, (lower, upper) in enumerate(bounds_array):
+            for delta in [-0.1, -0.1]:  # Example step sizes, adjust as needed
+                new_hyperparameters = best_hyperparameters.copy()
+                new_hyperparameters[i] = np.clip(new_hyperparameters[i] + delta, lower, upper)
+                new_nll = compute_nll(X, y, kernel,
+                                      reconstruct_params(new_hyperparameters,
+                                                         template))
+
+                if new_nll < best_nll:
+                    best_nll = new_nll
+                    best_hyperparameters = new_hyperparameters
+
+    return best_hyperparameters
+
+
+
+def get_optimal_hyperparameters(hyperparameters, hyperparameter_bounds,X, y, kernel):
     # Flatten hyperparameters and bounds
     initial_hyperparameters_array = np.array(flatten_params(hyperparameters))
     bounds_array = flatten_params(hyperparameter_bounds)
 
-    # Optimization
-    result = minimize(
-        fun=compute_nll,  # Function to minimize
-        x0=initial_hyperparameters_array,  # Initial guess
-        args=(y, kernel, hyperparameters),
-        bounds=bounds_array,  # Bounds for hyperparameters
-        method='L-BFGS-B'  # Optimization algorithm
-    )
 
     # Extract optimal hyperparameters
-    optimal_hyperparameters_array = result.x
+    optimal_hyperparameters = iterative_search(initial_hyperparameters_array,bounds_array,hyperparameters,X,y,kernel,compute_nll,reconstruct_params,n_iter=10)
 
     # Reconstruct optimal hyperparameters
-    optimal_hyperparameters, _ = reconstruct_params(
-        optimal_hyperparameters_array, hyperparameters)
+    return reconstruct_params(optimal_hyperparameters, hyperparameters)
 
 def main():
     sample_start_index = 10000
@@ -368,7 +402,7 @@ def main():
     gp_kernel = GaussianProcessKernel(**hyperparameters)
     gp_kernel.set_params(hyperparameters)
 
-    optimal_hyperparameters = get_optimal_hyperparameters(hyperparameters,hyperparameter_bounds,force_response,gp_kernel)
+    optimal_hyperparameters = get_optimal_hyperparameters(hyperparameters,hyperparameter_bounds,time,force_response,gp_kernel)
 
     prediction = gp_predict(time, force_response, time_test, gp_kernel.compute_kernel, **optimal_hyperparameters)
     plot_data(force_input,force_response, prediction, time, time_test)
