@@ -308,7 +308,7 @@ def iterative_search(initial_hyperparameters_array, bounds_array, template, X,
     best_nll = compute_nll(X, y, kernel,reconstruct_params_test)
 
     for j in range(n_iter):
-        if developer == True: print(f"Search Iteration: {j}/{n_iter}")
+        if developer == True: print(f"Search Iteration: {j+1}/{n_iter}")
         for i, (lower, upper) in enumerate(bounds_array):
             for modifier in [0.75, 2]:  # Example step sizes, adjust as needed
                 new_hyperparameters = best_hyperparameters.copy()
@@ -341,7 +341,7 @@ def main():
     if developer == True: start_time = timer.time()
 
     sample_start_index = 1000
-    sample_length = 200
+    sample_length = 500
     num_predictions = 100
     kernel_type = ('periodic')
     n_iter = 10
