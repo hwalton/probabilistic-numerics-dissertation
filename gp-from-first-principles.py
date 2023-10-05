@@ -328,7 +328,7 @@ def iterative_search(initial_hyperparameters_array, bounds_array, template, X,
 
     for _ in range(n_iter):
         for i, (lower, upper) in enumerate(bounds_array):
-            for modifier in [0.5, 2]:  # Example step sizes, adjust as needed
+            for modifier in [0.75, 2]:  # Example step sizes, adjust as needed
                 new_hyperparameters = best_hyperparameters.copy()
                 new_hyperparameters[i] = np.clip(new_hyperparameters[i] * modifier, lower, upper)
                 new_nll = compute_nll(X, y, kernel,
@@ -360,7 +360,7 @@ def main():
 
     sample_start_index = 1000
     sample_length = 100
-    kernel_type = 'periodic'
+    kernel_type = ('composite')
     n_iter = 10
 
 
