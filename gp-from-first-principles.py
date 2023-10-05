@@ -189,20 +189,8 @@ class GP_model:
             print(self.compute_nll(self.X, self.y, self.gp_kernel, self.optimal_hyperparameters))
 
     def get_optimal_hyperparameters(self):
-        initial_hyperparameters_array = np.array(self.flatten_params(self.initial_hyperparameters))
-        bounds_array = self.flatten_params(self.hyperparameter_bounds)
-        optimal_hyperparameters = self.iterative_search(
-            initial_hyperparameters_array,
-            bounds_array,
-            self.initial_hyperparameters,
-            self.X,
-            self.y,
-            self.gp_kernel,
-            self.compute_nll,
-            self.reconstruct_params,
-            n_iter=self.n_iter
-        )
-        return self.reconstruct_params(optimal_hyperparameters, self.initial_hyperparameters)
+        optimal_hyperparameters = self.iterative_search()
+        return self.reconstruct_params(optimal_hyperparameters)
 
 
     def predict(self, X_star):
@@ -279,22 +267,25 @@ class GP_model:
                 index += 1
         return reconstructed_params, index
 
-    def reconstruct_params(self, flat_params, template):
+    def reconstruct_params(self, flat_params):
         reconstructed_params, index = self.reconstruct_params_implementation(flat_params)
         return reconstructed_params
 
-    def iterative_search(self, initial_hyperparameters_array, bounds_array, template, X, y, kernel, compute_nll, reconstruct_params, n_iter=100):
+    def iterative_search(self):
+        initial_hyperparameters_array = np.array(self.flatten_params(self.initial_hyperparameters))
+        bounds_array = self.flatten_params(self.hyperparameter_bounds)
+
         best_hyperparameters = initial_hyperparameters_array
-        reconstruct_params_test = reconstruct_params(initial_hyperparameters_array, template)
-        best_nll = compute_nll(reconstruct_params_test)
-        for j in range(n_iter):
+        reconstruct_params_test = self.reconstruct_params(initial_hyperparameters_array)
+        best_nll = self.compute_nll(reconstruct_params_test)
+        for j in range(self.n_iter):
             if self.developer:
-                print(f"Search Iteration: {j+1}/{n_iter}")
+                print(f"Search Iteration: {j+1}/{self.n_iter}")
             for i, (lower, upper) in enumerate(bounds_array):
                 for modifier in [0.75, 2]:
                     new_hyperparameters = best_hyperparameters.copy()
                     new_hyperparameters[i] = np.clip(new_hyperparameters[i] * modifier, lower, upper)
-                    new_nll = compute_nll(reconstruct_params(new_hyperparameters, template))
+                    new_nll = self.compute_nll(self.reconstruct_params(new_hyperparameters))
                     if new_nll < best_nll:
                         best_nll = new_nll
                         best_hyperparameters = new_hyperparameters
