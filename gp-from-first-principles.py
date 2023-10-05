@@ -1,14 +1,10 @@
-from scipy.io import loadmat
-import os
-import csv
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
 import scipy
 from scipy.special import kv
-import numpy.linalg as npla
 import time as timer
-from scipy.optimize import minimize
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.linalg
+import numpy.linalg as npla
 
 developer = True
 
@@ -28,8 +24,6 @@ def load_data(start = 0, length = 65536):
 
     return input, output, time
 
-import matplotlib.pyplot as plt
-import numpy as np
 
 
 def plot_data(force_input, force_response, force_input_prediction, force_response_prediction, time, time_test):
@@ -68,7 +62,7 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
     plt.legend()
     plt.grid(True)
 
-    plt.tight_layout()  # Adjusts subplot params for better layout
+    plt.tight_layout()
     plt.show()
 
 
@@ -111,17 +105,13 @@ class GaussianProcessKernel:
             raise ValueError(f"Unknown kernel type: {self.params['kernel_type']}")
 
     def composite_kernel(self, X1, X2, **hyperparameters):
-
-        # Sum of periodic kernels
-        test3 = X1.shape
+        #test3 = X1.shape
         periodic_sum = np.zeros((X1.shape[0], X2.shape[0], X1.shape[1]))
         for params in hyperparameters['periodic_params']:
             periodic_sum += self.periodic_kernel(X1, X2, **params)
 
-        # Squared exponential kernel
         se_kernel = self.squared_exponential_kernel(X1, X2, **hyperparameters['se_params'])
 
-        # Multiplying the sum of periodic kernels with the squared exponential kernel
         composite_kernel = np.multiply(periodic_sum, se_kernel)
 
         return composite_kernel
@@ -170,9 +160,6 @@ class GaussianProcessKernel:
     def polynomial_kernel(self, X1, X2, alpha, beta, d):
         return (alpha + beta * np.dot(X1, X2.T)) ** d
 
-import numpy as np
-import scipy.linalg
-import numpy.linalg as npla
 
 class GP_model:
     def __init__(self, initial_hyperparameters, hyperparameter_bounds, X, y, n_iter=10):
@@ -332,7 +319,6 @@ def main():
             }
 
         hyperparameter_bounds = {
-            # periodic_hyperparameter_bounds
             'kernel_type': 'periodic',
             'sigma': (0.001, 100),
             'l': (0.001, 10),
@@ -370,14 +356,6 @@ def main():
     force_input_model.fit_model()
     force_input_prediction = force_input_model.predict((time_test))
 
-    # gp_kernel = GaussianProcessKernel(**initial_hyperparameters)
-    # gp_kernel.set_params(initial_hyperparameters)
-    #
-    # optimal_hyperparameters = get_optimal_hyperparameters(initial_hyperparameters,hyperparameter_bounds,time,force_response,gp_kernel, n_iter=n_iter)
-    # if developer == True:
-    #     print(optimal_hyperparameters)
-    #     print(compute_nll(time, force_response, gp_kernel, optimal_hyperparameters))
-    # prediction = gp_predict(time, force_response, time_test, gp_kernel.compute_kernel, **optimal_hyperparameters)
     plot_data(force_input,force_response, force_input_prediction, force_response_prediction, time, time_test)
 
     if developer == True:
