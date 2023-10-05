@@ -32,24 +32,32 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_data(force_input, force_response, prediction, time, time_test):
+def plot_data(force_input, force_response, force_input_prediction, force_response_prediction, time, time_test):
     plt.figure(figsize=(12, 6))
 
     plt.subplot(2, 1, 1)  # 2 rows, 1 column, plot 1
-    plt.scatter(time, force_input, label='Input', color='blue')
+    plt.scatter(time, force_input, label='Force input', color='green')
+    plt.scatter(time_test, force_input_prediction[0], label='Predicted Mean', color='red')
+
+    upper_bound = force_input_prediction[0] + force_input_prediction[1]
+    lower_bound = force_input_prediction[0] - force_input_prediction[1]
+
+    plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
+                     alpha=0.2, label='Std Dev')
+
     plt.xlabel('Time')
-    plt.ylabel('Input')
-    plt.title('Input over Time')
+    plt.ylabel('Force Input')
+    plt.title('Force Input over Time')
     plt.legend()
     plt.grid(True)
 
     plt.subplot(2, 1, 2)  # 2 rows, 1 column, plot 2
     plt.scatter(time, force_response, label='Force Response', color='green')
-    plt.scatter(time_test, prediction[0], label='Predicted Mean', color='red')
+    plt.scatter(time_test, force_response_prediction[0], label='Predicted Mean', color='red')
 
     # Assuming prediction[1] is the standard deviation
-    upper_bound = prediction[0] + prediction[1]
-    lower_bound = prediction[0] - prediction[1]
+    upper_bound = force_response_prediction[0] + force_response_prediction[1]
+    lower_bound = force_response_prediction[0] - force_response_prediction[1]
 
     plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
                      alpha=0.2, label='Std Dev')
@@ -359,9 +367,14 @@ def main():
             'noise_level': (0.0001,1)
             }
 
-    response_model = GP_model(initial_hyperparameters, hyperparameter_bounds, time, force_response, n_iter = n_iter)
-    response_model.fit_model()
-    prediction = response_model.predict(time_test)
+    force_response_model = GP_model(initial_hyperparameters, hyperparameter_bounds, time, force_response, n_iter = n_iter)
+    force_response_model.fit_model()
+    force_response_prediction = force_response_model.predict(time_test)
+
+    force_input_model = GP_model(initial_hyperparameters, hyperparameter_bounds, time, force_input, n_iter = n_iter)
+    force_input_model.fit_model()
+    force_input_prediction = force_input_model.predict((time_test))
+
     # gp_kernel = GaussianProcessKernel(**initial_hyperparameters)
     # gp_kernel.set_params(initial_hyperparameters)
     #
@@ -370,7 +383,7 @@ def main():
     #     print(optimal_hyperparameters)
     #     print(compute_nll(time, force_response, gp_kernel, optimal_hyperparameters))
     # prediction = gp_predict(time, force_response, time_test, gp_kernel.compute_kernel, **optimal_hyperparameters)
-    plot_data(force_input,force_response, prediction, time, time_test)
+    plot_data(force_input,force_response, force_input_prediction, force_response_prediction, time, time_test)
 
     if developer == True:
         end_time = timer.time()
