@@ -7,6 +7,7 @@ import numpy as np
 from scipy.special import kv
 import numpy.linalg as npla
 import time
+from scipy.optimize import minimize
 
 developer = False
 
@@ -50,16 +51,23 @@ def plot_data(force_input, force_response, prediction, time, time_test):
     plt.tight_layout()  # Adjusts subplot params for better layout
     plt.show()
 
+def format_data(X):
+    if X.ndim == 1: X = X.reshape(-1,1)
+    return X
+
 class GaussianProcessKernel:
     def __init__(self, kernel_type='linear', **kwargs):
         self.kernel_type = kernel_type
         self.params = kwargs
 
+    def set_params(self, **hyperparameters):
+        self.params = hyperparameters
+
     def compute_kernel(self, X1, X2):
         if developer == True: X1_shape_before = X1.shape
-        if X1.ndim == 1: X1 = X1.reshape(-1,1)
+        #if X1.ndim == 1: X1 = X1.reshape(-1,1)
         if developer == True: X1_shape_after = X1.shape
-        if developer == True: X2_shape_before = X2.shape
+        #if developer == True: X2_shape_before = X2.shape
         if X2.ndim == 1: X2 = X2.reshape(-1,1)
         if developer == True: X2_shape_after = X2.shape
         if self.kernel_type == 'linear':
@@ -86,15 +94,16 @@ class GaussianProcessKernel:
         else:
             raise ValueError(f"Unknown kernel type: {self.kernel_type}")
 
-    def composite_kernel(self, X1, X2, periodic_params_list, se_params):
+    def composite_kernel(self, X1, X2, **hyperparameters):
 
         # Sum of periodic kernels
+        test3 = X1.shape
         periodic_sum = np.zeros((X1.shape[0], X2.shape[0], X1.shape[1]))
-        for params in periodic_params_list:
+        for params in hyperparameters['periodic_params']:
             periodic_sum += self.periodic_kernel(X1, X2, **params)
 
         # Squared exponential kernel
-        se_kernel = self.squared_exponential_kernel(X1, X2, **se_params)
+        se_kernel = self.squared_exponential_kernel(X1, X2, **hyperparameters['se_params'])
 
         # Multiplying the sum of periodic kernels with the squared exponential kernel
         composite_kernel = np.multiply(periodic_sum, se_kernel)
@@ -104,16 +113,16 @@ class GaussianProcessKernel:
     def linear_kernel(self, X1, X2):
         return np.dot(X1, X2.T)
 
-    def periodic_kernel(self, X1, X2, sigma, l, p):
+    def periodic_kernel(self, X1, X2, **params):
         delta_X = X1[:, None, :] - X2[None, :, :]
-        out = sigma ** 2 * np.exp(
-            -2 * np.sin(np.pi * np.abs(delta_X) / p) ** 2 / l ** 2)
+        out = params['sigma'] ** 2 * np.exp(
+            -2 * np.sin(np.pi * np.abs(delta_X) / params['p']) ** 2 / params['l'] ** 2)
         return out
 
-    def squared_exponential_kernel(self, X1, X2, sigma, l):
+    def squared_exponential_kernel(self, X1, X2, **params):
         delta_X = X1[:, None, :] - X2[None, :, :]
-        out = sigma ** 2 * np.exp(
-            -0.5 * (delta_X ** 2) / l ** 2)
+        out = params['sigma'] ** 2 * np.exp(
+            -0.5 * (delta_X ** 2) / params['l'] ** 2)
         return out
 
     def matern_kernel(self, X1, X2, sigma, nu, l):
@@ -145,10 +154,10 @@ class GaussianProcessKernel:
     def polynomial_kernel(self, X1, X2, alpha, beta, d):
         return (alpha + beta * np.dot(X1, X2.T)) ** d
 
-def gp_predict(X_train, y_train, X_test, kernel_func, sigma_n=0.1):
+def gp_predict(X_train, y_train, X_test, kernel_func, **hyperparameters):
 
     # Kernel matrix for training data plus noise term
-    K_X_X = kernel_func(X_train, X_train) + np.array(sigma_n ** 2 * np.eye(len(X_train)))[:,:,None]
+    K_X_X = kernel_func(X_train, X_train) + np.array(hyperparameters['noise_level'] ** 2 * np.eye(len(X_train)))[:,:,None]
     assert is_positive_definite(K_X_X), "Warning: K_X_X is not positive definite!"
 
     # Kernel matrix between test and training data
@@ -212,30 +221,68 @@ def is_positive_definite(K):
 
     return True
 
+
+def negative_log_likelihood(X, y, kernel, **hyperparameters):
+    # Update kernel with new hyperparameters
+    kernel.set_params(**hyperparameters)
+
+    # Compute covariance matrix
+    K = kernel.compute_kernel(X, X)
+
+    # Add noise term
+    test = X.shape[1]
+    testk = K
+    K += np.repeat(np.array(np.eye(len(X)) * 1e-3)[:,:, np.newaxis], X.shape[1], axis=2)
+
+    for i in range(K.shape[2]):
+        # Compute negative log marginal likelihood
+        nll = 0.5 * y.T @ np.linalg.inv(K[:,:,i]) @ y + 0.5 * np.log(np.linalg.det(K[:,:,i])) + 0.5 * len(X) * np.log(2 * np.pi)
+
+    return nll.item()
+
 def main():
     sample_start_index = 10000
-    sample_length = 500
+    sample_length = 100
 
     force_input, force_response, time = load_data(sample_start_index, sample_length)
     time_test = np.linspace(time[0],time[-1], num=250, endpoint = True)
+
+    force_input = format_data(force_input)
+    time = format_data(time)
+    force_response = format_data(force_response)
+    time_test = format_data(time_test)
 
     if developer == True:
         print(force_input)
         print(force_response)
         print(time)
 
-     #  periodic_params_list = [
-     #    {'sigma': 1, 'l': 0.01, 'p': 1E-1},
-     #    {'sigma':1, 'l': 0.02, 'p': 1E-1}
-     #    ]
-     #
-     # se_params = {'sigma': 1, 'l': 0.01}
-     #
-     # gp_kernel = GaussianProcessKernel(kernel_type='composite', periodic_params_list = periodic_params_list, se_params = se_params)
-    gp_kernel = GaussianProcessKernel(kernel_type='periodic', sigma = 1, l = 0.01, p = 1E-1)
+
+    hyperparameters = {
+
+    # #periodic_hyperparameters
+    #    'sigma': 1.0,
+    #     'l': 0.02,
+    #     'p': 1E-4,
+    #     'noise_level': 0.001
+    #     }
+
+    #composite_hyperparameters
+        'periodic_params': [
+        {'sigma': 0.1, 'l': 0.01, 'p': 1E-3},
+        {'sigma': 0.1, 'l': 0.02, 'p': 1E-3}
+        ],
+        'se_params': {'sigma': 0.1, 'l': 0.01},
+        'noise_level': 0.001}
 
 
-    prediction = gp_predict(time, force_response, time_test, gp_kernel.compute_kernel,0.1)
+    gp_kernel = GaussianProcessKernel(kernel_type='composite', **hyperparameters)
+
+    #gp_kernel = GaussianProcessKernel(kernel_type='periodic', sigma = 1, l = 0.01, p = 1E-1)
+    nll = negative_log_likelihood(time, force_response, gp_kernel, **hyperparameters)
+    print(nll)
+
+    prediction = gp_predict(time, force_response, time_test, gp_kernel.compute_kernel, **hyperparameters)
     plot_data(force_input,force_response, prediction, time, time_test)
 
 
