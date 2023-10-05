@@ -166,163 +166,9 @@ class GaussianProcessKernel:
     def polynomial_kernel(self, X1, X2, alpha, beta, d):
         return (alpha + beta * np.dot(X1, X2.T)) ** d
 
-def gp_predict(X_train, y_train, X_test, kernel_func, **hyperparameters):
-
-    # Kernel matrix for training data plus noise term
-    K_X_X = kernel_func(X_train, X_train) + np.array(hyperparameters['noise_level'] ** 2 * np.eye(len(X_train)))[:,:,None]
-    #assert is_positive_definite(K_X_X), "Warning: K_X_X is not positive definite!"
-
-    # Kernel matrix between test and training data
-    K_star_X = kernel_func(X_train, X_test)
-   # assert is_positive_definite(K_star_X), "Warning: K_star_X is not positive definite!"
-
-
-    # Kernel matrix for test data
-    K_star_star = kernel_func(X_test, X_test)
-    #assert is_positive_definite(K_star_star), "Warning: K_star_X is not positive definite!"
-
-    # Initialize arrays to store the Cholesky decompositions, means, and variances
-    L = np.zeros_like(K_X_X)
-    mu = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
-    s2 = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
-
-    # Loop through the third dimension and compute the Cholesky decomposition for each 2D slice
-    for i in range(K_X_X.shape[2]):
-        L[:, :, i] = npla.cholesky(
-            K_X_X[:, :, i] + 1e-10 * np.eye(K_X_X.shape[0]))
-
-        # Compute the mean at our test points.
-
-        Lk = np.squeeze(npla.solve(L[:, :, i], K_star_X[:,:,i]))
-        mu[:, i] = np.dot(Lk.T, npla.solve(L[:, :, i], y_train)).flatten()
-
-       #L_inv = npla.inv(L[:,:,i])
-       #mu[:,i] = np.dot(np.dot(np.transpose(K_star_X[:,:,i]),L_inv.T), np.dot(L_inv,y_train)) #alternate function (slower?)
-
-        # Compute the standard deviation
-        s2[:, i] = np.diag(K_star_star[:, :, i]) - np.sum(Lk ** 2, axis=0)
-        stdv = np.sqrt(s2)
-
-    return mu, stdv
-
-
-def is_positive_definite(K):
-    # Ensure K is at most 3D
-    if K.ndim > 3:
-        raise ValueError("Input must be at most 3D.")
-
-    # If K is 2D, add an extra dimension to make the logic below work for both 2D and 3D cases
-    if K.ndim == 2:
-        K = K[:, :, np.newaxis]
-
-    # Check if the 2D slices are square
-    if K.shape[0] != K.shape[1]:
-        raise ValueError("The first two dimensions must be equal.")
-
-    # Check each 2D slice for positive definiteness
-    for i in range(K.shape[2]):
-        if not np.all(np.linalg.eigvals(K[:, :, i]) > 0):
-            return False
-
-    return True
-
-
-def compute_nll(X, y, kernel, hyperparameters):
-    if X.ndim == 1: X = X.reshape(-1, 1)
-    if y.ndim == 1: y = y.reshape(-1, 1)
-    # Update kernel with new hyperparameters
-    kernel.set_params(hyperparameters)
-
-    # Compute covariance matrix
-    K = kernel.compute_kernel(X, X)
-
-    # Add noise term
-    test = X.shape[1]
-    testk = K
-    K += np.repeat(np.array(np.eye(len(X)) * 1e-3)[:,:, np.newaxis], X.shape[1], axis=2)
-
-    for i in range(K.shape[2]):
-        # Compute negative log marginal likelihood
-        # nll = 0.5 * y.T @ np.linalg.inv(K[:,:,i]) @ y + 0.5 * np.log(np.linalg.det(K[:,:,i])) + 0.5 * len(X) * np.log(2 * np.pi)
-        L = scipy.linalg.cholesky(K[:, :, i], lower=True)
-        alpha = scipy.linalg.cho_solve((L, True), y)
-
-        nll = 0.5 * y.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * len(X) * np.log(2 * np.pi)
-
-    return nll.item()
-
-
-# Function to flatten hyperparameters and bounds
-def flatten_params(params):
-    flat_params = []
-    for key, value in params.items():
-        # Ignore string values
-        if isinstance(value, str):
-            continue
-
-        if isinstance(value, list):
-            for item in value:
-                flat_params.extend(flatten_params(item))
-        elif isinstance(value, dict):
-            flat_params.extend(flatten_params(value))
-        else:
-            flat_params.append(value)
-    return flat_params
-
-
-# Function to reconstruct nested hyperparameters from flat array
-def reconstruct_params_implementation(flat_params, template):
-    reconstructed_params = {}
-    index = 0
-    for key, value in template.items():
-        # Ignore string values
-        if isinstance(value, str):
-            reconstructed_params[key] = value
-            continue
-
-        if isinstance(value, list):
-            reconstructed_params[key] = []
-            for item in value:
-                reconstructed_item, item_length = reconstruct_params_implementation(
-                    flat_params[index:], item)
-                index += item_length
-                reconstructed_params[key].append(reconstructed_item)
-        elif isinstance(value, dict):
-            reconstructed_params[key], item_length = reconstruct_params_implementation(
-                flat_params[index:], value)
-            index += item_length
-        else:
-            reconstructed_params[key] = flat_params[index]
-            index += 1
-    return reconstructed_params, index
-
-def reconstruct_params(flat_params,template):
-    reconstructed_params, index = reconstruct_params_implementation(flat_params, template)
-    return reconstructed_params
-
-def iterative_search(initial_hyperparameters_array, bounds_array, template, X,
-                     y, kernel, compute_nll, reconstruct_params, n_iter=100):
-
-    best_hyperparameters = initial_hyperparameters_array
-    reconstruct_params_test = reconstruct_params(initial_hyperparameters_array,template)
-    best_nll = compute_nll(X, y, kernel,reconstruct_params_test)
-
-    for j in range(n_iter):
-        if developer == True: print(f"Search Iteration: {j+1}/{n_iter}")
-        for i, (lower, upper) in enumerate(bounds_array):
-            for modifier in [0.75, 2]:  # Example step sizes, adjust as needed
-                new_hyperparameters = best_hyperparameters.copy()
-                new_hyperparameters[i] = np.clip(new_hyperparameters[i] * modifier, lower, upper)
-                new_nll = compute_nll(X, y, kernel,
-                                      reconstruct_params(new_hyperparameters,
-                                                         template))
-
-                if new_nll < best_nll:
-                    best_nll = new_nll
-                    best_hyperparameters = new_hyperparameters
-
-    return best_hyperparameters
-
+import numpy as np
+import scipy.linalg
+import numpy.linalg as npla
 
 class GP_model:
     def __init__(self, initial_hyperparameters, hyperparameter_bounds, X, y, n_iter=10, developer=False):
@@ -336,38 +182,127 @@ class GP_model:
     def fit_model(self):
         self.gp_kernel = GaussianProcessKernel(**self.initial_hyperparameters)
         self.gp_kernel.set_params(self.initial_hyperparameters)
-
-        # Extract optimal hyperparameters
         self.optimal_hyperparameters = self.get_optimal_hyperparameters()
-
         if self.developer:
             print(self.optimal_hyperparameters)
-            print(compute_nll(self.X, self.y, self.gp_kernel, self.optimal_hyperparameters))
+            print(self.compute_nll(self.X, self.y, self.gp_kernel, self.optimal_hyperparameters))
 
     def get_optimal_hyperparameters(self):
-        # Flatten hyperparameters and bounds
-        initial_hyperparameters_array = np.array(flatten_params(self.initial_hyperparameters))
-        bounds_array = flatten_params(self.hyperparameter_bounds)
-
-        # Extract optimal hyperparameters
-        optimal_hyperparameters = iterative_search(
+        initial_hyperparameters_array = np.array(self.flatten_params(self.initial_hyperparameters))
+        bounds_array = self.flatten_params(self.hyperparameter_bounds)
+        optimal_hyperparameters = self.iterative_search(
             initial_hyperparameters_array,
             bounds_array,
             self.initial_hyperparameters,
             self.X,
             self.y,
             self.gp_kernel,
-            compute_nll,
-            reconstruct_params,
+            self.compute_nll,
+            self.reconstruct_params,
             n_iter=self.n_iter
         )
-
-        # Reconstruct optimal hyperparameters
-        return reconstruct_params(optimal_hyperparameters, self.initial_hyperparameters)
+        return self.reconstruct_params(optimal_hyperparameters, self.initial_hyperparameters)
 
     def predict(self, X_star):
-        prediction = gp_predict(self.X, self.y, X_star, self.gp_kernel.compute_kernel, **self.optimal_hyperparameters)
+        prediction = self.gp_predict(X_star, self.gp_kernel.compute_kernel, **self.optimal_hyperparameters)
         return prediction
+
+    def gp_predict(self, X_star, kernel_func, **hyperparameters):
+        K_X_X = kernel_func(self.X, self.X) + np.array(hyperparameters['noise_level'] ** 2 * np.eye(len(self.X)))[:,:,None]
+        K_star_X = kernel_func(self.X, X_star)
+        K_star_star = kernel_func(X_star, X_star)
+        L = np.zeros_like(K_X_X)
+        self.mu = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
+        self.s2 = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
+        for i in range(K_X_X.shape[2]):
+            L[:, :, i] = npla.cholesky(K_X_X[:, :, i] + 1e-10 * np.eye(K_X_X.shape[0]))
+            Lk = np.squeeze(npla.solve(L[:, :, i], K_star_X[:,:,i]))
+            self.mu[:, i] = np.dot(Lk.T, npla.solve(L[:, :, i], self.y)).flatten()
+            self.s2[:, i] = np.diag(K_star_star[:, :, i]) - np.sum(Lk ** 2, axis=0)
+            self.stdv = np.sqrt(self.s2)
+        return self.mu, self.stdv
+
+    def is_positive_definite(self, K):
+        if K.ndim > 3:
+            raise ValueError("Input must be at most 3D.")
+        if K.ndim == 2:
+            K = K[:, :, np.newaxis]
+        if K.shape[0] != K.shape[1]:
+            raise ValueError("The first two dimensions must be equal.")
+        for i in range(K.shape[2]):
+            if not np.all(np.linalg.eigvals(K[:, :, i]) > 0):
+                return False
+        return True
+
+    def compute_nll(self, X, y, kernel, hyperparameters):
+        if X.ndim == 1: X = X.reshape(-1, 1)
+        if y.ndim == 1: y = y.reshape(-1, 1)
+        kernel.set_params(hyperparameters)
+        K = kernel.compute_kernel(X, X)
+        K += np.repeat(np.array(np.eye(len(X)) * 1e-3)[:,:, np.newaxis], X.shape[1], axis=2)
+        for i in range(K.shape[2]):
+            L = scipy.linalg.cholesky(K[:, :, i], lower=True)
+            alpha = scipy.linalg.cho_solve((L, True), y)
+            nll = 0.5 * y.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * len(X) * np.log(2 * np.pi)
+        return nll.item()
+
+    def flatten_params(self, params):
+        flat_params = []
+        for key, value in params.items():
+            if isinstance(value, str):
+                continue
+            if isinstance(value, list):
+                for item in value:
+                    flat_params.extend(self.flatten_params(item))
+            elif isinstance(value, dict):
+                flat_params.extend(self.flatten_params(value))
+            else:
+                flat_params.append(value)
+        return flat_params
+
+    def reconstruct_params_implementation(self, flat_params, template):
+        reconstructed_params = {}
+        index = 0
+        for key, value in template.items():
+            if isinstance(value, str):
+                reconstructed_params[key] = value
+                continue
+            if isinstance(value, list):
+                reconstructed_params[key] = []
+                for item in value:
+                    reconstructed_item, item_length = self.reconstruct_params_implementation(flat_params[index:], item)
+                    index += item_length
+                    reconstructed_params[key].append(reconstructed_item)
+            elif isinstance(value, dict):
+                reconstructed_params[key], item_length = self.reconstruct_params_implementation(flat_params[index:], value)
+                index += item_length
+            else:
+                reconstructed_params[key] = flat_params[index]
+                index += 1
+        return reconstructed_params, index
+
+    def reconstruct_params(self, flat_params, template):
+        reconstructed_params, index = self.reconstruct_params_implementation(flat_params, template)
+        return reconstructed_params
+
+    def iterative_search(self, initial_hyperparameters_array, bounds_array, template, X, y, kernel, compute_nll, reconstruct_params, n_iter=100):
+        best_hyperparameters = initial_hyperparameters_array
+        reconstruct_params_test = reconstruct_params(initial_hyperparameters_array, template)
+        best_nll = compute_nll(X, y, kernel, reconstruct_params_test)
+        for j in range(n_iter):
+            if self.developer:
+                print(f"Search Iteration: {j+1}/{n_iter}")
+            for i, (lower, upper) in enumerate(bounds_array):
+                for modifier in [0.75, 2]:
+                    new_hyperparameters = best_hyperparameters.copy()
+                    new_hyperparameters[i] = np.clip(new_hyperparameters[i] * modifier, lower, upper)
+                    new_nll = compute_nll(X, y, kernel, reconstruct_params(new_hyperparameters, template))
+                    if new_nll < best_nll:
+                        best_nll = new_nll
+                        best_hyperparameters = new_hyperparameters
+        return best_hyperparameters
+
+
 
 
 def main():
