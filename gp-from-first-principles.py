@@ -364,13 +364,16 @@ def main():
     if developer == True: start_time = timer.time()
 
     sample_start_index = 1000
-    sample_length = 500
+    sample_length = 100
+    num_predictions = 50
     kernel_type = ('composite')
     n_iter = 10
 
 
     force_input, force_response, time = load_data(sample_start_index, sample_length)
-    time_test = np.linspace(time[0],time[-1], num=50, endpoint = True)
+    lower = time[0]-0.25*(time[-1]-time[0])
+    upper = time[-1]+0.25*(time[-1]-time[0])
+    time_test = np.linspace(lower,upper, num=num_predictions, endpoint = True)
 
     force_input = format_data(force_input)
     time = format_data(time)
