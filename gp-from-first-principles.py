@@ -84,12 +84,8 @@ class GaussianProcessKernel:
         self.params = hyperparameters
 
     def compute_kernel(self, X1, X2):
-        if developer == True: X1_shape_before = X1.shape
         if X1.ndim == 1: X1 = X1.reshape(-1,1)
-        if developer == True: X1_shape_after = X1.shape
-        if developer == True: X2_shape_before = X2.shape
         if X2.ndim == 1: X2 = X2.reshape(-1,1)
-        if developer == True: X2_shape_after = X2.shape
         if self.params['kernel_type'] == 'linear':
             return self.linear_kernel(X1, X2)
         elif self.params['kernel_type'] == 'periodic':
@@ -179,22 +175,21 @@ import scipy.linalg
 import numpy.linalg as npla
 
 class GP_model:
-    def __init__(self, initial_hyperparameters, hyperparameter_bounds, X, y, n_iter=10, developer=False):
+    def __init__(self, initial_hyperparameters, hyperparameter_bounds, X, y, n_iter=10):
         self.initial_hyperparameters = initial_hyperparameters
         self.hyperparameter_bounds = hyperparameter_bounds
         self.X = X
         self.y = y
         self.n_iter = n_iter
-        self.developer = developer
         self.template = initial_hyperparameters
 
     def fit_model(self):
         self.gp_kernel = GaussianProcessKernel(**self.initial_hyperparameters)
         self.gp_kernel.set_params(self.initial_hyperparameters)
         self.optimal_hyperparameters = self.get_optimal_hyperparameters()
-        if self.developer:
+        if developer:
             print(self.optimal_hyperparameters)
-            print(self.compute_nll(self.X, self.y, self.gp_kernel, self.optimal_hyperparameters))
+            print(self.compute_nll( self.optimal_hyperparameters))
 
     def get_optimal_hyperparameters(self):
         optimal_hyperparameters = self.iterative_search()
@@ -287,7 +282,7 @@ class GP_model:
         reconstruct_params_test = self.reconstruct_params(initial_hyperparameters_array)
         best_nll = self.compute_nll(reconstruct_params_test)
         for j in range(self.n_iter):
-            if self.developer:
+            if developer:
                 print(f"Search Iteration: {j+1}/{self.n_iter}")
             for i, (lower, upper) in enumerate(bounds_array):
                 for modifier in [0.75, 2]:
