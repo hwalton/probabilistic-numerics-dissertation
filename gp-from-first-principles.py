@@ -153,9 +153,9 @@ class GaussianProcessKernel:
         delta_X = np.sum(X1[:, None, :] - X2[None, :, :], axis=-1)
         return sigma ** 2 * np.cos(2 * np.pi * delta_X / p)
 
-    def white_noise_kernel(self, X1, X2, sigma):
-        delta_X = np.sum(X1[:, None, :] - X2[None, :, :], axis=-1)
-        return sigma ** 2 * np.where(delta_X == 0, 1, 0)
+    def white_noise_kernel(self, X1, X2, **params):
+        delta_X = X1[:, None, :] - X2[None, :, :]
+        return params['sigma'] ** 2 * np.where(delta_X == 0, 1, 0)
 
     def polynomial_kernel(self, X1, X2, alpha, beta, d):
         return (alpha + beta * np.dot(X1, X2.T)) ** d
@@ -282,33 +282,7 @@ class GP_model:
         return best_hyperparameters
 
 
-
-
-def main():
-    if developer == True: start_time = timer.time()
-
-    sample_start_index = 2000
-    sample_length = 100
-    num_predictions = 100
-    kernel_type = ('periodic')
-    n_iter = 10
-
-
-    force_input, force_response, time = load_data(sample_start_index, sample_length)
-    lower = time[0]-0.25*(time[-1]-time[0])
-    upper = time[-1]+0.25*(time[-1]-time[0])
-    time_test = np.linspace(lower,upper, num=num_predictions, endpoint = True)
-
-    force_input = format_data(force_input)
-    time = format_data(time)
-    force_response = format_data(force_response)
-    time_test = format_data(time_test)
-
-    if developer == True:
-        print(force_input)
-        print(force_response)
-        print(time)
-
+def get_kernel_hyperparameters(kernel_type):
     if kernel_type == 'periodic':
         initial_hyperparameters = {
             'kernel_type': 'periodic',
@@ -337,7 +311,6 @@ def main():
             'noise_level': 0.001
             }
 
-
         hyperparameter_bounds = {
             'kernel_type': 'composite',
             'periodic_param_bounds': [
@@ -348,13 +321,58 @@ def main():
             'noise_level': (0.0001,1)
             }
 
-    force_response_model = GP_model(initial_hyperparameters, hyperparameter_bounds, time, force_response, n_iter = n_iter)
-    force_response_model.fit_model()
-    force_response_prediction = force_response_model.predict(time_test)
+    if kernel_type == 'white_noise':
+        initial_hyperparameters = {
+            'kernel_type': 'white_noise',
+            'sigma': 1,
+            'noise_level': 0.1
+        }
 
-    force_input_model = GP_model(initial_hyperparameters, hyperparameter_bounds, time, force_input, n_iter = n_iter)
+        hyperparameter_bounds = {
+            'kernel_type': 'white_noise',
+            'sigma': (0.001, 100),
+            'noise_level': (0.0001, 0.25)
+        }
+
+    return initial_hyperparameters, hyperparameter_bounds
+
+def main():
+    if developer == True: start_time = timer.time()
+
+    sample_start_index = 2000
+    sample_length = 100
+    num_predictions = 100
+    force_input_kernel_type = 'white_noise'
+    force_response_kernel_type = 'periodic'
+    n_iter = 10
+
+
+    force_input, force_response, time = load_data(sample_start_index, sample_length)
+    lower = time[0]-0.25*(time[-1]-time[0])
+    upper = time[-1]+0.25*(time[-1]-time[0])
+    time_test = np.linspace(lower,upper, num=num_predictions, endpoint = True)
+
+    force_input = format_data(force_input)
+    time = format_data(time)
+    force_response = format_data(force_response)
+    time_test = format_data(time_test)
+
+    if developer == True:
+        print(force_input)
+        print(force_response)
+        print(time)
+
+    force_input_initial_hyperparameters, force_input_hyperparameter_bounds = get_kernel_hyperparameters(force_input_kernel_type)
+    force_response_initial_hyperparameters, force_response_hyperparameter_bounds = get_kernel_hyperparameters(force_response_kernel_type)
+
+
+    force_input_model = GP_model(force_input_initial_hyperparameters, force_input_hyperparameter_bounds, time, force_input, n_iter = n_iter)
     force_input_model.fit_model()
     force_input_prediction = force_input_model.predict((time_test))
+
+    force_response_model = GP_model(force_response_initial_hyperparameters, force_response_hyperparameter_bounds, time, force_response, n_iter = n_iter)
+    force_response_model.fit_model()
+    force_response_prediction = force_response_model.predict(time_test)
 
     plot_data(force_input,force_response, force_input_prediction, force_response_prediction, time, time_test)
 
