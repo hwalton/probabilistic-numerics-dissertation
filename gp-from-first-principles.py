@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.special import kv
 import numpy.linalg as npla
-import time
+import time as timer
 from scipy.optimize import minimize
 
 developer = True
@@ -180,18 +180,11 @@ def gp_predict(X_train, y_train, X_test, kernel_func, **hyperparameters):
 
         # Compute the mean at our test points.
 
-        if developer == True: start_time = time.time()
-
         Lk = np.squeeze(npla.solve(L[:, :, i], K_star_X[:,:,i]))
         mu[:, i] = np.dot(Lk.T, npla.solve(L[:, :, i], y_train)).flatten()
 
        #L_inv = npla.inv(L[:,:,i])
        #mu[:,i] = np.dot(np.dot(np.transpose(K_star_X[:,:,i]),L_inv.T), np.dot(L_inv,y_train)) #alternate function (slower?)
-
-        if developer == True:
-            end_time = time.time()
-            elapsed_time = end_time - start_time
-            print(f"The code ran in {elapsed_time} seconds")
 
         # Compute the standard deviation
         s2[:, i] = np.diag(K_star_star[:, :, i]) - np.sum(Lk ** 2, axis=0)
@@ -314,21 +307,26 @@ def iterative_search(initial_hyperparameters_array, bounds_array, template, X,
 
 
 
-def get_optimal_hyperparameters(hyperparameters, hyperparameter_bounds,X, y, kernel):
+def get_optimal_hyperparameters(hyperparameters, hyperparameter_bounds,X, y, kernel,n_iter):
     # Flatten hyperparameters and bounds
     initial_hyperparameters_array = np.array(flatten_params(hyperparameters))
     bounds_array = flatten_params(hyperparameter_bounds)
 
 
     # Extract optimal hyperparameters
-    optimal_hyperparameters = iterative_search(initial_hyperparameters_array,bounds_array,hyperparameters,X,y,kernel,compute_nll,reconstruct_params,n_iter=10)
+    optimal_hyperparameters = iterative_search(initial_hyperparameters_array,bounds_array,hyperparameters,X,y,kernel,compute_nll,reconstruct_params,n_iter=n_iter)
 
     # Reconstruct optimal hyperparameters
     return reconstruct_params(optimal_hyperparameters, hyperparameters)
 
 def main():
-    sample_start_index = 10000
+    if developer == True: start_time = timer.time()
+
+    sample_start_index = 1000
     sample_length = 100
+    kernel_type = 'periodic'
+    n_iter = 10
+
 
     force_input, force_response, time = load_data(sample_start_index, sample_length)
     time_test = np.linspace(time[0],time[-1], num=50, endpoint = True)
@@ -343,57 +341,61 @@ def main():
         print(force_response)
         print(time)
 
+    if kernel_type == 'periodic':
+        initial_hyperparameters = {
+            'kernel_type': 'periodic',
+            'sigma': 1,
+            'l': 0.1,
+            'p': 0.1,
+            'noise_level': 0.001
+            }
 
-    initial_hyperparameters = {
-
-    #periodic_hyperparameters
-        'kernel_type': 'periodic',
-        'sigma': 10,
-        'l': 0.15625,
-        'p': 0.015625,
-        'noise_level': 0.5
+        hyperparameter_bounds = {
+            # periodic_hyperparameter_bounds
+            'kernel_type': 'periodic',
+            'sigma': (0.001, 100),
+            'l': (0.001, 10),
+            'p': (0.0001, 1),
+            'noise_level': (0.0001, 0.25)
         }
 
-    # #composite_hyperparameters
-    #     'kernel_type': 'composite',
-    #     'periodic_params': [
-    #     {'sigma': 0.1, 'l': 0.01, 'p': 1E-3},
-    #     {'sigma': 0.1, 'l': 0.02, 'p': 1E-3}
-    #     ],
-    #     'se_params': {'sigma': 0.1, 'l': 0.01},
-    #     'noise_level': 0.001
-    #     }
+    if kernel_type == 'composite':
+        initial_hyperparameters = {
+            'kernel_type': 'composite',
+            'periodic_params': [
+            {'sigma': 0.1, 'l': 0.01, 'p': 1E-3},
+            {'sigma': 0.1, 'l': 0.02, 'p': 1E-3}
+            ],
+            'se_params': {'sigma': 0.1, 'l': 0.01},
+            'noise_level': 0.001
+            }
 
-    hyperparameter_bounds = {
-    #periodic_hyperparameter_bounds
-        'kernel_type': 'periodic',
-        'sigma': (0.001,10),
-        'l': (0.01,10),
-        'p': (0.0001,1),
-        'noise_level': (0.0001,0.5)
-        }
 
-    # #composite_hyperparameter_bounds
-    #     'kernel_type': 'composite',
-    #     'periodic_param_bounds': [
-    #     {'sigma': (0.001,10), 'l': (0.01,10), 'p': (0.0001,1)},
-    #     {'sigma': (0.001,10), 'l': (0.01,10), 'p': (0.0001,1)}
-    #     ],
-    #     'se_param_bounds': {'sigma': (0.001,10), 'l': (0.01,10)},
-    #     'noise_level': (0.0001,1)
-    # }
+        hyperparameter_bounds = {
+            'kernel_type': 'composite',
+            'periodic_param_bounds': [
+            {'sigma': (0.001,10), 'l': (0.001,10), 'p': (0.0001,1)},
+            {'sigma': (0.001,10), 'l': (0.001,10), 'p': (0.0001,1)}
+            ],
+            'se_param_bounds': {'sigma': (0.001,10), 'l': (0.001,10)},
+            'noise_level': (0.0001,1)
+            }
 
 
     gp_kernel = GaussianProcessKernel(**initial_hyperparameters)
     gp_kernel.set_params(initial_hyperparameters)
 
-    optimal_hyperparameters = get_optimal_hyperparameters(initial_hyperparameters,hyperparameter_bounds,time,force_response,gp_kernel)
+    optimal_hyperparameters = get_optimal_hyperparameters(initial_hyperparameters,hyperparameter_bounds,time,force_response,gp_kernel, n_iter=n_iter)
     if developer == True:
         print(optimal_hyperparameters)
         print(compute_nll(time, force_response, gp_kernel, optimal_hyperparameters))
     prediction = gp_predict(time, force_response, time_test, gp_kernel.compute_kernel, **optimal_hyperparameters)
     plot_data(force_input,force_response, prediction, time, time_test)
 
+    if developer == True:
+        end_time = timer.time()
+        elapsed_time = end_time - start_time
+        print(f"The code ran in {elapsed_time} seconds")
 
 
 if __name__ == "__main__":
