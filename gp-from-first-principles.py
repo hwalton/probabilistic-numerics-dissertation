@@ -193,7 +193,7 @@ class GP_model:
         for i in range(K_X_X.shape[2]):
             L[:, :, i] = npla.cholesky(K_X_X[:, :, i] + 1e-10 * np.eye(K_X_X.shape[0]))
             Lk = np.squeeze(npla.solve(L[:, :, i], K_star_X[:,:,i]))
-            self.mu[:, i] = np.dot(Lk.T, npla.solve(L[:, :, i], self.y)).flatten()
+            self.mu[:, i] = self.optimal_hyperparameters['mean_func_c'] + np.dot(Lk.T, npla.solve(L[:, :, i], self.y - self.optimal_hyperparameters['mean_func_c'])).flatten()
             self.s2[:, i] = np.diag(K_star_star[:, :, i]) - np.sum(Lk ** 2, axis=0)
             self.stdv = np.sqrt(self.s2)
         return self.mu, self.stdv
@@ -218,8 +218,12 @@ class GP_model:
         K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
         for i in range(K.shape[2]):
             L = scipy.linalg.cholesky(K[:, :, i], lower=True)
-            alpha = scipy.linalg.cho_solve((L, True), self.y)
-            nll = 0.5 * self.y.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * len(self.X) * np.log(2 * np.pi)
+            n = len(self.y)
+            one_vector = np.ones(n)
+            y_adj = self.y - hyperparameters['mean_func_c']# * one_vector
+            alpha = scipy.linalg.cho_solve((L, True), y_adj)
+            nll = 0.5 * y_adj.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
+
         return nll.item()
 
     def flatten_params(self, params):
@@ -289,6 +293,7 @@ def get_kernel_hyperparameters(kernel_type):
             'sigma': 1,
             'l': 0.1,
             'p': 0.08,
+            'mean_func_c': 1.0,
             'noise_level': 0.1
             }
 
@@ -297,6 +302,7 @@ def get_kernel_hyperparameters(kernel_type):
             'sigma': (0.001, 100),
             'l': (0.001, 10),
             'p': (0.0001, 1),
+            'mean_func_c': (-1000,1000),
             'noise_level': (0.0001, 0.25)
         }
 
@@ -308,6 +314,7 @@ def get_kernel_hyperparameters(kernel_type):
             {'sigma': 0.1, 'l': 0.02, 'p': 1E-3}
             ],
             'se_params': {'sigma': 0.1, 'l': 0.01},
+            'mean_func_c': 1.0,
             'noise_level': 0.001
             }
 
@@ -318,6 +325,7 @@ def get_kernel_hyperparameters(kernel_type):
             {'sigma': (0.001,10), 'l': (0.001,10), 'p': (0.0001,1)}
             ],
             'se_param_bounds': {'sigma': (0.001,10), 'l': (0.001,10)},
+            'mean_func_c': (-1000,1000),
             'noise_level': (0.0001,1)
             }
 
@@ -325,12 +333,14 @@ def get_kernel_hyperparameters(kernel_type):
         initial_hyperparameters = {
             'kernel_type': 'white_noise',
             'sigma': 1,
+            'mean_func_c': 1.0,
             'noise_level': 0.1
         }
 
         hyperparameter_bounds = {
             'kernel_type': 'white_noise',
             'sigma': (0.001, 100),
+            'mean_func_c': (-1000,1000),
             'noise_level': (0.0001, 0.25)
         }
 
@@ -339,9 +349,9 @@ def get_kernel_hyperparameters(kernel_type):
 def main():
     if developer == True: start_time = timer.time()
 
-    sample_start_index = 2000
+    sample_start_index = 20000
     sample_length = 100
-    num_predictions = 100
+    num_predictions = 50
     force_input_kernel_type = 'white_noise'
     force_response_kernel_type = 'periodic'
     n_iter = 10
