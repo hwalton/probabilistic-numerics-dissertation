@@ -9,7 +9,7 @@ import numpy.linalg as npla
 import time
 from scipy.optimize import minimize
 
-developer = False
+developer = True
 
 
 def load_data(start = 0, length = 65536):
@@ -292,31 +292,16 @@ def reconstruct_params(flat_params,template):
 
 def iterative_search(initial_hyperparameters_array, bounds_array, template, X,
                      y, kernel, compute_nll, reconstruct_params, n_iter=100):
-    """
-    Perform a simple iterative search for hyperparameter optimization.
 
-    Parameters:
-    - initial_hyperparameters_array: Initial flat array of hyperparameters.
-    - bounds_array: Array of (lower, upper) bounds for each hyperparameter.
-    - template: Template for reconstructing structured hyperparameters.
-    - X, y: Training data and targets.
-    - kernel: Kernel class or function.
-    - compute_nll: Function to compute negative log-likelihood.
-    - reconstruct_params: Function to reconstruct hyperparameters from flat array.
-    - n_iter: Number of iterations for the search.
-
-    Returns:
-    - best_hyperparameters: Best found hyperparameters.
-    """
     best_hyperparameters = initial_hyperparameters_array
     reconstruct_params_test = reconstruct_params(initial_hyperparameters_array,template)
     best_nll = compute_nll(X, y, kernel,reconstruct_params_test)
 
     for _ in range(n_iter):
         for i, (lower, upper) in enumerate(bounds_array):
-            for delta in [-0.1, -0.1]:  # Example step sizes, adjust as needed
+            for modifier in [0.5, 2]:  # Example step sizes, adjust as needed
                 new_hyperparameters = best_hyperparameters.copy()
-                new_hyperparameters[i] = np.clip(new_hyperparameters[i] + delta, lower, upper)
+                new_hyperparameters[i] = np.clip(new_hyperparameters[i] * modifier, lower, upper)
                 new_nll = compute_nll(X, y, kernel,
                                       reconstruct_params(new_hyperparameters,
                                                          template))
@@ -346,7 +331,7 @@ def main():
     sample_length = 100
 
     force_input, force_response, time = load_data(sample_start_index, sample_length)
-    time_test = np.linspace(time[0],time[-1], num=250, endpoint = True)
+    time_test = np.linspace(time[0],time[-1], num=50, endpoint = True)
 
     force_input = format_data(force_input)
     time = format_data(time)
@@ -359,51 +344,53 @@ def main():
         print(time)
 
 
-    hyperparameters = {
+    initial_hyperparameters = {
 
-    # #periodic_hyperparameters
-    #     'kernel_type': 'periodic',
-    #     'sigma': 1.0,
-    #     'l': 0.3,
-    #     'p': 1E-2,
-    #     'noise_level': 0.1
-    #     }
-
-    #composite_hyperparameters
-        'kernel_type': 'composite',
-        'periodic_params': [
-        {'sigma': 0.1, 'l': 0.01, 'p': 1E-3},
-        {'sigma': 0.1, 'l': 0.02, 'p': 1E-3}
-        ],
-        'se_params': {'sigma': 0.1, 'l': 0.01},
-        'noise_level': 0.001
+    #periodic_hyperparameters
+        'kernel_type': 'periodic',
+        'sigma': 10,
+        'l': 0.15625,
+        'p': 0.015625,
+        'noise_level': 0.5
         }
 
-    hyperparameter_bounds = {
-    # #periodic_hyperparameter_bounds
-    #     'kernel_type': 'periodic',
-    #     'sigma': (0.001,10),
-    #     'l': (0.01,10),
-    #     'p': (0.0001,1),
-    #     'noise_level': (0.0001,0.5)
+    # #composite_hyperparameters
+    #     'kernel_type': 'composite',
+    #     'periodic_params': [
+    #     {'sigma': 0.1, 'l': 0.01, 'p': 1E-3},
+    #     {'sigma': 0.1, 'l': 0.02, 'p': 1E-3}
+    #     ],
+    #     'se_params': {'sigma': 0.1, 'l': 0.01},
+    #     'noise_level': 0.001
     #     }
 
-    #composite_hyperparameter_bounds
-        'kernel_type': 'composite',
-        'periodic_param_bounds': [
-        {'sigma': (0.001,10), 'l': (0.01,10), 'p': (0.0001,1)},
-        {'sigma': (0.001,10), 'l': (0.01,10), 'p': (0.0001,1)}
-        ],
-        'se_param_bounds': {'sigma': (0.001,10), 'l': (0.01,10)},
-        'noise_level': (0.0001,1)
-    }
+    hyperparameter_bounds = {
+    #periodic_hyperparameter_bounds
+        'kernel_type': 'periodic',
+        'sigma': (0.001,10),
+        'l': (0.01,10),
+        'p': (0.0001,1),
+        'noise_level': (0.0001,0.5)
+        }
+
+    # #composite_hyperparameter_bounds
+    #     'kernel_type': 'composite',
+    #     'periodic_param_bounds': [
+    #     {'sigma': (0.001,10), 'l': (0.01,10), 'p': (0.0001,1)},
+    #     {'sigma': (0.001,10), 'l': (0.01,10), 'p': (0.0001,1)}
+    #     ],
+    #     'se_param_bounds': {'sigma': (0.001,10), 'l': (0.01,10)},
+    #     'noise_level': (0.0001,1)
+    # }
 
 
-    gp_kernel = GaussianProcessKernel(**hyperparameters)
-    gp_kernel.set_params(hyperparameters)
+    gp_kernel = GaussianProcessKernel(**initial_hyperparameters)
+    gp_kernel.set_params(initial_hyperparameters)
 
-    optimal_hyperparameters = get_optimal_hyperparameters(hyperparameters,hyperparameter_bounds,time,force_response,gp_kernel)
-
+    optimal_hyperparameters = get_optimal_hyperparameters(initial_hyperparameters,hyperparameter_bounds,time,force_response,gp_kernel)
+    if developer == True:
+        print(optimal_hyperparameters)
+        print(compute_nll(time, force_response, gp_kernel, optimal_hyperparameters))
     prediction = gp_predict(time, force_response, time_test, gp_kernel.compute_kernel, **optimal_hyperparameters)
     plot_data(force_input,force_response, prediction, time, time_test)
 
