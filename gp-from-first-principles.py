@@ -324,43 +324,56 @@ def iterative_search(initial_hyperparameters_array, bounds_array, template, X,
     return best_hyperparameters
 
 
-
-def get_optimal_hyperparameters(hyperparameters, hyperparameter_bounds,X, y, kernel,n_iter):
-    # Flatten hyperparameters and bounds
-    initial_hyperparameters_array = np.array(flatten_params(hyperparameters))
-    bounds_array = flatten_params(hyperparameter_bounds)
-
-
-    # Extract optimal hyperparameters
-    optimal_hyperparameters = iterative_search(initial_hyperparameters_array,bounds_array,hyperparameters,X,y,kernel,compute_nll,reconstruct_params,n_iter=n_iter)
-
-    # Reconstruct optimal hyperparameters
-    return reconstruct_params(optimal_hyperparameters, hyperparameters)
-
 class GP_model:
-    def __init__(self, initial_hyperparameters, hyperparameter_bounds, X, y, n_iter = '10'):
+    def __init__(self, initial_hyperparameters, hyperparameter_bounds, X, y, n_iter=10, developer=False):
         self.initial_hyperparameters = initial_hyperparameters
         self.hyperparameter_bounds = hyperparameter_bounds
         self.X = X
         self.y = y
         self.n_iter = n_iter
+        self.developer = developer
+
     def fit_model(self):
         self.gp_kernel = GaussianProcessKernel(**self.initial_hyperparameters)
         self.gp_kernel.set_params(self.initial_hyperparameters)
 
-        self.optimal_hyperparameters = get_optimal_hyperparameters(self. initial_hyperparameters,self.hyperparameter_bounds,self.X,self.y,self.gp_kernel, n_iter=self.n_iter)
-        if developer == True:
+        # Extract optimal hyperparameters
+        self.optimal_hyperparameters = self.get_optimal_hyperparameters()
+
+        if self.developer:
             print(self.optimal_hyperparameters)
             print(compute_nll(self.X, self.y, self.gp_kernel, self.optimal_hyperparameters))
 
+    def get_optimal_hyperparameters(self):
+        # Flatten hyperparameters and bounds
+        initial_hyperparameters_array = np.array(flatten_params(self.initial_hyperparameters))
+        bounds_array = flatten_params(self.hyperparameter_bounds)
+
+        # Extract optimal hyperparameters
+        optimal_hyperparameters = iterative_search(
+            initial_hyperparameters_array,
+            bounds_array,
+            self.initial_hyperparameters,
+            self.X,
+            self.y,
+            self.gp_kernel,
+            compute_nll,
+            reconstruct_params,
+            n_iter=self.n_iter
+        )
+
+        # Reconstruct optimal hyperparameters
+        return reconstruct_params(optimal_hyperparameters, self.initial_hyperparameters)
+
     def predict(self, X_star):
-        prediction = gp_predict(self.X, self.y, X_star, self.gp_kernel.compute_kernel,**self.optimal_hyperparameters)
+        prediction = gp_predict(self.X, self.y, X_star, self.gp_kernel.compute_kernel, **self.optimal_hyperparameters)
         return prediction
+
 
 def main():
     if developer == True: start_time = timer.time()
 
-    sample_start_index = 1000
+    sample_start_index = 2000
     sample_length = 100
     num_predictions = 100
     kernel_type = ('periodic')
