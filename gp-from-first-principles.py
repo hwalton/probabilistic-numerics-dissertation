@@ -178,6 +178,7 @@ class GP_model:
         self.y = y
         self.n_iter = n_iter
         self.developer = developer
+        self.template = initial_hyperparameters
 
     def fit_model(self):
         self.gp_kernel = GaussianProcessKernel(**self.initial_hyperparameters)
@@ -257,10 +258,10 @@ class GP_model:
                 flat_params.append(value)
         return flat_params
 
-    def reconstruct_params_implementation(self, flat_params, template):
+    def reconstruct_params_implementation(self, flat_params):
         reconstructed_params = {}
         index = 0
-        for key, value in template.items():
+        for key, value in self.template.items():
             if isinstance(value, str):
                 reconstructed_params[key] = value
                 continue
@@ -279,7 +280,7 @@ class GP_model:
         return reconstructed_params, index
 
     def reconstruct_params(self, flat_params, template):
-        reconstructed_params, index = self.reconstruct_params_implementation(flat_params, template)
+        reconstructed_params, index = self.reconstruct_params_implementation(flat_params)
         return reconstructed_params
 
     def iterative_search(self, initial_hyperparameters_array, bounds_array, template, X, y, kernel, compute_nll, reconstruct_params, n_iter=100):
