@@ -28,30 +28,6 @@ def load_data(start = 0, length = 65536):
 
     return input, output, time
 
-# def plot_data(force_input, force_response, prediction, time, time_test):
-#     plt.figure(figsize=(12, 6))
-#
-#     plt.subplot(2, 1, 1)  # 2 rows, 1 column, plot 1
-#     plt.scatter(time, force_input, label='Input', color='blue')
-#     plt.xlabel('Time')
-#     plt.ylabel('Input')
-#     plt.title('Input over Time')
-#     plt.legend()
-#     plt.grid(True)
-#
-#     plt.subplot(2, 1, 2)  # 2 rows, 1 column, plot 2
-#     plt.scatter(time, force_response, label='Force Response', color='green')
-#     plt.scatter(time_test, prediction[0], label='Predicted Mean', color='red')
-#     plt.scatter(time_test, prediction[1], label='Predicted Std Dev', color='blue')
-#     plt.xlabel('Time')
-#     plt.ylabel('Force Response')
-#     plt.title('Force Response over Time')
-#     plt.legend()
-#     plt.grid(True)
-#
-#     plt.tight_layout()  # Adjusts subplot params for better layout
-#     plt.show()
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -76,7 +52,7 @@ def plot_data(force_input, force_response, prediction, time, time_test):
     lower_bound = prediction[0] - prediction[1]
 
     plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
-                     alpha=0.2, label='1 Std Dev')
+                     alpha=0.2, label='Std Dev')
 
     plt.xlabel('Time')
     plt.ylabel('Force Response')
@@ -365,7 +341,7 @@ def main():
 
     sample_start_index = 1000
     sample_length = 100
-    num_predictions = 50
+    num_predictions = 100
     kernel_type = ('composite')
     n_iter = 10
 
