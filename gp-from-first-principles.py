@@ -246,10 +246,10 @@ class GP_model:
                 flat_params.append(value)
         return flat_params
 
-    def reconstruct_params_implementation(self, flat_params):
+    def reconstruct_params_implementation(self, flat_params, template):
         reconstructed_params = {}
         index = 0
-        for key, value in self.template.items():
+        for key, value in template.items():
             if isinstance(value, str):
                 reconstructed_params[key] = value
                 continue
@@ -268,7 +268,7 @@ class GP_model:
         return reconstructed_params, index
 
     def reconstruct_params(self, flat_params):
-        reconstructed_params, index = self.reconstruct_params_implementation(flat_params)
+        reconstructed_params, index = self.reconstruct_params_implementation(flat_params,self.template)
         return reconstructed_params
 
     def iterative_search(self):
