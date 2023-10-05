@@ -203,14 +203,11 @@ class GP_model:
         )
         return self.reconstruct_params(optimal_hyperparameters, self.initial_hyperparameters)
 
-    def predict(self, X_star):
-        prediction = self.gp_predict(X_star, self.gp_kernel.compute_kernel, **self.optimal_hyperparameters)
-        return prediction
 
-    def gp_predict(self, X_star, kernel_func, **hyperparameters):
-        K_X_X = kernel_func(self.X, self.X) + np.array(hyperparameters['noise_level'] ** 2 * np.eye(len(self.X)))[:,:,None]
-        K_star_X = kernel_func(self.X, X_star)
-        K_star_star = kernel_func(X_star, X_star)
+    def predict(self, X_star):
+        K_X_X = self.gp_kernel.compute_kernel(self.X, self.X) + np.array(self.optimal_hyperparameters['noise_level'] ** 2 * np.eye(len(self.X)))[:,:,None]
+        K_star_X = self.gp_kernel.compute_kernel(self.X, X_star)
+        K_star_star = self.gp_kernel.compute_kernel(X_star, X_star)
         L = np.zeros_like(K_X_X)
         self.mu = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
         self.s2 = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
@@ -234,16 +231,16 @@ class GP_model:
                 return False
         return True
 
-    def compute_nll(self, X, y, kernel, hyperparameters):
-        if X.ndim == 1: X = X.reshape(-1, 1)
-        if y.ndim == 1: y = y.reshape(-1, 1)
-        kernel.set_params(hyperparameters)
-        K = kernel.compute_kernel(X, X)
-        K += np.repeat(np.array(np.eye(len(X)) * 1e-3)[:,:, np.newaxis], X.shape[1], axis=2)
+    def compute_nll(self, hyperparameters):
+        if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
+        if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
+        self.gp_kernel.set_params(hyperparameters)
+        K = self.gp_kernel.compute_kernel(self.X, self.X)
+        K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
         for i in range(K.shape[2]):
             L = scipy.linalg.cholesky(K[:, :, i], lower=True)
-            alpha = scipy.linalg.cho_solve((L, True), y)
-            nll = 0.5 * y.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * len(X) * np.log(2 * np.pi)
+            alpha = scipy.linalg.cho_solve((L, True), self.y)
+            nll = 0.5 * self.y.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * len(self.X) * np.log(2 * np.pi)
         return nll.item()
 
     def flatten_params(self, params):
@@ -288,7 +285,7 @@ class GP_model:
     def iterative_search(self, initial_hyperparameters_array, bounds_array, template, X, y, kernel, compute_nll, reconstruct_params, n_iter=100):
         best_hyperparameters = initial_hyperparameters_array
         reconstruct_params_test = reconstruct_params(initial_hyperparameters_array, template)
-        best_nll = compute_nll(X, y, kernel, reconstruct_params_test)
+        best_nll = compute_nll(reconstruct_params_test)
         for j in range(n_iter):
             if self.developer:
                 print(f"Search Iteration: {j+1}/{n_iter}")
@@ -296,7 +293,7 @@ class GP_model:
                 for modifier in [0.75, 2]:
                     new_hyperparameters = best_hyperparameters.copy()
                     new_hyperparameters[i] = np.clip(new_hyperparameters[i] * modifier, lower, upper)
-                    new_nll = compute_nll(X, y, kernel, reconstruct_params(new_hyperparameters, template))
+                    new_nll = compute_nll(reconstruct_params(new_hyperparameters, template))
                     if new_nll < best_nll:
                         best_nll = new_nll
                         best_hyperparameters = new_hyperparameters
