@@ -3,8 +3,8 @@ import scipy
 from numpy import linalg as npla
 
 from gaussian_process_kernel import GaussianProcessKernel
-from iterative_search import IterativeSearch
-from metropolis_hastings import MetropolisHastings
+from iterative_search import iterative_search_solve
+from metropolis_hastings import metropolis_hastings_solve
 from utils import debug_print
 
 
@@ -27,17 +27,16 @@ class GPModel:
         debug_print(nll)
         return(nll)
 
-    def construct_solver(self,solver_type, initial_hyperparameters_array, bounds_array):
+    def solve(self, solver_type, initial_hyperparameters_array, bounds_array):
         if solver_type == 'iterative_search':
-            self.solver = IterativeSearch(initial_hyperparameters_array, bounds_array, self.compute_nll)
+            return iterative_search_solve(initial_hyperparameters_array, bounds_array, self.compute_nll, n_iter=self.n_iter)
         elif solver_type == 'metropolis_hastings':
-            self.solver = MetropolisHastings()
+            return metropolis_hastings_solve(initial_hyperparameters_array, bounds_array, self.compute_nll, n_iter=self.n_iter)
 
     def get_optimal_hyperparameters(self):
         initial_hyperparameters_array = np.array(self.flatten_params(self.initial_hyperparameters))
         bounds_array = self.flatten_params(self.hyperparameter_bounds)
-        self.construct_solver(self.solver_type, initial_hyperparameters_array, bounds_array)
-        optimal_hyperparameters = self.solver.solve(self.n_iter)
+        optimal_hyperparameters = self.solve(self.solver_type, initial_hyperparameters_array, bounds_array)
         return self.reconstruct_params(optimal_hyperparameters)
 
 

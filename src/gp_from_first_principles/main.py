@@ -158,9 +158,7 @@ def execute_gp_model():
     time = format_data(time)
     force_response = format_data(force_response)
     time_test = format_data(time_test)
-    debug_print(force_input)
-    debug_print(force_response)
-    debug_print(time)
+
     force_input_initial_hyperparameters, force_input_hyperparameter_bounds = get_kernel_hyperparameters(
         force_input_kernel_type)
     force_response_initial_hyperparameters, force_response_hyperparameter_bounds = get_kernel_hyperparameters(
