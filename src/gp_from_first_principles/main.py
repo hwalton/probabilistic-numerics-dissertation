@@ -2,8 +2,8 @@ import time as timer
 import matplotlib.pyplot as plt
 import numpy as np
 
-from src.gp_from_first_principles.gp_model import GPModel
-from src.utils.utils import debug_print
+from gp_model import GPModel
+from utils import debug_print
 
 def load_data(start = 0, length = 65536):
 
@@ -144,9 +144,7 @@ def get_kernel_hyperparameters(kernel_type):
 
     return initial_hyperparameters, hyperparameter_bounds
 
-def main():
-    start_time = timer.time()
-
+def execute_gp_model():
     sample_start_index = 15000
     sample_length = 100
     num_predictions = 50
@@ -155,33 +153,43 @@ def main():
     force_response_kernel_type = 'p_se_composite'
     force_response_solver_type = 'iterative_search'
     n_iter = 5
-
-    force_input, force_response, time = load_data(sample_start_index, sample_length)
-    lower = time[0]-0.25*(time[-1]-time[0])
-    upper = time[-1]+0.25*(time[-1]-time[0])
-    time_test = np.linspace(lower,upper, num=num_predictions, endpoint = True)
-
+    force_input, force_response, time = load_data(sample_start_index,
+                                                  sample_length)
+    lower = time[0] - 0.25 * (time[-1] - time[0])
+    upper = time[-1] + 0.25 * (time[-1] - time[0])
+    time_test = np.linspace(lower, upper, num=num_predictions, endpoint=True)
     force_input = format_data(force_input)
     time = format_data(time)
     force_response = format_data(force_response)
     time_test = format_data(time_test)
-
     debug_print(force_input)
     debug_print(force_response)
     debug_print(time)
-
-    force_input_initial_hyperparameters, force_input_hyperparameter_bounds = get_kernel_hyperparameters(force_input_kernel_type)
-    force_response_initial_hyperparameters, force_response_hyperparameter_bounds = get_kernel_hyperparameters(force_response_kernel_type)
-
-    force_input_model = GPModel(force_input_initial_hyperparameters, force_input_hyperparameter_bounds, time, force_input, solver_type = force_input_solver_type, n_iter = n_iter)
+    force_input_initial_hyperparameters, force_input_hyperparameter_bounds = get_kernel_hyperparameters(
+        force_input_kernel_type)
+    force_response_initial_hyperparameters, force_response_hyperparameter_bounds = get_kernel_hyperparameters(
+        force_response_kernel_type)
+    force_input_model = GPModel(force_input_initial_hyperparameters,
+                                force_input_hyperparameter_bounds, time,
+                                force_input,
+                                solver_type=force_input_solver_type,
+                                n_iter=n_iter)
     force_input_model.fit_model()
     force_input_prediction = force_input_model.predict((time_test))
-
-    force_response_model = GPModel(force_response_initial_hyperparameters, force_response_hyperparameter_bounds, time, force_response, solver_type = force_response_solver_type, n_iter = n_iter)
+    force_response_model = GPModel(force_response_initial_hyperparameters,
+                                   force_response_hyperparameter_bounds, time,
+                                   force_response,
+                                   solver_type=force_response_solver_type,
+                                   n_iter=n_iter)
     force_response_model.fit_model()
     force_response_prediction = force_response_model.predict(time_test)
+    plot_data(force_input, force_response, force_input_prediction,
+              force_response_prediction, time, time_test)
 
-    plot_data(force_input,force_response, force_input_prediction, force_response_prediction, time, time_test)
+def main():
+    start_time = timer.time()
+
+    execute_gp_model()
 
     end_time = timer.time()
     elapsed_time = end_time - start_time

@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.special import kv
-from src.utils.utils import debug_print
+from utils import debug_print
 
 class GaussianProcessKernel:
     def __init__(self, **kwargs):

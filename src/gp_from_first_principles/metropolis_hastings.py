@@ -1,4 +1,3 @@
-from src.utils.utils import debug_print
 class MetropolisHastings:
     def __init__(self,initial_hyperparameters_array, bounds_array, compute_nll):
         self.initial_hyperparameters_array = initial_hyperparameters_array

@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.utils.utils import debug_print
+from utils import debug_print
 
 class IterativeSearch:
     def __init__(self,initial_hyperparameters_array, bounds_array, compute_nll):
