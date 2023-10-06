@@ -170,15 +170,37 @@ class GaussianProcessKernel:
     def polynomial_kernel(self, X1, X2, alpha, beta, d):
         return (alpha + beta * np.dot(X1, X2.T)) ** d
 
+class IterativeSearch:
+    def __init__(self,initial_hyperparameters_array, bounds_array, compute_nll):
+        self.initial_hyperparameters_array = initial_hyperparameters_array
+        self.bounds_array = bounds_array
+        self.compute_nll = compute_nll
 
-class GP_model:
-    def __init__(self, initial_hyperparameters, hyperparameter_bounds, X, y, n_iter=10):
+    def solve(self, n_iter = '10'):
+        best_hyperparameters = self.initial_hyperparameters_array
+        best_nll = self.compute_nll(self.initial_hyperparameters_array)
+        for j in range(n_iter):
+            if developer:
+                print(f"Search Iteration: {j+1}/{n_iter}")
+            for i, (lower, upper) in enumerate(self.bounds_array):
+                for modifier in [0.75, 2]:
+                    new_hyperparameters = best_hyperparameters.copy()
+                    new_hyperparameters[i] = np.clip(new_hyperparameters[i] * modifier, lower, upper)
+                    new_nll = self.compute_nll(new_hyperparameters)
+                    if new_nll < best_nll:
+                        best_nll = new_nll
+                        best_hyperparameters = new_hyperparameters
+        return best_hyperparameters
+
+class GPModel:
+    def __init__(self, initial_hyperparameters, hyperparameter_bounds, X, y, solver_type = 'iterative_search', n_iter=10):
         self.initial_hyperparameters = initial_hyperparameters
         self.hyperparameter_bounds = hyperparameter_bounds
         self.X = X
         self.y = y
         self.n_iter = n_iter
         self.template = initial_hyperparameters
+        self.solver_type = solver_type
 
     def fit_model(self):
         self.gp_kernel = GaussianProcessKernel(**self.initial_hyperparameters)
@@ -188,8 +210,17 @@ class GP_model:
             print(self.optimal_hyperparameters)
             print(self.compute_nll( self.optimal_hyperparameters))
 
+    def construct_solver(self,solver_type, initial_hyperparameters_array, bounds_array):
+        if solver_type == 'iterative_search':
+            self.solver = IterativeSearch(initial_hyperparameters_array, bounds_array, self.compute_nll)
+        elif solver_type == 'metropolis_hastings':
+            self.solver = MetropolisHastings()
+
     def get_optimal_hyperparameters(self):
-        optimal_hyperparameters = self.iterative_search()
+        initial_hyperparameters_array = np.array(self.flatten_params(self.initial_hyperparameters))
+        bounds_array = self.flatten_params(self.hyperparameter_bounds)
+        self.construct_solver(self.solver_type, initial_hyperparameters_array, bounds_array)
+        optimal_hyperparameters = self.solver.solve(self.n_iter)
         return self.reconstruct_params(optimal_hyperparameters)
 
 
@@ -221,6 +252,13 @@ class GP_model:
         return True
 
     def compute_nll(self, hyperparameters):
+        if type(hyperparameters) == dict:
+            pass
+        elif type(hyperparameters) == np.ndarray:
+            hyperparameters = self.reconstruct_params(hyperparameters)
+        else:
+            raise ValueError("Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
+
         if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
         if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
         self.gp_kernel.set_params(hyperparameters)
@@ -230,7 +268,7 @@ class GP_model:
             L = scipy.linalg.cholesky(K[:, :, i], lower=True)
             n = len(self.y)
             one_vector = np.ones(n)
-            y_adj = self.y - hyperparameters['mean_func_c']# * one_vector
+            y_adj = self.y - hyperparameters['mean_func_c']
             alpha = scipy.linalg.cho_solve((L, True), y_adj)
             nll = 0.5 * y_adj.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
 
@@ -274,26 +312,6 @@ class GP_model:
     def reconstruct_params(self, flat_params):
         reconstructed_params, index = self.reconstruct_params_implementation(flat_params,self.template)
         return reconstructed_params
-
-    def iterative_search(self):
-        initial_hyperparameters_array = np.array(self.flatten_params(self.initial_hyperparameters))
-        bounds_array = self.flatten_params(self.hyperparameter_bounds)
-
-        best_hyperparameters = initial_hyperparameters_array
-        reconstruct_params_test = self.reconstruct_params(initial_hyperparameters_array)
-        best_nll = self.compute_nll(reconstruct_params_test)
-        for j in range(self.n_iter):
-            if developer:
-                print(f"Search Iteration: {j+1}/{self.n_iter}")
-            for i, (lower, upper) in enumerate(bounds_array):
-                for modifier in [0.75, 2]:
-                    new_hyperparameters = best_hyperparameters.copy()
-                    new_hyperparameters[i] = np.clip(new_hyperparameters[i] * modifier, lower, upper)
-                    new_nll = self.compute_nll(self.reconstruct_params(new_hyperparameters))
-                    if new_nll < best_nll:
-                        best_nll = new_nll
-                        best_hyperparameters = new_hyperparameters
-        return best_hyperparameters
 
 
 def get_kernel_hyperparameters(kernel_type):
@@ -380,7 +398,9 @@ def main():
     sample_length = 100
     num_predictions = 50
     force_input_kernel_type = 'wn_se_composite'
+    force_input_solver_type = 'iterative_search'
     force_response_kernel_type = 'p_se_composite'
+    force_response_solver_type = 'iterative_search'
     n_iter = 15
 
 
@@ -403,11 +423,11 @@ def main():
     force_response_initial_hyperparameters, force_response_hyperparameter_bounds = get_kernel_hyperparameters(force_response_kernel_type)
 
 
-    force_input_model = GP_model(force_input_initial_hyperparameters, force_input_hyperparameter_bounds, time, force_input, n_iter = n_iter)
+    force_input_model = GPModel(force_input_initial_hyperparameters, force_input_hyperparameter_bounds, time, force_input, solver_type = force_input_solver_type, n_iter = n_iter)
     force_input_model.fit_model()
     force_input_prediction = force_input_model.predict((time_test))
 
-    force_response_model = GP_model(force_response_initial_hyperparameters, force_response_hyperparameter_bounds, time, force_response, n_iter = n_iter)
+    force_response_model = GPModel(force_response_initial_hyperparameters, force_response_hyperparameter_bounds, time, force_response, solver_type = force_response_solver_type, n_iter = n_iter)
     force_response_model.fit_model()
     force_response_prediction = force_response_model.predict(time_test)
 
