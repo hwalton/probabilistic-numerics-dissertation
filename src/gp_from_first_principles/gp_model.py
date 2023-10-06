@@ -23,7 +23,9 @@ class GPModel:
         self.gp_kernel.set_params(self.initial_hyperparameters)
         self.optimal_hyperparameters = self.get_optimal_hyperparameters()
         debug_print(self.optimal_hyperparameters)
-        debug_print(self.compute_nll( self.optimal_hyperparameters))
+        nll = self.compute_nll(self.optimal_hyperparameters)
+        debug_print(nll)
+        return(nll)
 
     def construct_solver(self,solver_type, initial_hyperparameters_array, bounds_array):
         if solver_type == 'iterative_search':

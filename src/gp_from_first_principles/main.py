@@ -20,8 +20,6 @@ def load_data(start = 0, length = 65536):
 
     return input, output, time
 
-
-
 def plot_data(force_input, force_response, force_input_prediction, force_response_prediction, time, time_test):
     plt.figure(figsize=(12, 6))
 
@@ -61,11 +59,9 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
     plt.tight_layout()
     plt.show()
 
-
 def format_data(X):
     if X.ndim == 1: X = X.reshape(-1,1)
     return X
-
 
 def get_kernel_hyperparameters(kernel_type):
     if kernel_type == 'periodic':
@@ -152,7 +148,7 @@ def execute_gp_model():
     force_input_solver_type = 'iterative_search'
     force_response_kernel_type = 'p_se_composite'
     force_response_solver_type = 'iterative_search'
-    n_iter = 5
+    n_iter = 10
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
     lower = time[0] - 0.25 * (time[-1] - time[0])
@@ -174,22 +170,25 @@ def execute_gp_model():
                                 force_input,
                                 solver_type=force_input_solver_type,
                                 n_iter=n_iter)
-    force_input_model.fit_model()
+    model_1_nll = force_input_model.fit_model()
     force_input_prediction = force_input_model.predict((time_test))
     force_response_model = GPModel(force_response_initial_hyperparameters,
                                    force_response_hyperparameter_bounds, time,
                                    force_response,
                                    solver_type=force_response_solver_type,
                                    n_iter=n_iter)
-    force_response_model.fit_model()
+    model_2_nll = force_response_model.fit_model()
     force_response_prediction = force_response_model.predict(time_test)
     plot_data(force_input, force_response, force_input_prediction,
               force_response_prediction, time, time_test)
-
+    return model_1_nll, model_2_nll
 def main():
     start_time = timer.time()
 
-    execute_gp_model()
+    model_1_nll, model_2_nll = execute_gp_model()
+
+    print(model_1_nll)
+    print(model_2_nll)
 
     end_time = timer.time()
     elapsed_time = end_time - start_time
