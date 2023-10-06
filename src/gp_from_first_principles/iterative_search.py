@@ -3,7 +3,7 @@ import numpy as np
 from utils import debug_print
 
 
-def iterative_search_solve(initial_hyperparameters_array, bounds_array, compute_nll, n_iter ='10'):
+def iterative_search_solve(initial_hyperparameters_array, bounds_array, compute_nll, n_iter = 10):
     best_hyperparameters = initial_hyperparameters_array
     best_nll = compute_nll(initial_hyperparameters_array)
     for j in range(n_iter):
