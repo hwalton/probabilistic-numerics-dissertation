@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from src.gp_from_first_principles.gp_model import GPModel
-from src.utils import debug_print
+from src.utils.utils import debug_print
 
 def load_data(start = 0, length = 65536):
 

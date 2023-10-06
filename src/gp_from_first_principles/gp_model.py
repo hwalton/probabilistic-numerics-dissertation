@@ -5,7 +5,7 @@ from numpy import linalg as npla
 from src.gp_from_first_principles.gaussian_process_kernel import GaussianProcessKernel
 from src.gp_from_first_principles.iterative_search import IterativeSearch
 from src.gp_from_first_principles.metropolis_hastings import MetropolisHastings
-from src.utils import debug_print
+from src.utils.utils import debug_print
 
 
 class GPModel:
