@@ -5,9 +5,6 @@ import numpy as np
 from src.gp_model import GPModel
 from utils import debug_print
 
-developer = True
-
-
 def load_data(start = 0, length = 65536):
 
     assert length <= 65536, "Length must be less than or equal to 65536"
