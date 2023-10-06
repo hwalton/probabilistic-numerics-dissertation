@@ -381,7 +381,7 @@ def main():
     num_predictions = 50
     force_input_kernel_type = 'wn_se_composite'
     force_response_kernel_type = 'p_se_composite'
-    n_iter = 10
+    n_iter = 15
 
 
     force_input, force_response, time = load_data(sample_start_index, sample_length)
