@@ -192,6 +192,14 @@ class IterativeSearch:
                         best_hyperparameters = new_hyperparameters
         return best_hyperparameters
 
+class MetropolisHastings:
+    def __init__(self,initial_hyperparameters_array, bounds_array, compute_nll):
+        self.initial_hyperparameters_array = initial_hyperparameters_array
+        self.bounds_array = bounds_array
+        self.compute_nll = compute_nll
+
+    def solve(self, n_iter = '10'):
+        return
 class GPModel:
     def __init__(self, initial_hyperparameters, hyperparameter_bounds, X, y, solver_type = 'iterative_search', n_iter=10):
         self.initial_hyperparameters = initial_hyperparameters
