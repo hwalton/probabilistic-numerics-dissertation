@@ -321,7 +321,6 @@ class GPModel:
         reconstructed_params, index = self.reconstruct_params_implementation(flat_params,self.template)
         return reconstructed_params
 
-
 def get_kernel_hyperparameters(kernel_type):
     if kernel_type == 'periodic':
         initial_hyperparameters = {
@@ -402,7 +401,7 @@ def get_kernel_hyperparameters(kernel_type):
 def main():
     if developer == True: start_time = timer.time()
 
-    sample_start_index = 30000
+    sample_start_index = 15000
     sample_length = 100
     num_predictions = 50
     force_input_kernel_type = 'wn_se_composite'
@@ -410,7 +409,6 @@ def main():
     force_response_kernel_type = 'p_se_composite'
     force_response_solver_type = 'iterative_search'
     n_iter = 15
-
 
     force_input, force_response, time = load_data(sample_start_index, sample_length)
     lower = time[0]-0.25*(time[-1]-time[0])
@@ -430,7 +428,6 @@ def main():
     force_input_initial_hyperparameters, force_input_hyperparameter_bounds = get_kernel_hyperparameters(force_input_kernel_type)
     force_response_initial_hyperparameters, force_response_hyperparameter_bounds = get_kernel_hyperparameters(force_response_kernel_type)
 
-
     force_input_model = GPModel(force_input_initial_hyperparameters, force_input_hyperparameter_bounds, time, force_input, solver_type = force_input_solver_type, n_iter = n_iter)
     force_input_model.fit_model()
     force_input_prediction = force_input_model.predict((time_test))
@@ -445,7 +442,6 @@ def main():
         end_time = timer.time()
         elapsed_time = end_time - start_time
         print(f"The code ran in {elapsed_time} seconds")
-
 
 if __name__ == "__main__":
     main()
