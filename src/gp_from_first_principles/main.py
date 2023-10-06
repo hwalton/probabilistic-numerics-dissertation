@@ -2,17 +2,17 @@ import time as timer
 import matplotlib.pyplot as plt
 import numpy as np
 
-from src.gp_model import GPModel
-from utils import debug_print
+from src.gp_from_first_principles.gp_model import GPModel
+from src.utils import debug_print
 
 def load_data(start = 0, length = 65536):
 
     assert length <= 65536, "Length must be less than or equal to 65536"
 
     #data collected during MEC326
-    input = np.loadtxt('../datasets/input.csv', delimiter=',')
-    output = np.loadtxt('../datasets/output.csv', delimiter=',')
-    time = np.loadtxt('../datasets/time.csv', delimiter=',')
+    input = np.loadtxt('../../datasets/input.csv', delimiter=',')
+    output = np.loadtxt('../../datasets/output.csv', delimiter=',')
+    time = np.loadtxt('../../datasets/time.csv', delimiter=',')
 
     input= input[start:start+length]
     output = output[start:start+length]
@@ -145,7 +145,7 @@ def get_kernel_hyperparameters(kernel_type):
     return initial_hyperparameters, hyperparameter_bounds
 
 def main():
-    if developer == True: start_time = timer.time()
+    start_time = timer.time()
 
     sample_start_index = 15000
     sample_length = 100
@@ -183,10 +183,9 @@ def main():
 
     plot_data(force_input,force_response, force_input_prediction, force_response_prediction, time, time_test)
 
-    if developer == True:
-        end_time = timer.time()
-        elapsed_time = end_time - start_time
-        debug_print(f"The code ran in {elapsed_time} seconds")
+    end_time = timer.time()
+    elapsed_time = end_time - start_time
+    debug_print(f"The code ran in {elapsed_time} seconds")
 
 if __name__ == "__main__":
     main()

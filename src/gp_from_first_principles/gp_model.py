@@ -2,9 +2,9 @@ import numpy as np
 import scipy
 from numpy import linalg as npla
 
-from src.gaussian_process_kernel import GaussianProcessKernel
-from src.iterative_search import IterativeSearch
-from src.metropolis_hastings import MetropolisHastings
+from src.gp_from_first_principles.gaussian_process_kernel import GaussianProcessKernel
+from src.gp_from_first_principles.iterative_search import IterativeSearch
+from src.gp_from_first_principles.metropolis_hastings import MetropolisHastings
 from src.utils import debug_print
 
 
