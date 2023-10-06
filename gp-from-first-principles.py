@@ -98,21 +98,31 @@ class GaussianProcessKernel:
             return self.white_noise_kernel(X1, X2, **self.params)
         elif self.params['kernel_type'] == 'polynomial':
             return self.polynomial_kernel(X1, X2, **self.params)
-        elif self.params['kernel_type'] == 'composite':
-            return self.composite_kernel(X1, X2, **self.params)
+        elif self.params['kernel_type'] == 'p_se_composite':
+            return self.p_se_composite_kernel(X1, X2, **self.params)
+        elif self.params['kernel_type'] == 'wn_se_composite':
+            return self.wn_se_composite_kernel(X1, X2, **self.params)
         # Add more kernel types as needed
         else:
             raise ValueError(f"Unknown kernel type: {self.params['kernel_type']}")
 
-    def composite_kernel(self, X1, X2, **hyperparameters):
+    def p_se_composite_kernel(self, X1, X2, **params):
         #test3 = X1.shape
         periodic_sum = np.zeros((X1.shape[0], X2.shape[0], X1.shape[1]))
-        for params in hyperparameters['periodic_params']:
-            periodic_sum += self.periodic_kernel(X1, X2, **params)
+        for param in params['periodic_params']:
+            periodic_sum += self.periodic_kernel(X1, X2, **param)
 
-        se_kernel = self.squared_exponential_kernel(X1, X2, **hyperparameters['se_params'])
+        se_kernel = self.squared_exponential_kernel(X1, X2, **params['se_params'])
 
         composite_kernel = np.multiply(periodic_sum, se_kernel)
+
+        return composite_kernel
+
+    def wn_se_composite_kernel(self, X1, X2, **params):
+        white_noise_kernel = self.white_noise_kernel(X1, X2, **params['wn_params'])
+        squared_exponential_kernel = self.squared_exponential_kernel(X1, X2, **params['se_params'])
+
+        composite_kernel = white_noise_kernel + squared_exponential_kernel
 
         return composite_kernel
 
@@ -306,9 +316,9 @@ def get_kernel_hyperparameters(kernel_type):
             'noise_level': (0.0001, 0.25)
         }
 
-    if kernel_type == 'composite':
+    if kernel_type == 'p_se_composite':
         initial_hyperparameters = {
-            'kernel_type': 'composite',
+            'kernel_type': 'p_se_composite',
             'periodic_params': [
             {'sigma': 0.1, 'l': 0.01, 'p': 1E-3},
             {'sigma': 0.1, 'l': 0.02, 'p': 1E-3}
@@ -319,7 +329,7 @@ def get_kernel_hyperparameters(kernel_type):
             }
 
         hyperparameter_bounds = {
-            'kernel_type': 'composite',
+            'kernel_type': 'p_se_composite',
             'periodic_param_bounds': [
             {'sigma': (0.001,10), 'l': (0.001,10), 'p': (0.0001,1)},
             {'sigma': (0.001,10), 'l': (0.001,10), 'p': (0.0001,1)}
@@ -344,16 +354,33 @@ def get_kernel_hyperparameters(kernel_type):
             'noise_level': (0.0001, 0.25)
         }
 
+    if kernel_type == 'wn_se_composite':
+        initial_hyperparameters = {
+            'kernel_type': 'wn_se_composite',
+            'wn_params': {'sigma': 0.1},
+            'se_params': {'sigma': 0.1, 'l': 0.01},
+            'mean_func_c': 1.0,
+            'noise_level': 0.001
+            }
+
+        hyperparameter_bounds = {
+            'kernel_type': 'wn_se_composite',
+            'periodic_param_bounds': {'sigma': (0.001,10)},
+            'se_param_bounds': {'sigma': (0.001,10), 'l': (0.001,10)},
+            'mean_func_c': (-1000,1000),
+            'noise_level': (0.0001,1)
+            }
+
     return initial_hyperparameters, hyperparameter_bounds
 
 def main():
     if developer == True: start_time = timer.time()
 
-    sample_start_index = 20000
+    sample_start_index = 30000
     sample_length = 100
     num_predictions = 50
-    force_input_kernel_type = 'white_noise'
-    force_response_kernel_type = 'periodic'
+    force_input_kernel_type = 'wn_se_composite'
+    force_response_kernel_type = 'p_se_composite'
     n_iter = 10
 
 
