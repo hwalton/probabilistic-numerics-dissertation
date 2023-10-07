@@ -148,7 +148,7 @@ def execute_gp_model():
     force_input_solver_type = 'metropolis_hastings'            #'iterative_search' or 'metropolis_hastings'
     force_response_kernel_type = 'p_se_composite'
     force_response_solver_type = 'metropolis_hastings'         #'iterative_search' or 'metropolis_hastings'
-    n_iter = 100
+    n_iter = 1000
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
     lower = time[0] - 0.25 * (time[-1] - time[0])
