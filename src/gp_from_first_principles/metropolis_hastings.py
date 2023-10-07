@@ -5,14 +5,14 @@ from map_number import map_number
 
 
 def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
-                              compute_nll, n_iter=10):
+                              compute_nll, n_iter=10, sample_length = 0):
     best_hyperparameters = initial_hyperparameters_array.copy()
     hyperparameters = initial_hyperparameters_array.copy()
     best_nll = compute_nll(initial_hyperparameters_array)
     nll = compute_nll(initial_hyperparameters_array)
 
     for j in range(n_iter):
-        debug_print(f"Search Iteration: {j+1}/{n_iter}")
+        debug_print(f"Search Iteration: {j+1}/{n_iter} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         for i, (lower, upper) in enumerate(bounds_array):
             exponent = np.random.normal(0,1)
             modifier = np.exp(exponent)
@@ -31,5 +31,7 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
             if update_nll:
                 nll = nll_prime
                 hyperparameters = hyperparameters_prime
-
+        if j > 50 and best_nll < (sample_length):
+            debug_print(f"Stopping due to nll sufficiently low: {best_nll}")
+            break
     return best_hyperparameters
