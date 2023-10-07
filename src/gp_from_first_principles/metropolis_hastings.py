@@ -13,7 +13,7 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
     iter_since_update = 0
     for j in range(n_iter):
 
-        debug_print(f"Iteration: {j+1}/{n_iter} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        debug_print(f"Iteration: {j+1}/{n_iter} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         if j > 10 and best_nll < -sample_length:
         #if j > 2:
             debug_print(
@@ -22,38 +22,25 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
         else:
             for i, (lower, upper) in enumerate(bounds_array):
 
-                exponent = np.random.normal(0,2)
+                exponent = np.random.normal(0,4)
                 modifier = np.exp(exponent)
                 hyperparameters_prime = hyperparameters.copy()
                 hyperparameters_prime[i] = np.clip(hyperparameters_prime[i] * modifier, lower, upper)
                 nll_prime = compute_nll(hyperparameters_prime)
                 if nll_prime < best_nll:
-                    # debug_print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    #       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    #       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    #       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    #       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-
                     best_nll = nll_prime
                     best_hyperparameters = hyperparameters_prime.copy()
                     # debug_print(f"best_hyperparameters set as {best_hyperparameters} with nll {compute_nll(best_hyperparameters)}")
                 A = map_number((nll_prime-nll),0,1000,1.0,0.0)
                 #A = min(0, map_number_out)
-                debug_print(f"nll_prime = :{nll_prime}")
-                debug_print(f"nll = :{nll}")
-                debug_print(A)
+                #debug_print(f"nll_prime = :{nll_prime}")
+                #debug_print(f"nll = :{nll}")
+                #debug_print(A)
                 update = np.random.binomial(1,A)
                 if update:
                     nll = nll_prime
                     hyperparameters = hyperparameters_prime.copy()
-                #     iter_since_update = 0
-                # else:
-                #     iter_since_update = iter_since_update + 1
-                # if iter_since_update >= 100:
-                #     debug_print(
-                #         "10 iterations since last update, switch back to best_hyperparameters")
-                #     iter_since_update = 0
-                #     hyperparameters = best_hyperparameters.copy()
+
 
     # debug_print(f"metropolis_hastings_solve returning {best_hyperparameters} with nll {compute_nll(best_hyperparameters)}")
     return best_hyperparameters
