@@ -31,7 +31,7 @@ class GPModel:
         if solver_type == 'iterative_search':
             return iterative_search_solve(initial_hyperparameters_array, bounds_array, self.compute_nll, n_iter=self.n_iter)
         elif solver_type == 'metropolis_hastings':
-            return metropolis_hastings_solve(initial_hyperparameters_array, bounds_array, self.compute_nll, n_iter=self.n_iter)
+            return metropolis_hastings_solve(initial_hyperparameters_array, bounds_array, self.compute_nll, n_iter=self.n_iter, sample_length = len(self.X))
 
     def get_optimal_hyperparameters(self):
         initial_hyperparameters_array = np.array(self.flatten_params(self.initial_hyperparameters))
