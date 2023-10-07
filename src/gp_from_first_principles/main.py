@@ -145,10 +145,10 @@ def execute_gp_model():
     sample_length = 100
     num_predictions = 50
     force_input_kernel_type = 'wn_se_composite'
-    force_input_solver_type = 'iterative_search'
+    force_input_solver_type = 'metropolis_hastings'
     force_response_kernel_type = 'p_se_composite'
-    force_response_solver_type = 'iterative_search'
-    n_iter = 10
+    force_response_solver_type = 'metropolis_hastings'
+    n_iter = 50
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
     lower = time[0] - 0.25 * (time[-1] - time[0])
