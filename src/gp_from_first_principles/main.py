@@ -141,7 +141,7 @@ def get_kernel_hyperparameters(kernel_type):
     return initial_hyperparameters, hyperparameter_bounds
 
 def execute_gp_model():
-    sample_start_index = 18000
+    sample_start_index = 25000
     sample_length = 100
     num_predictions = 50
     force_input_kernel_type = 'wn_se_composite'
