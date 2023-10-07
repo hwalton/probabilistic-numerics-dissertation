@@ -148,7 +148,7 @@ def execute_gp_model():
     force_input_solver_type = 'metropolis_hastings'            #'iterative_search' or 'metropolis_hastings'
     force_response_kernel_type = 'p_se_composite'
     force_response_solver_type = 'metropolis_hastings'         #'iterative_search' or 'metropolis_hastings'
-    n_iter = 1000
+    n_iter = 100
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
     lower = time[0] - 0.25 * (time[-1] - time[0])
@@ -190,7 +190,7 @@ def main():
 
     end_time = timer.time()
     elapsed_time = end_time - start_time
-    debug_print(f"The code ran in {elapsed_time} seconds")
+    print(f"The code ran in {elapsed_time} seconds")
 
 if __name__ == "__main__":
     main()

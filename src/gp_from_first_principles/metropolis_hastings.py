@@ -15,24 +15,24 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
         debug_print(f"Iteration: {j+1}/{n_iter} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         hyperparameters_prime = hyperparameters.copy()
         for i, (lower, upper) in enumerate(bounds_array):
-            exponent = np.random.normal(0,1)
+            exponent = np.random.normal(0,2)
             modifier = np.exp(exponent)
 
             hyperparameters_prime[i] = np.clip(hyperparameters_prime[i] * modifier, lower, upper)
-        nll_prime = compute_nll(hyperparameters_prime)
-        if nll_prime < best_nll:
-            best_nll = nll_prime
-            best_hyperparameters = hyperparameters_prime
-        A = map_number((nll_prime-nll),0,1000,1.0,0.0)
-        #A = min(0, map_number_out)
-        debug_print(f"nll_prime = :{nll_prime}")
-        debug_print(f"nll = :{nll}")
-        debug_print(A)
-        update_nll = np.random.binomial(1,A)
-        if update_nll:
-            nll = nll_prime
-            hyperparameters = hyperparameters_prime
-        if j > 25 and best_nll < -sample_length:
+            nll_prime = compute_nll(hyperparameters_prime)
+            if nll_prime < best_nll:
+                best_nll = nll_prime
+                best_hyperparameters = hyperparameters_prime
+            A = map_number((nll_prime-nll),0,1000,1.0,0.0)
+            #A = min(0, map_number_out)
+            debug_print(f"nll_prime = :{nll_prime}")
+            debug_print(f"nll = :{nll}")
+            debug_print(A)
+            update = np.random.binomial(1,A)
+            if update:
+                nll = nll_prime
+                hyperparameters = hyperparameters_prime
+        if j > 10 and best_nll < -sample_length:
             debug_print(f"Stopping after {j} iterations due to nll sufficiently low: {best_nll}")
             break
     return best_hyperparameters
