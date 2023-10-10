@@ -64,7 +64,25 @@ def format_data(X):
     return X
 
 def get_kernel_hyperparameters(kernel_type):
-    if kernel_type == 'periodic':
+    if kernel_type == 'squared_exponential':
+        initial_hyperparameters = {
+            'kernel_type': 'squared_exponential',
+            'sigma': 0.1,
+            'l': 0.01,
+            'p': 1E-3,
+            'mean_func_c': 1.0,
+            'noise_level': 0.001
+            }
+
+        hyperparameter_bounds = {
+            'kernel_type': 'squared_exponential',
+            'sigma': (0.001,10),
+            'l': (0.001,10),
+            'p': (0.0001,1),
+            'mean_func_c': (-1000,1000),
+            'noise_level': (0.0001,1)
+            }
+    elif kernel_type == 'periodic':
         initial_hyperparameters = {
             'kernel_type': 'periodic',
             'sigma': 1,
@@ -97,10 +115,10 @@ def get_kernel_hyperparameters(kernel_type):
         hyperparameter_bounds = {
             'kernel_type': 'p_se_composite',
             'periodic_param_bounds': [
-            {'sigma': (0.001,10), 'l': (0.001,10), 'p': (0.0001,1)},
-            {'sigma': (0.001,10), 'l': (0.001,10), 'p': (0.0001,1)}
+            {'sigma': (0.0001,100), 'l': (0.0001,100), 'p': (0.0001,10)},
+            {'sigma': (0.0001,100), 'l': (0.0001,100), 'p': (0.0001,10)}
             ],
-            'se_param_bounds': {'sigma': (0.001,10), 'l': (0.001,10)},
+            'se_param_bounds': {'sigma': (0.0001,100), 'l': (0.0001,100)},
             'mean_func_c': (-1000,1000),
             'noise_level': (0.0001,1)
             }
@@ -140,18 +158,18 @@ def get_kernel_hyperparameters(kernel_type):
     return initial_hyperparameters, hyperparameter_bounds
 
 def execute_gp_model():
-    sample_start_index = 36000+25
+    sample_start_index = 0
     sample_length = 100
     num_predictions = 50
-    force_input_kernel_type = 'wn_se_composite'
+    force_input_kernel_type = 'p_se_composite'
     force_input_solver_type = 'metropolis_hastings'            #'iterative_search' or 'metropolis_hastings'
     force_response_kernel_type = 'p_se_composite'
     force_response_solver_type = 'metropolis_hastings'         #'iterative_search' or 'metropolis_hastings'
     n_iter = 100
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
-    lower = time[0] - 0.15 * (time[-1] - time[0])
-    upper = time[-1] + 0.15 * (time[-1] - time[0])
+    lower = time[0] - 0 * (time[-1] - time[0])
+    upper = time[-1] + 0 * (time[-1] - time[0])
     time_test = np.linspace(lower, upper, num=num_predictions, endpoint=True)
     force_input = format_data(force_input)
     time = format_data(time)
