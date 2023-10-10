@@ -137,11 +137,13 @@ def get_kernel_hyperparameters(kernel_type):
             'mean_func_c': (-1000,1000),
             'noise_level': (0.0001,1)
             }
+    else:
+        assert False, "Invalid kernel_type"
 
     return initial_hyperparameters, hyperparameter_bounds
 
 def execute_gp_model():
-    sample_start_index = 27000
+    sample_start_index = 36000+25
     sample_length = 100
     num_predictions = 50
     force_input_kernel_type = 'wn_se_composite'
@@ -151,8 +153,8 @@ def execute_gp_model():
     n_iter = 100
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
-    lower = time[0] - 0.1 * (time[-1] - time[0])
-    upper = time[-1] + 0.1 * (time[-1] - time[0])
+    lower = time[0] - 0.15 * (time[-1] - time[0])
+    upper = time[-1] + 0.15 * (time[-1] - time[0])
     time_test = np.linspace(lower, upper, num=num_predictions, endpoint=True)
     force_input = format_data(force_input)
     time = format_data(time)
@@ -160,9 +162,9 @@ def execute_gp_model():
     time_test = format_data(time_test)
 
     force_input_initial_hyperparameters, force_input_hyperparameter_bounds = get_kernel_hyperparameters(
-        force_input_kernel_type)
+                                                                             force_input_kernel_type)
     force_response_initial_hyperparameters, force_response_hyperparameter_bounds = get_kernel_hyperparameters(
-        force_response_kernel_type)
+                                                                                force_response_kernel_type)
     force_input_model = GPModel(force_input_initial_hyperparameters,
                                 force_input_hyperparameter_bounds, time,
                                 force_input,
@@ -170,6 +172,7 @@ def execute_gp_model():
                                 n_iter=n_iter)
     model_1_nll = force_input_model.fit_model()
     force_input_prediction = force_input_model.predict((time_test))
+
     force_response_model = GPModel(force_response_initial_hyperparameters,
                                    force_response_hyperparameter_bounds, time,
                                    force_response,
@@ -177,8 +180,10 @@ def execute_gp_model():
                                    n_iter=n_iter)
     model_2_nll = force_response_model.fit_model()
     force_response_prediction = force_response_model.predict(time_test)
+
     plot_data(force_input, force_response, force_input_prediction,
               force_response_prediction, time, time_test)
+
     return model_1_nll, model_2_nll
 def main():
     start_time = timer.time()
