@@ -82,8 +82,7 @@ def get_kernel_hyperparameters(kernel_type):
             'mean_func_c': (-1000,1000),
             'noise_level': (0.0001, 0.25)
         }
-
-    if kernel_type == 'p_se_composite':
+    elif kernel_type == 'p_se_composite':
         initial_hyperparameters = {
             'kernel_type': 'p_se_composite',
             'periodic_params': [
@@ -105,8 +104,7 @@ def get_kernel_hyperparameters(kernel_type):
             'mean_func_c': (-1000,1000),
             'noise_level': (0.0001,1)
             }
-
-    if kernel_type == 'white_noise':
+    elif kernel_type == 'white_noise':
         initial_hyperparameters = {
             'kernel_type': 'white_noise',
             'sigma': 1,
@@ -120,8 +118,7 @@ def get_kernel_hyperparameters(kernel_type):
             'mean_func_c': (-1000,1000),
             'noise_level': (0.0001, 0.25)
         }
-
-    if kernel_type == 'wn_se_composite':
+    elif kernel_type == 'wn_se_composite':
         initial_hyperparameters = {
             'kernel_type': 'wn_se_composite',
             'wn_params': {'sigma': 0.1},
