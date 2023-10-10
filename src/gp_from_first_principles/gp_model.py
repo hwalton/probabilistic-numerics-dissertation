@@ -1,5 +1,6 @@
 import numpy as np
 import scipy
+import freelunch
 from numpy import linalg as npla
 
 from gaussian_process_kernel import GaussianProcessKernel
@@ -32,11 +33,16 @@ class GPModel:
             return iterative_search_solve(initial_hyperparameters_array, bounds_array, self.compute_nll, n_iter=self.n_iter)
         elif solver_type == 'metropolis_hastings':
             return metropolis_hastings_solve(initial_hyperparameters_array, bounds_array, self.compute_nll, n_iter=self.n_iter, sample_length = len(self.X))
+        elif solver_type == 'free_lunch':
+            self.solver = freelunch.DE(self.compute_nll, bounds = bounds_array)
+            return self.solver()
 
     def get_optimal_hyperparameters(self):
         initial_hyperparameters_array = np.array(self.flatten_params(self.initial_hyperparameters))
         bounds_array = self.flatten_params(self.hyperparameter_bounds)
-        optimal_hyperparameters = self.solve(self.solver_type, initial_hyperparameters_array, bounds_array)
+        debug_print("solving")
+        optimal_hyperparameters = self.solve(self.solver_type, initial_hyperparameters_array, bounds_array).T
+        debug_print("solved")
         return self.reconstruct_params(optimal_hyperparameters)
 
 

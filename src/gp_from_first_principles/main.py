@@ -162,14 +162,14 @@ def execute_gp_model():
     sample_length = 100
     num_predictions = 50
     force_input_kernel_type = 'p_se_composite'
-    force_input_solver_type = 'metropolis_hastings'            #'iterative_search' or 'metropolis_hastings'
+    force_input_solver_type = 'free_lunch'            #'iterative_search' or 'metropolis_hastings'
     force_response_kernel_type = 'p_se_composite'
-    force_response_solver_type = 'metropolis_hastings'         #'iterative_search' or 'metropolis_hastings'
+    force_response_solver_type = 'free_lunch'         #'iterative_search' or 'metropolis_hastings'
     n_iter = 100
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
-    lower = time[0] - 0 * (time[-1] - time[0])
-    upper = time[-1] + 0 * (time[-1] - time[0])
+    lower = time[0] - 0.15 * (time[-1] - time[0])
+    upper = time[-1] + 0.15 * (time[-1] - time[0])
     time_test = np.linspace(lower, upper, num=num_predictions, endpoint=True)
     force_input = format_data(force_input)
     time = format_data(time)
