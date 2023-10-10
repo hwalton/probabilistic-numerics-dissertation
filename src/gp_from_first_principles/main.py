@@ -161,15 +161,15 @@ def execute_gp_model():
     sample_start_index = 1000
     sample_length = 50
     num_predictions = 50
-    force_input_kernel_type = 'p_se_composite'
-    force_input_solver_type = 'adam'            #'iterative_search', 'metropolis_hastings', 'adam', or 'free_lunch'
-    force_response_kernel_type = 'p_se_composite'
-    force_response_solver_type = 'adam'         #'iterative_search' or 'metropolis_hastings'
+    force_input_kernel_type = 'wn_se_composite'
+    force_input_solver_type = 'metropolis_hastings'            #'iterative_search', 'metropolis_hastings', 'adam', or 'free_lunch'
+    force_response_kernel_type = 'squared_exponential'
+    force_response_solver_type = 'metropolis_hastings'         #'iterative_search' or 'metropolis_hastings'
     n_iter = 100
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
-    lower = time[0] - 0.15 * (time[-1] - time[0])
-    upper = time[-1] + 0.15 * (time[-1] - time[0])
+    lower = time[0] - 0 * (time[-1] - time[0])
+    upper = time[-1] + 0 * (time[-1] - time[0])
     time_test = np.linspace(lower, upper, num=num_predictions, endpoint=True)
     force_input = format_data(force_input)
     time = format_data(time)
@@ -178,6 +178,7 @@ def execute_gp_model():
 
     force_input_initial_hyperparameters, force_input_hyperparameter_bounds = get_kernel_hyperparameters(
                                                                              force_input_kernel_type)
+
     force_response_initial_hyperparameters, force_response_hyperparameter_bounds = get_kernel_hyperparameters(
                                                                                 force_response_kernel_type)
     force_input_model = GPModel(force_input_initial_hyperparameters,

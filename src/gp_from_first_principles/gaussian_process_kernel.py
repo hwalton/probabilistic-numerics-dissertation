@@ -8,35 +8,35 @@ class GaussianProcessKernel:
 
     def set_params(self, hyperparameters):
         self.params = hyperparameters
+        self.kernel_type = self.params['kernel_type']
 
     def compute_kernel(self, X1, X2):
-        if X1.ndim == 1: X1 = X1.reshape(-1,1)
-        if X2.ndim == 1: X2 = X2.reshape(-1,1)
-        if self.params['kernel_type'] == 'linear':
-            return self.linear_kernel(X1, X2)
-        elif self.params['kernel_type'] == 'periodic':
-            return self.periodic_kernel(X1, X2, **self.params)
-        elif self.params['kernel_type'] == 'squared_exponential':
-            return self.squared_exponential_kernel(X1, X2, **self.params)
-        elif self.params['kernel_type'] == 'matern':
-            return self.matern_kernel(X1, X2, **self.params)
-        elif self.params['kernel_type'] == 'rational_quadratic':
-            return self.rational_quadratic_kernel(X1, X2, **self.params)
-        elif self.params['kernel_type'] == 'exponential':
-            return self.exponential_kernel(X1, X2, **self.params)
-        elif self.params['kernel_type'] == 'cosine':
-            return self.cosine_kernel(X1, X2, **self.params)
-        elif self.params['kernel_type'] == 'white_noise':
-            return self.white_noise_kernel(X1, X2, **self.params)
-        elif self.params['kernel_type'] == 'polynomial':
-            return self.polynomial_kernel(X1, X2, **self.params)
-        elif self.params['kernel_type'] == 'p_se_composite':
-            return self.p_se_composite_kernel(X1, X2, **self.params)
-        elif self.params['kernel_type'] == 'wn_se_composite':
-            return self.wn_se_composite_kernel(X1, X2, **self.params)
-        # Add more kernel types as needed
-        else:
-            raise ValueError(f"Unknown kernel type: {self.params['kernel_type']}")
+        if X1.ndim == 1:
+            X1 = X1.reshape(-1, 1)
+        if X2.ndim == 1:
+            X2 = X2.reshape(-1, 1)
+
+        kernel_methods = {
+            'linear': self.linear_kernel,
+            'periodic': self.periodic_kernel,
+            'squared_exponential': self.squared_exponential_kernel,
+            'matern': self.matern_kernel,
+            'rational_quadratic': self.rational_quadratic_kernel,
+            'exponential': self.exponential_kernel,
+            'cosine': self.cosine_kernel,
+            'white_noise': self.white_noise_kernel,
+            'polynomial': self.polynomial_kernel,
+            'p_se_composite': self.p_se_composite_kernel,
+            'wn_se_composite': self.wn_se_composite_kernel,
+            # Add more kernel types as needed
+        }
+
+        try:
+            kernel_function = kernel_methods[self.kernel_type]
+        except KeyError:
+            raise ValueError(f"Unknown kernel type: {self.kernel_type}")
+
+        return kernel_function(X1, X2, **self.params)
 
     def p_se_composite_kernel(self, X1, X2, **params):
         #test3 = X1.shape
