@@ -2,14 +2,15 @@ import numpy as np
 from utils import debug_print
 
 
-def adam_optimize(objective_function, X, y, params, lr=0.001, beta1=0.9, beta2=0.999,
-                  epsilon=1e-4, epochs=1000):
+def adam_optimize(objective_function, X, y, params, kernel, reconstruct_params, lr=0.001, beta1=0.9, beta2=0.999,
+                  epsilon=1e-4, epochs=50):
     m = np.zeros_like(params)
     v = np.zeros_like(params)
 
     for epoch in range(epochs):
+        debug_print(f"Epoch: {epoch}/{epochs}")
         # Compute all gradients at once
-        grads = compute_all_gradients(objective_function, X, y, params)
+        grads = compute_all_gradients(objective_function, X, y, params, kernel, reconstruct_params)
 
         for j, grad_j in enumerate(grads):
             # Update biased first and second moment estimates for j-th parameter
@@ -31,18 +32,22 @@ import numpy as np
 import numpy as np
 
 
-def compute_all_gradients(objective_function,X, y, params, kernel):
+def compute_all_gradients(objective_function,X, y, params, kernel, reconstruct_params):
     # Extract X, y, and theta from params or modify as per your use case
     # X, y, theta = ...
 
     # Define a kernel function and its derivative w.r.t. theta_j
     def kernel_function(x, y, theta, kernel):
-        kernel.set_hyperparameter(theta)
-        return kernel.compute_kernel(x,y)
+        kernel.set_params(reconstruct_params(theta))
+        out = np.squeeze(kernel.compute_kernel(x,y))
+        return out
 
     def dkernel_dtheta_j(x, y, theta, j, kernel):
-        # Implement the derivative of your kernel function w.r.t. theta_j here using theta
-        pass
+        derivative = kernel.compute_kernel_derivative(x, y, j)
+        #debug_print(theta)
+        out = derivative(theta)
+        #debug_print(out)
+        return out
 
     # Compute the covariance matrix K
     K = np.array([[kernel_function(xi, xj, params, kernel) for xj in X] for xi in X])
@@ -60,7 +65,7 @@ def compute_all_gradients(objective_function,X, y, params, kernel):
     for j in range(len(params)):
         # Compute the derivative of K w.r.t. theta_j
         dK_dthetaj = np.array(
-            [[dkernel_dtheta_j(xi, xj, params, j) for xj in X] for xi in X])
+            [[dkernel_dtheta_j(xi, xj, params, j, kernel) for xj in X] for xi in X])
 
         # Compute the gradient w.r.t. the covariance function hyperparameters
         gradient_cov = 0.5 * np.trace(

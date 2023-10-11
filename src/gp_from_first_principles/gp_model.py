@@ -38,7 +38,7 @@ class GPModel:
             self.solver = freelunch.DE(self.compute_nll, bounds = bounds_array)
             return self.solver()
         elif solver_type == 'adam':
-            return adam_optimize(self.compute_nll,self.X, self.y, initial_hyperparameters_array, self.gp_kernel)
+            return adam_optimize(self.compute_nll,self.X, self.y, initial_hyperparameters_array, self.gp_kernel, self.reconstruct_params)
         else:
             assert False, "invalid solver_type"
 

@@ -160,11 +160,11 @@ def get_kernel_hyperparameters(kernel_type):
 def execute_gp_model():
     sample_start_index = 1000
     sample_length = 50
-    num_predictions = 50
-    force_input_kernel_type = 'wn_se_composite'
-    force_input_solver_type = 'metropolis_hastings'            #'iterative_search', 'metropolis_hastings', 'adam', or 'free_lunch'
-    force_response_kernel_type = 'squared_exponential'
-    force_response_solver_type = 'metropolis_hastings'         #'iterative_search' or 'metropolis_hastings'
+    num_predictions = 24
+    force_input_kernel_type = 'periodic'
+    force_input_solver_type = 'adam'            #'iterative_search', 'metropolis_hastings', 'adam', or 'free_lunch'
+    force_response_kernel_type = 'periodic'
+    force_response_solver_type = 'adam'         #'iterative_search' or 'metropolis_hastings'
     n_iter = 100
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
