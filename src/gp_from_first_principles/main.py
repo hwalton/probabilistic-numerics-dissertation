@@ -164,8 +164,8 @@ def execute_gp_model():
     num_predictions = 150
     force_input_kernel_type = 'p_se_composite'
     force_input_solver_type = 'metropolis_hastings'            #'iterative_search', 'metropolis_hastings', 'adam', or 'free_lunch'
-    force_response_kernel_type = 'periodic'
-    force_response_solver_type = 'adam'         #'iterative_search' or 'metropolis_hastings
+    force_response_kernel_type = 'p_se_composite'
+    force_response_solver_type = 'metropolis_hastings'         #'iterative_search' or 'metropolis_hastings
     n_iter = 100
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
