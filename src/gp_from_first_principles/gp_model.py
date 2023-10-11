@@ -6,6 +6,7 @@ from numpy import linalg as npla
 from gaussian_process_kernel import GaussianProcessKernel
 from iterative_search import iterative_search_solve
 from metropolis_hastings import metropolis_hastings_solve
+from adam import adam_optimize
 from utils import debug_print
 
 
@@ -36,6 +37,10 @@ class GPModel:
         elif solver_type == 'free_lunch':
             self.solver = freelunch.DE(self.compute_nll, bounds = bounds_array)
             return self.solver()
+        elif solver_type == 'adam':
+            return adam_optimize(self.compute_nll,self.X, self.y, initial_hyperparameters_array, self.gp_kernel, self.reconstruct_params)
+        else:
+            assert False, "invalid solver_type"
 
     def get_optimal_hyperparameters(self):
         initial_hyperparameters_array = np.array(self.flatten_params(self.initial_hyperparameters))
