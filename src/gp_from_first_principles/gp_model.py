@@ -3,6 +3,7 @@ import scipy
 import freelunch
 from numpy import linalg as npla
 
+from hyperparameters import Hyperparameters
 from gaussian_process_kernel import GaussianProcessKernel
 from iterative_search import iterative_search_solve
 from metropolis_hastings import metropolis_hastings_solve
@@ -11,13 +12,14 @@ from utils import debug_print
 
 
 class GPModel:
-    def __init__(self, initial_hyperparameters, hyperparameter_bounds, X, y, solver_type = 'iterative_search', n_iter=10):
-        self.initial_hyperparameters = initial_hyperparameters
-        self.hyperparameter_bounds = hyperparameter_bounds
+    def __init__(self, kernel_type, X, y, solver_type = 'iterative_search', n_iter=10):
+        self.hyperparameters = Hyperparameters (kernel_type)
+        self.initial_hyperparameters = self.hyperparameters.initial_hyperparameters
+        self.hyperparameter_bounds = self.hyperparameters.hyperparameter_bounds
         self.X = X
         self.y = y
         self.n_iter = n_iter
-        self.template = initial_hyperparameters
+        self.template = self.hyperparameters.initial_hyperparameters
         self.solver_type = solver_type
 
     def fit_model(self):
