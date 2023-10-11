@@ -2,13 +2,18 @@ import numpy as np
 from scipy.special import kv
 from utils import debug_print
 
+from hyperparameters import Hyperparameters
+
 class GaussianProcessKernel:
-    def __init__(self, **kwargs):
-        self.params = kwargs
+    def __init__(self, hyperparameters_obj):
+        self.hyperparameters_obj = hyperparameters_obj
+        self.kernel_type = self.hyperparameters_obj.dict()['kernel_type']
 
     def set_params(self, hyperparameters):
-        self.params = hyperparameters
-        self.kernel_type = self.params['kernel_type']
+        if type(hyperparameters) == Hyperparameters:
+            self.hyperparameters_obj = hyperparameters
+        if type(hyperparameters) == dict:
+            self.hyperparameters_obj = Hyperparameters(hyperparameters['kernel_type'])
 
     def compute_kernel(self, X1, X2):
         if X1.ndim == 1:
@@ -32,11 +37,11 @@ class GaussianProcessKernel:
         }
 
         try:
-            kernel_function = kernel_methods[self.kernel_type]
+            kernel_function = kernel_methods[self.hyperparameters_obj.dict()['kernel_type']]
         except KeyError:
-            raise ValueError(f"Unknown kernel type: {self.kernel_type}")
+            raise ValueError(f"Unknown kernel type: {self.hyperparameters_obj.dict()['kernel_type']}")
 
-        return kernel_function(X1, X2, **self.params)
+        return kernel_function(X1, X2, **self.hyperparameters_obj.dict())
 
     def p_se_composite_kernel(self, X1, X2, **params):
         #test3 = X1.shape
