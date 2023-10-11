@@ -9,11 +9,12 @@ from iterative_search import iterative_search_solve
 from metropolis_hastings import metropolis_hastings_solve
 from adam import adam_optimize
 from utils import debug_print
+from sklearn.cluster import KMeans
 
 
 class GPModel:
     def __init__(self, kernel_type, X, y, solver_type = 'iterative_search', n_iter=10):
-        self.hyperparameters_obj = Hyperparameters (kernel_type)
+        self.hyperparameters_obj = Hyperparameters(kernel_type)
         self.initial_hyperparameters = self.hyperparameters_obj._initial_hyperparameters.copy()
         self.hyperparameter_bounds = self.hyperparameters_obj._hyperparameter_bounds.copy()
         self.X = X
@@ -59,22 +60,22 @@ class GPModel:
         # Implement your kernel function here
         pass
 
-    def K_sigma(self, X, U, y, kernel_params, noise_var):
-        """
-        Compute the FITC approximation.
+    def U_induced(self, M_one_in = 10, method ='k_means'):
+        M = len(self.X) / M_one_in
+        if method == 'k_means':
+            kmeans = KMeans(n_clusters=M).fit(self.X)
+            U = kmeans.cluster_centers_
+        else:
+            raise ValueError("Invalid inducing method")
+        return U
 
-        Parameters:
-            X: Training inputs (N x D).
-            U: Inducing inputs (M x D).
-            y: Target values (N).
-            kernel_params: Parameters for the kernel function.
-            noise_var: Noise variance.
+    def K_XX_FITC(self):
 
-        Returns:
-            K_sigma: Approximated covariance matrix.
-        """
-        # Compute covariance matrices
+        X = self.X
+        U = self.U_induced()
+
         K_XU = self.gp_kernel.compute_kernel(X, U)
+        K_UX = self.gp_kernel.compute_kernel(U, X)
         K_UU = self.gp_kernel.compute_kernel(U, U)
         K_XX = self.gp_kernel.compute_kernel(X, X)
 
@@ -85,14 +86,26 @@ class GPModel:
         # Compute Q_XX
         Q_XX = K_XU @ K_UU_inv @ K_XU.T
 
-        # Compute K_sigma
-        K_sigma = K_XX + Q_XX - K_XU @ K_UU_inv @ K_XU.T
+        # Compute K_XX_FITC
+        K_XX_FITC = K_XX + Q_XX - K_XU @ K_UU_inv @ K_XU.T
 
-        # Add noise variance to the diagonal
-        K_sigma += noise_var * np.eye(X.shape[0])
 
-        return K_sigma
+        # out = {
+        #     'K_XX_FITC': K_XX_FITC,
+        #     'K_XU': K_XU,
+        #     'K_UU': K_UU,
+        #     'K_XX': K_XX,
+        # }
+        return K_XX_FITC, K_XU, K_UX, K_UU, K_XX
 
+    def K_sigma_inv(self, method = 'woodbury'):
+        if method == 'woodbury':
+            K_XX_FITC, K_XU, K_UX, K_UU, K_XX = self.K_XX_FITC()
+            sigma_n = self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X))
+            out = sigma_n - np.multiply(sigma_n, K_XU, (np.invert(K_UU), np.multiply(K_UX, sigma_n, K_XU)), K_UX, sigma_n)
+        else:
+            raise ValueError("Invalid inducing method")
+        return out
     def predict(self, X_star):
         K_X_X = self.gp_kernel.compute_kernel(self.X, self.X) + np.array(self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(len(self.X)))[:,:,None]
         K_star_X = self.gp_kernel.compute_kernel(self.X, X_star)
