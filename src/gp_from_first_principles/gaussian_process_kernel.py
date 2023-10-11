@@ -7,6 +7,7 @@ from hyperparameters import Hyperparameters
 class GaussianProcessKernel:
     def __init__(self, hyperparameters_obj):
         self.hyperparameters_obj = hyperparameters_obj
+        self.kernel_type = self.hyperparameters_obj.dict()['kernel_type']
 
     def set_params(self, hyperparameters):
         if type(hyperparameters) == Hyperparameters:
