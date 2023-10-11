@@ -2,8 +2,8 @@ import numpy as np
 from utils import debug_print
 
 
-def adam_optimize(objective_function, X, y, params, kernel, reconstruct_params, lr=0.001, beta1=0.9, beta2=0.999,
-                  epsilon=1e-4, epochs=50):
+def adam_optimize(objective_function, X, y, params, kernel, reconstruct_params, lr=0.01, beta1=0.9, beta2=0.999,
+                  epsilon=1e-4, epochs=20):
     m = np.zeros_like(params)
     v = np.zeros_like(params)
 
