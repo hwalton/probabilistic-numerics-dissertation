@@ -21,10 +21,9 @@ class GPModel:
         self.n_iter = n_iter
         self.template = self.hyperparameters_obj._initial_hyperparameters.copy()
         self.solver_type = solver_type
+        self.gp_kernel = GaussianProcessKernel(self.hyperparameters_obj)
 
     def fit_model(self):
-        out = self.hyperparameters_obj
-        self.gp_kernel = GaussianProcessKernel(out)
         self.gp_kernel.set_params(self.hyperparameters_obj)
         optimal_hyperparameters = self.get_optimal_hyperparameters()
         self.hyperparameters_obj.update(optimal_hyperparameters)
@@ -53,6 +52,46 @@ class GPModel:
         debug_print("solved")
         return self.hyperparameters_obj.reconstruct_params(optimal_hyperparameters)
 
+    import numpy as np
+    import scipy.linalg
+
+    def kernel_function(x, y, params):
+        # Implement your kernel function here
+        pass
+
+    def K_sigma(self, X, U, y, kernel_params, noise_var):
+        """
+        Compute the FITC approximation.
+
+        Parameters:
+            X: Training inputs (N x D).
+            U: Inducing inputs (M x D).
+            y: Target values (N).
+            kernel_params: Parameters for the kernel function.
+            noise_var: Noise variance.
+
+        Returns:
+            K_sigma: Approximated covariance matrix.
+        """
+        # Compute covariance matrices
+        K_XU = self.gp_kernel.compute_kernel(X, U)
+        K_UU = self.gp_kernel.compute_kernel(U, U)
+        K_XX = self.gp_kernel.compute_kernel(X, X)
+
+        # Compute the inverse of K_UU
+        K_UU_inv = np.linalg.inv(K_UU + 1e-6 * np.eye(
+            U.shape[0]))  # Add jitter for numerical stability
+
+        # Compute Q_XX
+        Q_XX = K_XU @ K_UU_inv @ K_XU.T
+
+        # Compute K_sigma
+        K_sigma = K_XX + Q_XX - K_XU @ K_UU_inv @ K_XU.T
+
+        # Add noise variance to the diagonal
+        K_sigma += noise_var * np.eye(X.shape[0])
+
+        return K_sigma
 
     def predict(self, X_star):
         K_X_X = self.gp_kernel.compute_kernel(self.X, self.X) + np.array(self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(len(self.X)))[:,:,None]
