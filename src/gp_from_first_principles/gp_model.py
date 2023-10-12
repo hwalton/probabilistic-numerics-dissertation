@@ -56,14 +56,10 @@ class GPModel:
     import numpy as np
     import scipy.linalg
 
-    def kernel_function(x, y, params):
-        # Implement your kernel function here
-        pass
-
-    def U_induced(self, M_one_in = 10, method ='k_means'):
-        M = len(self.X) / M_one_in
+    def U_induced(self, M_one_in = 1, method ='k_means'):
+        M = len(self.X) // M_one_in
         if method == 'k_means':
-            kmeans = KMeans(n_clusters=M).fit(self.X)
+            kmeans = KMeans(n_clusters=M, n_init = 3).fit(self.X)
             U = kmeans.cluster_centers_
         else:
             raise ValueError("Invalid inducing method")
@@ -71,13 +67,13 @@ class GPModel:
 
     def K_XX_FITC(self):
 
-        X = self.X
-        U = self.U_induced()
+        X = np.squeeze(self.X)
+        U = np.squeeze(self.U_induced())
 
-        K_XU = self.gp_kernel.compute_kernel(X, U)
-        K_UX = self.gp_kernel.compute_kernel(U, X)
-        K_UU = self.gp_kernel.compute_kernel(U, U)
-        K_XX = self.gp_kernel.compute_kernel(X, X)
+        K_XU = np.squeeze(self.gp_kernel.compute_kernel(X, U))
+        K_UX = np.squeeze(self.gp_kernel.compute_kernel(U, X))
+        K_UU = np.squeeze(self.gp_kernel.compute_kernel(U, U))
+        K_XX = np.squeeze(self.gp_kernel.compute_kernel(X, X))
 
         # Compute the inverse of K_UU
         K_UU_inv = np.linalg.inv(K_UU + 1e-6 * np.eye(
@@ -85,6 +81,7 @@ class GPModel:
 
         # Compute Q_XX
         Q_XX = K_XU @ K_UU_inv @ K_XU.T
+
 
         # Compute K_XX_FITC
         K_XX_FITC = K_XX + Q_XX - K_XU @ K_UU_inv @ K_XU.T
@@ -101,22 +98,27 @@ class GPModel:
     def K_sigma_inv(self, method = 'woodbury'):
         if method == 'woodbury':
             K_XX_FITC, K_XU, K_UX, K_UU, K_XX = self.K_XX_FITC()
-            sigma_n = self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X))
-            out = sigma_n - np.multiply(sigma_n, K_XU, (np.invert(K_UU), np.multiply(K_UX, sigma_n, K_XU)), K_UX, sigma_n)
+            sigma_n = np.multiply(self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X)))
+            var = (sigma_n @ K_XU @ (np.linalg.inv(K_UU) + np.array(K_UX @ sigma_n @ K_XU)) @ K_UX @ sigma_n)
+            out = sigma_n - var
+
         else:
             raise ValueError("Invalid inducing method")
         return out
+
     def predict(self, X_star):
         K_X_X = self.gp_kernel.compute_kernel(self.X, self.X) + np.array(self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(len(self.X)))[:,:,None]
         K_star_X = self.gp_kernel.compute_kernel(self.X, X_star)
         K_star_star = self.gp_kernel.compute_kernel(X_star, X_star)
+        K_sigma_inv = self.K_sigma_inv()
         L = np.zeros_like(K_X_X)
         self.mu = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
         self.s2 = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
         for i in range(K_X_X.shape[2]):
             L[:, :, i] = npla.cholesky(K_X_X[:, :, i] + 1e-10 * np.eye(K_X_X.shape[0]))
             Lk = np.squeeze(npla.solve(L[:, :, i], K_star_X[:,:,i]))
-            self.mu[:, i] = self.hyperparameters_obj.dict()['mean_func_c'] + np.dot(Lk.T, npla.solve(L[:, :, i], self.y - self.hyperparameters_obj.dict()['mean_func_c'])).flatten()
+            alpha = K_sigma_inv @ self.y
+            self.mu[:, i] = self.hyperparameters_obj.dict()['mean_func_c'] + np.array(K_star_X.T @ alpha).flatten()
             self.s2[:, i] = np.diag(K_star_star[:, :, i]) - np.sum(Lk ** 2, axis=0)
             self.stdv = np.sqrt(self.s2)
         return self.mu, self.stdv
