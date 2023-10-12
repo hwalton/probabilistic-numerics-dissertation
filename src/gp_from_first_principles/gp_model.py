@@ -23,6 +23,7 @@ class GPModel:
         self.template = self.hyperparameters_obj._initial_hyperparameters.copy()
         self.solver_type = solver_type
         self.gp_kernel = GaussianProcessKernel(self.hyperparameters_obj)
+        self.U = self.U_induced()
 
     def fit_model(self):
         self.gp_kernel.set_params(self.hyperparameters_obj)
@@ -68,7 +69,7 @@ class GPModel:
     def K_XX_FITC(self):
 
         X = np.squeeze(self.X)
-        U = np.squeeze(self.U_induced())
+        U = np.squeeze(self.U)
 
         K_XU = np.squeeze(self.gp_kernel.compute_kernel(X, U))
         K_UX = np.squeeze(self.gp_kernel.compute_kernel(U, X))
@@ -170,28 +171,29 @@ class GPModel:
                 return False
         return True
 
-    def compute_nll(self, hyperparameters):
-        if type(hyperparameters) == dict:
-            self.hyperparameters_obj.update(hyperparameters)
-        if type(hyperparameters) == Hyperparameters:
-            self.hyperparameters_obj.update(hyperparameters)
-        elif type(hyperparameters) == np.ndarray:
-            hyperparameters = self.hyperparameters_obj.reconstruct_params(hyperparameters)
-        else:
-            raise ValueError("Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
+    def compute_nll(self, hyperparameters, method = 'cholesky'):
+        if method == 'cholesky':
+            if type(hyperparameters) == dict:
+                self.hyperparameters_obj.update(hyperparameters)
+            if type(hyperparameters) == Hyperparameters:
+                self.hyperparameters_obj.update(hyperparameters)
+            elif type(hyperparameters) == np.ndarray:
+                hyperparameters = self.hyperparameters_obj.reconstruct_params(hyperparameters)
+            else:
+                raise ValueError("Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
 
-        if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
-        if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
-        self.hyperparameters_obj.update(hyperparameters)
-        K = self.gp_kernel.compute_kernel(self.X, self.X)
-        K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
-        for i in range(K.shape[2]):
-            L = scipy.linalg.cholesky(K[:, :, i], lower=True)
-            n = len(self.y)
-            one_vector = np.ones(n)
-            y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
-            alpha = scipy.linalg.cho_solve((L, True), y_adj)
-            nll = 0.5 * y_adj.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
+            if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
+            if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
+            self.hyperparameters_obj.update(hyperparameters)
+            K = self.gp_kernel.compute_kernel(self.X, self.X)
+            K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
+            for i in range(K.shape[2]):
+                L = scipy.linalg.cholesky(K[:, :, i], lower=True)
+                n = len(self.y)
+                one_vector = np.ones(n)
+                y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
+                alpha = scipy.linalg.cho_solve((L, True), y_adj)
+                nll = 0.5 * y_adj.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
 
         return nll.item()
 
