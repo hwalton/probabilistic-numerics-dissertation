@@ -162,10 +162,12 @@ def execute_gp_model():
     sample_start_index = 10000
     sample_length = 100
     num_predictions = 50
-    force_input_kernel_type = 'p_se_composite'
-    force_input_solver_type = 'metropolis_hastings'            #'iterative_search', 'metropolis_hastings', 'adam', or 'free_lunch'
-    force_response_kernel_type = 'p_se_composite'
-    force_response_solver_type = 'metropolis_hastings'         #'iterative_search' or 'metropolis_hastings
+    force_input_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite'][1]
+    force_input_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
+    force_input_predict_type = ['cholesky', 'FITC'][0]
+    force_response_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite'][1]
+    force_response_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
+    force_response_predict_type = ['cholesky', 'FITC'][0]
     n_iter = 100
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
@@ -184,7 +186,7 @@ def execute_gp_model():
                                 solver_type=force_input_solver_type,
                                 n_iter=n_iter)
     model_1_nll = force_input_model.fit_model()
-    force_input_prediction = force_input_model.predict((time_test))
+    force_input_prediction = force_input_model.predict(time_test, method = force_input_predict_type)
 
     force_response_model = GPModel(force_response_kernel_type,
                                    time,
@@ -192,7 +194,7 @@ def execute_gp_model():
                                    solver_type=force_response_solver_type,
                                    n_iter=n_iter)
     model_2_nll = force_response_model.fit_model()
-    force_response_prediction = force_response_model.predict(time_test)
+    force_response_prediction = force_response_model.predict(time_test, method = force_response_predict_type)
 
     plot_data(force_input, force_response, force_input_prediction,
               force_response_prediction, time, time_test)
