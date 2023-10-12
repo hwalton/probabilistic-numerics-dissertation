@@ -108,7 +108,8 @@ class GPModel:
 
             X = np.linalg.solve(K_UU, K_XU)
             var = sigma_n @ K_XU @ (X + K_UX @ sigma_n @ K_XU @ K_UX) @ sigma_n
-            #var = sigma_n @ K_XU @ (np.linalg.inv(K_UU) + np.array(K_UX @ sigma_n @ K_XU)) @ K_UX @ sigma_n
+            #var2 = sigma_n @ K_XU @ (np.linalg.inv(K_UU) + np.array(K_UX @ sigma_n @ K_XU)) @ K_UX @ sigma_n
+            #debug_print(f"var == var2: {np.allclose(var,var2, atol = 1E-3)}")
             out = sigma_n - var
 
         else:
