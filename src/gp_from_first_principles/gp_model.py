@@ -91,11 +91,24 @@ class GPModel:
         # }
         return K_XX_FITC, K_XU, K_UX, K_UU, K_XX
 
+    # def K_sigma_inv(self, method = 'woodbury'):
+    #     if method == 'woodbury':
+    #         K_XX_FITC, K_XU, K_UX, K_UU, K_XX = self.K_XX_FITC()
+    #         sigma_n = np.multiply(self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X)))
+    #         var = (sigma_n @ K_XU @ (np.linalg.inv(K_UU) + np.array(K_UX @ sigma_n @ K_XU)) @ K_UX @ sigma_n)
+    #         out = sigma_n - var
+    #
+    #     else:
+    #         raise ValueError("Invalid inducing method")
+    #     return out
     def K_sigma_inv(self, method = 'woodbury'):
         if method == 'woodbury':
             K_XX_FITC, K_XU, K_UX, K_UU, K_XX = self.K_XX_FITC()
             sigma_n = np.multiply(self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X)))
-            var = (sigma_n @ K_XU @ (np.linalg.inv(K_UU) + np.array(K_UX @ sigma_n @ K_XU)) @ K_UX @ sigma_n)
+
+            X = np.linalg.solve(K_UU, K_XU)
+            var = sigma_n @ K_XU @ (X + K_UX @ sigma_n @ K_XU @ K_UX) @ sigma_n
+            #var = sigma_n @ K_XU @ (np.linalg.inv(K_UU) + np.array(K_UX @ sigma_n @ K_XU)) @ K_UX @ sigma_n
             out = sigma_n - var
 
         else:
