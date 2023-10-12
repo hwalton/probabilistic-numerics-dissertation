@@ -105,17 +105,28 @@ class GPModel:
     def K_sigma_inv(self, method = 'woodbury'):
         if method == 'woodbury':
             K_XX_FITC, K_XU, K_UX, K_UU, K_XX = self.K_XX_FITC()
-            sigma_n = np.multiply(self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X)))
+            sigma_n_neg2 = np.multiply(self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X)))
 
             X = np.linalg.solve(K_UU, K_XU)
-            var = sigma_n @ K_XU @ (X + K_UX @ sigma_n @ K_XU @ K_UX) @ sigma_n
+            var = sigma_n_neg2 @ K_XU @ (X + K_UX @ sigma_n_neg2 @ K_XU @ K_UX) @ sigma_n_neg2
             #var2 = sigma_n @ K_XU @ (np.linalg.inv(K_UU) + np.array(K_UX @ sigma_n @ K_XU)) @ K_UX @ sigma_n
             #debug_print(f"var == var2: {np.allclose(var,var2, atol = 1E-3)}")
-            out = sigma_n - var
+            out = sigma_n_neg2 - var
 
         else:
             raise ValueError("Invalid inducing method")
         return out
+    # def K_sigma_inv(self, method = 'woodbury'):
+    #     if method == 'woodbury':
+    #         K_XX_FITC, K_XU, K_UX, K_UU, K_XX = self.K_XX_FITC()
+    #         sigma_n = np.multiply(self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X)))
+    #         var = (sigma_n @ K_XU @ (np.linalg.inv(K_UU) + np.array(K_UX @ sigma_n @ K_XU)) @ K_UX @ sigma_n)
+    #         out = sigma_n - var
+    #
+    #     else:
+    #         raise ValueError("Invalid inducing method")
+    #     return out
+
 
     def predict(self, X_star, method = 'FITC'):
         if method == 'FITC':
@@ -171,7 +182,7 @@ class GPModel:
                 return False
         return True
 
-    def compute_nll(self, hyperparameters, method = 'cholesky'):
+    def compute_nll(self, hyperparameters, method = 'FITC'):
         if method == 'cholesky':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
@@ -193,9 +204,31 @@ class GPModel:
                 one_vector = np.ones(n)
                 y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
                 alpha = scipy.linalg.cho_solve((L, True), y_adj)
-                nll = 0.5 * y_adj.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
+                nlml = 0.5 * y_adj.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
+        if method == 'FITC':
+            if type(hyperparameters) == dict:
+                self.hyperparameters_obj.update(hyperparameters)
+            if type(hyperparameters) == Hyperparameters:
+                self.hyperparameters_obj.update(hyperparameters)
+            elif type(hyperparameters) == np.ndarray:
+                hyperparameters = self.hyperparameters_obj.reconstruct_params(hyperparameters)
+            else:
+                raise ValueError("Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
 
-        return nll.item()
+            if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
+            if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
+            self.hyperparameters_obj.update(hyperparameters)
+            K = self.gp_kernel.compute_kernel(self.X, self.X)
+            K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
+            for i in range(K.shape[2]):
+                n = len(self.y)
+                L = scipy.linalg.cholesky(K[:, :, i], lower=True)
+                y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
+                K_sigma_inv = self.K_sigma_inv()
+                nlml = -0.5 * n * np.log(2*np.pi) - np.sum(np.log(np.diag(L))) - 0.5 * y_adj.T @ K_sigma_inv @ y_adj
+        else:
+            raise ValueError("Invalid compute_nll method")
+        return nlml.item()
 
     # def flatten_params(self, params):
     #     flat_params = []
