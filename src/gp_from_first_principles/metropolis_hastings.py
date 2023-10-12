@@ -14,7 +14,7 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
     for j in range(n_iter):
 
         debug_print(f"Iteration: {j+1}/{n_iter} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-        if False:#j > 10 and best_nll < -sample_length:
+        if j > 10 and best_nll < -sample_length:
         #if j > 2:
             debug_print(
                 f"Stopping after {j} iterations due to nll sufficiently low: {best_nll}")

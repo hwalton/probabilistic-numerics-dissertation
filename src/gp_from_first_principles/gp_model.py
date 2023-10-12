@@ -90,7 +90,7 @@ class GPModel:
         #     'K_UU': K_UU,
         #     'K_XX': K_XX,
         # }
-        return K_XX_FITC, K_XU, K_UX, K_UU, K_XX
+        return K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX
 
     # def K_sigma_inv(self, method = 'woodbury'):
     #     if method == 'woodbury':
@@ -104,7 +104,7 @@ class GPModel:
     #     return out
     def K_sigma_inv(self, method = 'woodbury'):
         if method == 'woodbury':
-            K_XX_FITC, K_XU, K_UX, K_UU, K_XX = self.K_XX_FITC()
+            K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
             sigma_n_neg2 = np.multiply(self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X)))
 
             X = np.linalg.solve(K_UU, K_XU)
@@ -182,7 +182,7 @@ class GPModel:
                 return False
         return True
 
-    def compute_nll(self, hyperparameters, method = 'FITC'):
+    def compute_nll(self, hyperparameters, method = 'FITC2'):
         if method == 'cholesky':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
@@ -204,7 +204,7 @@ class GPModel:
                 one_vector = np.ones(n)
                 y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
                 alpha = scipy.linalg.cho_solve((L, True), y_adj)
-                nlml = 0.5 * y_adj.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
+                nll = 0.5 * y_adj.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
         if method == 'FITC':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
@@ -225,10 +225,47 @@ class GPModel:
                 L = scipy.linalg.cholesky(K[:, :, i], lower=True)
                 y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
                 K_sigma_inv = self.K_sigma_inv()
-                nlml = -0.5 * n * np.log(2*np.pi) - np.sum(np.log(np.diag(L))) - 0.5 * y_adj.T @ K_sigma_inv @ y_adj
+                nll = -0.5 * n * np.log(2*np.pi) - np.sum(np.log(np.diag(L))) - 0.5 * y_adj.T @ K_sigma_inv @ y_adj
+        if method == 'FITC2':
+            if type(hyperparameters) == dict:
+                self.hyperparameters_obj.update(hyperparameters)
+            if type(hyperparameters) == Hyperparameters:
+                self.hyperparameters_obj.update(hyperparameters)
+            elif type(hyperparameters) == np.ndarray:
+                hyperparameters = self.hyperparameters_obj.reconstruct_params(
+                    hyperparameters)
+            else:
+                raise ValueError(
+                    "Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
+
+            if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
+            if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
+            self.hyperparameters_obj.update(hyperparameters)
+            #K = self.gp_kernel.compute_kernel(self.X, self.X)
+            #K += np.repeat(
+            #    np.array(np.eye(len(self.X)) * 1e-3)[:, :, np.newaxis],
+            #   self.X.shape[1], axis=2)
+            for i in range(1):
+                n = len(self.y)
+            #    L = scipy.linalg.cholesky(K[:, :, i], lower=True)
+                y_adj = np.squeeze(self.y - self.hyperparameters_obj.dict()[
+                    'mean_func_c'])
+                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
+                beta = self.hyperparameters_obj.dict()['noise_level'] ** -1
+                cov = Q_XX + beta ** -1 * np.eye(len(Q_XX))
+                log_likelihood = scipy.stats.multivariate_normal.logpdf(y_adj,
+                                                            mean=np.zeros(
+                                                                n),
+                                                            cov=cov, allow_singular= True)
+
+                # Compute the second term of the lower bound
+                trace_term = 0.5 * beta * np.trace(K_XX - Q_XX)
+
+                # Compute the lower bound on the log marginal likelihood
+                nll = np.array(-log_likelihood - trace_term)
         else:
             raise ValueError("Invalid compute_nll method")
-        return nlml.item()
+        return nll.item()
 
     # def flatten_params(self, params):
     #     flat_params = []
