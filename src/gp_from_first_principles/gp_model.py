@@ -75,16 +75,12 @@ class GPModel:
         K_UU = np.squeeze(self.gp_kernel.compute_kernel(U, U))
         K_XX = np.squeeze(self.gp_kernel.compute_kernel(X, X))
 
-        # Compute the inverse of K_UU
-        K_UU_inv = np.linalg.inv(K_UU + 1e-6 * np.eye(
-            U.shape[0]))  # Add jitter for numerical stability
+        K_UU_stable = K_UU + 1e-6 * np.eye(U.shape[0])
 
-        # Compute Q_XX
-        Q_XX = K_XU @ K_UU_inv @ K_XU.T
+        X = np.linalg.solve(K_UU_stable, K_XU.T)
+        Q_XX = K_XU @ X
 
-
-        # Compute K_XX_FITC
-        K_XX_FITC = K_XX + Q_XX - K_XU @ K_UU_inv @ K_XU.T
+        K_XX_FITC = K_XX + Q_XX - K_XU @ X
 
 
         # out = {
