@@ -380,14 +380,13 @@ class GPModel:
                 K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
                 K_UU_inv = np.linalg.pinv(K_UU + 1E-3)
                 K_tilde = K_XU @ K_UU_inv @ K_UX
+                y_adj = np.squeeze(self.y - self.hyperparameters_obj.dict()[
+                    'mean_func_c'])
+                sigma_2 = np.array(self.hyperparameters_obj.dict()[
+                             'noise_level'] ** 2 * np.eye(Q_XX.shape[0]))
                 try:
-                    L = scipy.linalg.cholesky(K_tilde + 1E-4 * np.eye(n),
-                                              lower=True)
-                    alpha = scipy.linalg.cho_solve((L, True), self.y)
-                    y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
-                    nll = 0.5 * y_adj.T @ alpha + np.sum(
-                        np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
-                    nll = nll
+                    nll = 0.5 * np.log(np.linalg.det(Q_XX + sigma_2)) + 0.5 * y_adj.T @ (self.K_sigma_inv()) @ y_adj + 0.5 * len(self.X) * np.log(2 * np.pi)
+                    nll = np.array(nll)
                 except np.linalg.LinAlgError:
                     nll = np.array([10E10])
                     debug_print(
