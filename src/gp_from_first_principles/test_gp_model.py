@@ -46,6 +46,11 @@ class TestGPModel(unittest.TestCase):
         result = np.array([K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX])
 
         correct = np.array([
+            np.array([0.01,0.,0.,0.],
+            [0.,0.01,0.,0.],
+            [0.,0.,0.01,0.],
+            [0.,0.,0.,0.01]),
+
 
         ])
 
