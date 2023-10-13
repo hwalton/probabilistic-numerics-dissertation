@@ -78,10 +78,10 @@ class GPModel:
 
         K_UU_stable = K_UU + 1e-6 * np.eye(U.shape[0])
 
-        X = np.linalg.solve(K_UU_stable, K_XU.T)
-        Q_XX = K_XU @ X
+        var4 = np.linalg.solve(K_UU_stable, K_XU.T)
+        Q_XX = K_XU @ var4
 
-        K_XX_FITC = K_XX + Q_XX - K_XU @ X
+        K_XX_FITC = K_XX + Q_XX - K_XU @ var4
 
 
         # out = {
@@ -182,7 +182,7 @@ class GPModel:
                 return False
         return True
 
-    def compute_nll(self, hyperparameters, method = 'FITC2'):
+    def compute_nll(self, hyperparameters, method = 'FITC3'):
         if method == 'cholesky':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
@@ -205,7 +205,7 @@ class GPModel:
                 y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
                 alpha = scipy.linalg.cho_solve((L, True), y_adj)
                 nll = 0.5 * y_adj.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
-        if method == 'FITC':
+        elif method == 'FITC':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
             if type(hyperparameters) == Hyperparameters:
@@ -222,11 +222,12 @@ class GPModel:
             K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
             for i in range(K.shape[2]):
                 n = len(self.y)
-                L = scipy.linalg.cholesky(K[:, :, i], lower=True)
+                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
+                L = scipy.linalg.cholesky(K_UU, lower=True)
                 y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
                 K_sigma_inv = self.K_sigma_inv()
                 nll = -0.5 * n * np.log(2*np.pi) - np.sum(np.log(np.diag(L))) - 0.5 * y_adj.T @ K_sigma_inv @ y_adj
-        if method == 'FITC2':
+        elif method == 'FITC2':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
             if type(hyperparameters) == Hyperparameters:
@@ -263,6 +264,43 @@ class GPModel:
 
                 # Compute the lower bound on the log marginal likelihood
                 nll = np.array(-log_likelihood - trace_term)
+        elif method == 'FITC3':
+            if type(hyperparameters) == dict:
+                self.hyperparameters_obj.update(hyperparameters)
+            if type(hyperparameters) == Hyperparameters:
+                self.hyperparameters_obj.update(hyperparameters)
+            elif type(hyperparameters) == np.ndarray:
+                hyperparameters = self.hyperparameters_obj.reconstruct_params(
+                    hyperparameters)
+            else:
+                raise ValueError(
+                    "Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
+
+            if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
+            if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
+            self.hyperparameters_obj.update(hyperparameters)
+            #K = self.gp_kernel.compute_kernel(self.X, self.X)
+            #K += np.repeat(
+            #    np.array(np.eye(len(self.X)) * 1e-3)[:, :, np.newaxis],
+            #    self.X.shape[1], axis=2)
+            for i in range(1):
+                n = len(self.y)
+                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
+                K_UU_inv = np.linalg.inv(K_UU)
+                K_tilde = K_XU @ K_UU_inv @ K_UX
+                try:
+                    L = scipy.linalg.cholesky(K_tilde + 1E-4 * np.eye(n),
+                                              lower=True)
+                    alpha = scipy.linalg.cho_solve((L, True), self.y)
+                    y_adj = self.y - self.hyperparameters_obj.dict()[
+                        'mean_func_c']
+                    nll = 0.5 * y_adj.T @ alpha + np.sum(
+                        np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
+                except np.linalg.LinAlgError:
+                    nll = np.array([10E10])
+                    debug_print(
+                        "Cholesky decomposition failed. Setting nll to a large value.")
+
         else:
             raise ValueError("Invalid compute_nll method")
         return nll.item()
