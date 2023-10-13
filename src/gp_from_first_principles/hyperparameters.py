@@ -15,7 +15,7 @@ class Hyperparameters:
             self._initial_hyperparameters = {
                 'kernel_type': 'squared_exponential',
                 'sigma': 0.1,
-                'l': 1,
+                'l': 1.,
                 'mean_func_c': 0.001,
                 'noise_level': 0.1
             }

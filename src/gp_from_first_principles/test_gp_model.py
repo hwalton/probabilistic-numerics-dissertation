@@ -39,23 +39,46 @@ class TestGPModel(unittest.TestCase):
         gp.X = np.array([2,4,6,8])
         gp.U = np.array([3,7])
 
-        gp.hyperparameters_obj.update(np.array([0.1,0.01,1E-3,0.001,0.1]))
+        gp.hyperparameters_obj.update(np.array([0.1,1.,0.001,0.1]))
 
         K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX = gp.K_XX_FITC()
 
-        result = np.array([K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX])
+        result = [K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX]
 
-        correct = np.array([
-            np.array([0.01,0.,0.,0.],
-            [0.,0.01,0.,0.],
-            [0.,0.,0.01,0.],
-            [0.,0.,0.,0.01]),
+        K_XX_FITC_C = np.array([[1.00E-02, 1.35E-03, 3.35E-06, 1.52E-10],
+            [1.35E-03, 1.00E-02, 1.35E-03, 3.35E-06],
+            [3.35E-06, 1.35E-03, 1.00E-02, 1.35E-03],
+            [1.52E-10, 3.35E-06, 1.35E-03, 1.00E-02]])
+
+        K_XU_C = np.array([[6.07E-03, 3.73E-08],
+                 [6.07E-03, 1.11E-04],
+                 [1.11E-04, 6.07E-03],
+                 [3.73E-08, 6.07E-03]])
+
+        K_UX_C = K_XU_C.T
+
+        K_UU_C = np.array([[1.00E-02,3.35E-06],
+                    [3.35E-06,1.00E-02]])
+
+        K_XX_C = K_XX_FITC_C
+
+        Q_XX_C = K_XU_C @ np.linalg.inv(K_UU_C) @ K_UX_C
+
+        K_UU_inv_KUX_C = np.linalg.inv(K_UU_C) @ K_UX_C
 
 
-        ])
 
+        correct = [ K_XX_FITC_C, K_XU_C, K_UX_C, K_XX_C, Q_XX_C, K_UU_inv_KUX]
 
-        assert np.K_XX_FITC ==
+        for i in correct:
+            assert np.allclose(K_XX_FITC, K_XX_FITC_C, atol = 1E-2), "incorrect K_XX_FITC"
+            assert np.allclose(K_XU, K_XU_C, atol=1E-2), "incorrect K_XU"
+            assert np.allclose(K_UX, K_UX_C, atol=1E-2), "incorrect K_UX"
+            assert np.allclose(K_UU, K_UU_C, atol=1E-2), "incorrect K_UU"
+            assert np.allclose(K_XX, K_XX_C, atol=1E-2), "incorrect K_XX"
+            assert np.allclose(Q_XX, Q_XX_C, atol=1E-2), "incorrect Q_XX"
+            assert np.allclose(K_UU_inv_KUX, K_UU_inv_KUX_C, atol=1E-2), "incorrect K_UU_inv_KUX"
+
 
 
 
