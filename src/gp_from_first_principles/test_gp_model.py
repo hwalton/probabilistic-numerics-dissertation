@@ -1,6 +1,6 @@
 # test_my_module.py
 import math
-
+import time as timer
 from gp_model import GPModel
 import unittest
 import utils
@@ -43,18 +43,27 @@ class TestGPModel(unittest.TestCase):
                                     solver_type=force_input_solver_type,
                                     n_iter=force_input_n_iter)
 
-        U = np.array([[1, 2],
-                     [3, 4],
-                     [5, 6]])
+        U = np.ones((4000,2))
         V_T = U.T
-        D = 3 * np.eye(U.shape[0])
+        D = 1.001 * np.eye(U.shape[0])
+
+        start_time = timer.time()
 
         fast_det = force_input_model.fast_det(U,V_T,D)
+
+        end_time = timer.time()
+        elapsed_time = end_time - start_time
+        print(f"fast_det ran in {elapsed_time} seconds")
+
+        start_time = timer.time()
+
         det = np.linalg.det(D+U @ V_T)
         equal = math.isclose(fast_det, det, rel_tol=1E-9, abs_tol=1E-9)
         assert equal, "Incorrect Fast_det"
 
-
+        end_time = timer.time()
+        elapsed_time = end_time - start_time
+        print(f"det ran in {elapsed_time} seconds")
 
 
 if __name__ == '__main__':

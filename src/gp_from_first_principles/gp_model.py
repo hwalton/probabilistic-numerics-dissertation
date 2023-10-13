@@ -210,7 +210,10 @@ class GPModel:
     def fast_det(self, U, V_T, D):
         n = U.shape[0]
         m = U.shape[1]
-        fast_det = np.linalg.det(D) * np.linalg.det(np.eye(m) + V_T @ np.linalg.inv(D) @ U)
+        diag_D = np.diag(D)
+        D_inv = np.diag(np.reciprocal(diag_D))  # O(n)
+        det_D = np.prod(diag_D)  # O(n)
+        fast_det = det_D * np.linalg.det(np.eye(m) + V_T @ D_inv @ U)
         return fast_det
 
 
