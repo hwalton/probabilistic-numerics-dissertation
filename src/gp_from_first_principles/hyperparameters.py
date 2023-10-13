@@ -96,7 +96,7 @@ class Hyperparameters:
                 'kernel_type': 'wn_se_composite',
                 'periodic_param_bounds': {'sigma': (0.001,10)},
                 'se_param_bounds': {'sigma': (0.001,10), 'l': (0.001,10)},
-                'mean_func_c': (-1000,1000),
+                'mean_func_c': (-1E-10,1E-10),
                 'noise_level': (0.0001,1)
             }
         else:

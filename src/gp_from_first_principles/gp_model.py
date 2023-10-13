@@ -57,7 +57,7 @@ class GPModel:
     import numpy as np
     import scipy.linalg
 
-    def U_induced(self, M_one_in = 1, method ='k_means'):
+    def U_induced(self, M_one_in = 3, method ='k_means'):
         M = len(self.X) // M_one_in
         if method == 'k_means':
             kmeans = KMeans(n_clusters=M, n_init = 3).fit(self.X)
@@ -286,7 +286,7 @@ class GPModel:
             for i in range(1):
                 n = len(self.y)
                 K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
-                K_UU_inv = np.linalg.inv(K_UU)
+                K_UU_inv = np.linalg.pinv(K_UU + 1E-3)
                 K_tilde = K_XU @ K_UU_inv @ K_UX
                 try:
                     L = scipy.linalg.cholesky(K_tilde + 1E-4 * np.eye(n),
