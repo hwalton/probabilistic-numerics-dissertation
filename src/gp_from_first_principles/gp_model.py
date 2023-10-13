@@ -78,7 +78,8 @@ class GPModel:
 
         K_UU_stable = K_UU + 1e-6 * np.eye(U.shape[0])
 
-        var4 = np.linalg.solve(K_UU_stable, K_UX)
+        L_UU = scipy.linalg.cholesky(K_UU_stable, lower=True)
+        var4 = scipy.linalg.cho_solve((L_UU, True), K_UX)
         Q_XX = K_XU @ var4
 
         #K_XX_FITC = K_XX + Q_XX - K_XU @ var4
@@ -184,7 +185,7 @@ class GPModel:
                 return False
         return True
 
-    def compute_nll(self, hyperparameters, method = 'FITC5'):
+    def compute_nll(self, hyperparameters, method = 'FITC4'):
         if method == 'cholesky':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
