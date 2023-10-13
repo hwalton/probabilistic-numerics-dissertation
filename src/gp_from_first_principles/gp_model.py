@@ -57,14 +57,35 @@ class GPModel:
     import numpy as np
     import scipy.linalg
 
-    def U_induced(self, M_one_in = 3, method ='k_means'):
+    from sklearn.cluster import KMeans
+    import numpy as np
+
+    def U_induced(self, M_one_in=4, method='k_means'):
         M = len(self.X) // M_one_in
+
         if method == 'k_means':
-            kmeans = KMeans(n_clusters=M, n_init = 3).fit(self.X)
-            U = kmeans.cluster_centers_
+            # Perform k-means clustering on self.X
+            kmeans = KMeans(n_clusters=M, n_init=3).fit(self.X)
+
+            # Extract the cluster centers for self.X
+            U_X = kmeans.cluster_centers_
+
+            # Determine the corresponding self.y values for the inducing points
+            U_y = np.zeros((M, self.y.shape[1] if self.y.ndim > 1 else 1))
+            for i in range(M):
+                # Find the indices of the points assigned to cluster i
+                idx = np.where(kmeans.labels_ == i)[0]
+
+                # Assign the mean of the self.y values of the points in cluster i
+                # to the corresponding inducing output
+                U_y[i] = np.mean(self.y[idx], axis=0)
         else:
             raise ValueError("Invalid inducing method")
-        return U
+        self.U_X = U_X
+        self.U_y = U_y
+        self.X = U_X
+        self.y = U_y
+        return U_X
 
     def K_XX_FITC(self):
 
@@ -158,8 +179,7 @@ class GPModel:
             self.mu = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
             self.s2 = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
             for i in range(K_X_X.shape[2]):
-                L[:, :, i] = npla.cholesky(
-                    K_X_X[:, :, i] + 1e-10 * np.eye(K_X_X.shape[0]))
+                L[:, :, i] = npla.cholesky( K_X_X[:, :, i] + 1e-10 * np.eye(K_X_X.shape[0]))
                 Lk = np.squeeze(npla.solve(L[:, :, i], K_star_X[:, :, i]))
                 self.mu[:, i] = self.hyperparameters_obj.dict()[
                                     'mean_func_c'] + np.dot(Lk.T,
@@ -185,8 +205,30 @@ class GPModel:
                 return False
         return True
 
-    def compute_nll(self, hyperparameters, method = 'FITC6'):
+    def compute_nll(self, hyperparameters, method = 'cholesky_KMeans'):
         if method == 'cholesky':
+            if type(hyperparameters) == dict:
+                self.hyperparameters_obj.update(hyperparameters)
+            if type(hyperparameters) == Hyperparameters:
+                self.hyperparameters_obj.update(hyperparameters)
+            elif type(hyperparameters) == np.ndarray:
+                hyperparameters = self.hyperparameters_obj.reconstruct_params(hyperparameters)
+            else:
+                raise ValueError("Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
+
+            if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
+            if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
+            self.hyperparameters_obj.update(hyperparameters)
+            K = self.gp_kernel.compute_kernel(self.X, self.X)
+            K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
+            for i in range(K.shape[2]):
+                L = scipy.linalg.cholesky(K[:, :, i], lower=True)
+                n = len(self.y)
+                one_vector = np.ones(n)
+                y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
+                alpha = scipy.linalg.cho_solve((L, True), y_adj)
+                nll = 0.5 * y_adj.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
+        elif method == 'cholesky_KMeans':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
             if type(hyperparameters) == Hyperparameters:
@@ -414,14 +456,14 @@ class GPModel:
             for i in range(1):
                 n = len(self.y)
                 K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
-                K_UU_inv = np.linalg.pinv(K_UU + 1E-3)
-                K_tilde = K_XU @ K_UU_inv @ K_UX
+                #K_UU_inv = np.linalg.pinv(K_UU + 1E-3)
+                #K_tilde = K_XU @ K_UU_inv @ K_UX
 
-                y_adj = np.squeeze(self.y - self.hyperparameters_obj.dict()[
+                y_adj = np.squeeze(self.U_y - self.hyperparameters_obj.dict()[
                     'mean_func_c'])
                 sigma_2 = self.hyperparameters_obj.dict()[
                              'noise_level'] ** 2
-                K = K_XX
+                K = K_UU
                 try:
                     var923 = K/sigma_2+np.eye(K.shape[0])
                     L = scipy.linalg.cholesky(var923).T

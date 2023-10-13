@@ -21,12 +21,13 @@ def load_data(start = 0, length = 65536):
 
     return input, output, time
 
-def plot_data(force_input, force_response, force_input_prediction, force_response_prediction, time, time_test):
+def plot_data(force_input, force_response, force_input_prediction, force_response_prediction, time, time_test, force_input_model, force_response_model):
     plt.figure(figsize=(12, 6))
 
     plt.subplot(2, 1, 1)  # 2 rows, 1 column, plot 1
     plt.scatter(time, force_input, label='Force input', color='green')
     plt.scatter(time_test, force_input_prediction[0], label='Predicted Mean', color='red')
+    plt.scatter(force_input_model.U_X, force_input_model.U_y, label='KMeans Clusters', color='purple')
 
     upper_bound = force_input_prediction[0] + force_input_prediction[1]
     lower_bound = force_input_prediction[0] - force_input_prediction[1]
@@ -43,6 +44,7 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
     plt.subplot(2, 1, 2)  # 2 rows, 1 column, plot 2
     plt.scatter(time, force_response, label='Force Response', color='green')
     plt.scatter(time_test, force_response_prediction[0], label='Predicted Mean', color='red')
+    plt.scatter(force_response_model.U_X, force_response_model.U_y, label='KMeans Clusters', color='purple')
 
     # Assuming prediction[1] is the standard deviation
     upper_bound = force_response_prediction[0] + force_response_prediction[1]
@@ -160,20 +162,20 @@ def format_data(X):
 
 def execute_gp_model():
     sample_start_index = 1000
-    sample_length = 100
+    sample_length = 1000
     num_predictions = 40
-    force_input_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite'][1]
+    force_input_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite'][2]
     force_input_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
     force_input_predict_type = ['cholesky', 'FITC'][0]
-    force_input_n_iter = 30
+    force_input_n_iter = 50
     force_response_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite'][1]
     force_response_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
     force_response_predict_type = ['cholesky', 'FITC'][0]
-    force_response_n_iter = 30
+    force_response_n_iter = 50
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
-    lower = time[0] - 0.1 * (time[-1] - time[0])
-    upper = time[-1] + 0.1 * (time[-1] - time[0])
+    lower = time[0] - 0 * (time[-1] - time[0])
+    upper = time[-1] + 0 * (time[-1] - time[0])
     time_test = np.linspace(lower, upper, num=num_predictions, endpoint=True)
     force_input = format_data(force_input)
     time = format_data(time)
@@ -198,7 +200,7 @@ def execute_gp_model():
     force_response_prediction = force_response_model.predict(time_test, method = force_response_predict_type)
 
     plot_data(force_input, force_response, force_input_prediction,
-              force_response_prediction, time, time_test)
+              force_response_prediction, time, time_test, force_input_model, force_response_model)
 
     return model_1_nll, model_2_nll
 def main():
