@@ -57,10 +57,10 @@ class GPModel:
     import numpy as np
     import scipy.linalg
 
-    def U_induced(self, M_one_in = 5, method ='k_means'):
+    def U_induced(self, M_one_in = 1, method ='k_means'):
         M = len(self.X) // M_one_in
         if method == 'k_means':
-            kmeans = KMeans(n_clusters=M, n_init = 5).fit(self.X)
+            kmeans = KMeans(n_clusters=M, n_init = 3).fit(self.X)
             U = kmeans.cluster_centers_
         else:
             raise ValueError("Invalid inducing method")
@@ -78,10 +78,11 @@ class GPModel:
 
         K_UU_stable = K_UU + 1e-6 * np.eye(U.shape[0])
 
-        var4 = np.linalg.solve(K_UU_stable, K_XU.T)
+        var4 = np.linalg.solve(K_UU_stable, K_UX)
         Q_XX = K_XU @ var4
 
-        K_XX_FITC = K_XX + Q_XX - K_XU @ var4
+        #K_XX_FITC = K_XX + Q_XX - K_XU @ var4
+        K_XX_FITC = K_XU @ var4
 
 
         # out = {
@@ -106,10 +107,11 @@ class GPModel:
         if method == 'woodbury':
             K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
             sigma_n_neg2 = np.multiply(self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X)))
+            #sigma_n_neg2 = np.multiply(0.001, np.eye(len(self.X)))
 
-            X = np.linalg.solve(K_UU, K_XU)
-            var = sigma_n_neg2 @ K_XU @ (X + K_UX @ sigma_n_neg2 @ K_XU @ K_UX) @ sigma_n_neg2
-            #var2 = sigma_n @ K_XU @ (np.linalg.inv(K_UU) + np.array(K_UX @ sigma_n @ K_XU)) @ K_UX @ sigma_n
+            var237 = np.linalg.solve(K_UU, K_UX)
+            var = sigma_n_neg2 @ K_XU @ (var237 + K_UX @ sigma_n_neg2 @ K_XU @ K_UX) @ sigma_n_neg2
+            #var2 = sigma_n_neg2 @ K_XU @ (np.linalg.inv(K_UU) + np.array(K_UX @ sigma_n_neg2 @ K_XU)) @ K_UX @ sigma_n_neg2
             #debug_print(f"var == var2: {np.allclose(var,var2, atol = 1E-3)}")
             out = sigma_n_neg2 - var
 
@@ -182,7 +184,7 @@ class GPModel:
                 return False
         return True
 
-    def compute_nll(self, hyperparameters, method = 'FITC3'):
+    def compute_nll(self, hyperparameters, method = 'FITC5'):
         if method == 'cholesky':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
@@ -264,6 +266,7 @@ class GPModel:
 
                 # Compute the lower bound on the log marginal likelihood
                 nll = np.array(-log_likelihood - trace_term)
+
         elif method == 'FITC3':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
@@ -300,7 +303,95 @@ class GPModel:
                     nll = np.array([10E10])
                     debug_print(
                         "Cholesky decomposition failed. Setting nll to a large value.")
+        elif method == 'FITC4':
+            if type(hyperparameters) == dict:
+                self.hyperparameters_obj.update(hyperparameters)
+            if type(hyperparameters) == Hyperparameters:
+                self.hyperparameters_obj.update(hyperparameters)
+            elif type(hyperparameters) == np.ndarray:
+                hyperparameters = self.hyperparameters_obj.reconstruct_params(
+                    hyperparameters)
+            else:
+                raise ValueError(
+                    "Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
 
+            if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
+            if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
+            self.hyperparameters_obj.update(hyperparameters)
+            # K = self.gp_kernel.compute_kernel(self.X, self.X)
+            # K += np.repeat(
+            #    np.array(np.eye(len(self.X)) * 1e-3)[:, :, np.newaxis],
+            #   self.X.shape[1], axis=2)
+            for i in range(1):
+                n = len(self.y)
+                #    L = scipy.linalg.cholesky(K[:, :, i], lower=True)
+                y_adj = np.squeeze(self.y - self.hyperparameters_obj.dict()[
+                    'mean_func_c'])
+                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
+                #beta = self.hyperparameters_obj.dict()['noise_level'] ** -1
+                K_sigma_inv = self.K_sigma_inv()
+                #eigs = np.linalg.eigvalsh(K_sigma_inv)
+                #debug_print(f"cov eigenvalues: {eigs}")
+                big_lambda = np.diag(np.diag(K_XX-Q_XX))
+                #eigs_big_lambda = np.linalg.eigvalsh(big_lambda)
+                #debug_print(f"big lambda eigenvalues: {eigs_big_lambda}")
+                cov = K_sigma_inv + big_lambda
+                #eigs2 = np.linalg.eigvalsh(cov)
+                #debug_print(f"cov eigenvalues2: {eigs2}")
+                try:
+                    log_likelihood = scipy.stats.multivariate_normal.logpdf(y_adj,
+                                                                            mean=np.zeros(
+                                                                                n),
+                                                                            cov=cov,
+                                                                            allow_singular=True)
+
+                    # Compute the second term of the lower bound
+                    #trace_term = 0.5 * beta * np.trace(K_XX - Q_XX)
+
+                    # Compute the lower bound on the log marginal likelihood
+
+                    nll = np.array(-log_likelihood)# - trace_term)
+                    debug_print(f"nll = {nll}")
+                except ValueError:
+                    nll = np.array([10E10])
+                    debug_print(
+                        "logpdf failed. Setting nll to a large value.")
+        elif method == 'FITC5':
+            if type(hyperparameters) == dict:
+                self.hyperparameters_obj.update(hyperparameters)
+            if type(hyperparameters) == Hyperparameters:
+                self.hyperparameters_obj.update(hyperparameters)
+            elif type(hyperparameters) == np.ndarray:
+                hyperparameters = self.hyperparameters_obj.reconstruct_params(
+                    hyperparameters)
+            else:
+                raise ValueError(
+                    "Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
+
+            if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
+            if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
+            self.hyperparameters_obj.update(hyperparameters)
+            #K = self.gp_kernel.compute_kernel(self.X, self.X)
+            #K += np.repeat(
+            #    np.array(np.eye(len(self.X)) * 1e-3)[:, :, np.newaxis],
+            #    self.X.shape[1], axis=2)
+            for i in range(1):
+                n = len(self.y)
+                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
+                K_UU_inv = np.linalg.pinv(K_UU + 1E-3)
+                K_tilde = K_XU @ K_UU_inv @ K_UX
+                try:
+                    L = scipy.linalg.cholesky(K_tilde + 1E-4 * np.eye(n),
+                                              lower=True)
+                    alpha = scipy.linalg.cho_solve((L, True), self.y)
+                    y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
+                    nll = 0.5 * y_adj.T @ alpha + np.sum(
+                        np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
+                    nll = nll
+                except np.linalg.LinAlgError:
+                    nll = np.array([10E10])
+                    debug_print(
+                        "Cholesky decomposition failed. Setting nll to a large value.")
         else:
             raise ValueError("Invalid compute_nll method")
         return nll.item()
