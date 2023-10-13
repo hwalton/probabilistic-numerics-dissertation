@@ -60,7 +60,7 @@ class GPModel:
     from sklearn.cluster import KMeans
     import numpy as np
 
-    def U_induced(self, M_one_in=4, method='k_means'):
+    def U_induced(self, M_one_in=1, method='k_means'):
         M = len(self.X) // M_one_in
 
         if method == 'k_means':
@@ -83,8 +83,8 @@ class GPModel:
             raise ValueError("Invalid inducing method")
         self.U_X = U_X
         self.U_y = U_y
-        self.X = U_X
-        self.y = U_y
+        #self.X = U_X
+        #self.y = U_y
         return U_X
 
     def K_XX_FITC(self):
@@ -100,11 +100,12 @@ class GPModel:
         K_UU_stable = K_UU + 1e-6 * np.eye(U.shape[0])
 
         L_UU = scipy.linalg.cholesky(K_UU_stable, lower=True)
-        var4 = scipy.linalg.cho_solve((L_UU, True), K_UX)
-        Q_XX = K_XU @ var4
-
+        K_UU_inv_KUX = scipy.linalg.cho_solve((L_UU, True), K_UX)
+        Q_XX = K_XU @ K_UU_inv_KUX
+        rank_Q_XX = np.linalg.matrix_rank(Q_XX)
+        debug_print(f"Q_XX Rank: {rank_Q_XX}")
         #K_XX_FITC = K_XX + Q_XX - K_XU @ var4
-        K_XX_FITC = K_XU @ var4
+        K_XX_FITC = K_XU @ K_UU_inv_KUX
 
 
         # out = {
@@ -113,7 +114,7 @@ class GPModel:
         #     'K_UU': K_UU,
         #     'K_XX': K_XX,
         # }
-        return K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX
+        return K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX
 
     # def K_sigma_inv(self, method = 'woodbury'):
     #     if method == 'woodbury':
@@ -127,14 +128,14 @@ class GPModel:
     #     return out
     def K_sigma_inv(self, method = 'woodbury'):
         if method == 'woodbury':
-            K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
+            K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX= self.K_XX_FITC()
             sigma_n_neg2 = np.multiply(self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X)))
             #sigma_n_neg2 = np.multiply(0.001, np.eye(len(self.X)))
 
             var237 = np.linalg.solve(K_UU, K_UX)
             var = sigma_n_neg2 @ K_XU @ (var237 + K_UX @ sigma_n_neg2 @ K_XU @ K_UX) @ sigma_n_neg2
-            #var2 = sigma_n_neg2 @ K_XU @ (np.linalg.inv(K_UU) + np.array(K_UX @ sigma_n_neg2 @ K_XU)) @ K_UX @ sigma_n_neg2
-            #debug_print(f"var == var2: {np.allclose(var,var2, atol = 1E-3)}")
+            var2 = sigma_n_neg2 @ K_XU @ (np.linalg.inv(K_UU) + np.array(K_UX @ sigma_n_neg2 @ K_XU)) @ K_UX @ sigma_n_neg2
+            debug_print(f"var == var2: {np.allclose(var,var2, atol = 1E-3)}")
             out = sigma_n_neg2 - var
 
         else:
@@ -205,7 +206,15 @@ class GPModel:
                 return False
         return True
 
-    def compute_nll(self, hyperparameters, method = 'cholesky_KMeans'):
+
+    def fast_det(self, U, V_T, D):
+        n = U.shape[0]
+        m = U.shape[1]
+        fast_det = np.linalg.det(D) * np.linalg.det(np.eye(m) + V_T @ np.linalg.inv(D) @ U)
+        return fast_det
+
+
+    def compute_nll(self, hyperparameters, method = 'FITC_18_134'):
         if method == 'cholesky':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
@@ -267,7 +276,7 @@ class GPModel:
             K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
             for i in range(K.shape[2]):
                 n = len(self.y)
-                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
+                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX = self.K_XX_FITC()
                 L = scipy.linalg.cholesky(K_UU, lower=True)
                 y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
                 K_sigma_inv = self.K_sigma_inv()
@@ -296,7 +305,7 @@ class GPModel:
             #    L = scipy.linalg.cholesky(K[:, :, i], lower=True)
                 y_adj = np.squeeze(self.y - self.hyperparameters_obj.dict()[
                     'mean_func_c'])
-                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
+                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX = self.K_XX_FITC()
                 beta = self.hyperparameters_obj.dict()['noise_level'] ** -1
                 cov = Q_XX + beta ** -1 * np.eye(len(Q_XX))
                 log_likelihood = scipy.stats.multivariate_normal.logpdf(y_adj,
@@ -331,7 +340,7 @@ class GPModel:
             #    self.X.shape[1], axis=2)
             for i in range(1):
                 n = len(self.y)
-                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
+                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX = self.K_XX_FITC()
                 K_UU_inv = np.linalg.pinv(K_UU + 1E-3)
                 K_tilde = K_XU @ K_UU_inv @ K_UX
                 try:
@@ -370,7 +379,7 @@ class GPModel:
                 #    L = scipy.linalg.cholesky(K[:, :, i], lower=True)
                 y_adj = np.squeeze(self.y - self.hyperparameters_obj.dict()[
                     'mean_func_c'])
-                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
+                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX = self.K_XX_FITC()
                 #beta = self.hyperparameters_obj.dict()['noise_level'] ** -1
                 K_sigma_inv = self.K_sigma_inv()
                 #eigs = np.linalg.eigvalsh(K_sigma_inv)
@@ -420,7 +429,7 @@ class GPModel:
             #    self.X.shape[1], axis=2)
             for i in range(1):
                 n = len(self.y)
-                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
+                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX = self.K_XX_FITC()
                 K_UU_inv = np.linalg.pinv(K_UU + 1E-3)
                 K_tilde = K_XU @ K_UU_inv @ K_UX
                 y_adj = np.squeeze(self.y - self.hyperparameters_obj.dict()[
@@ -455,7 +464,7 @@ class GPModel:
             #    self.X.shape[1], axis=2)
             for i in range(1):
                 n = len(self.y)
-                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
+                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX = self.K_XX_FITC()
                 #K_UU_inv = np.linalg.pinv(K_UU + 1E-3)
                 #K_tilde = K_XU @ K_UU_inv @ K_UX
 
@@ -473,6 +482,52 @@ class GPModel:
                     nll = np.array([10E10])
                     debug_print(
                         "Cholesky decomposition failed. Setting nll to a large value.")
+        elif method == 'FITC_18_134':
+            if type(hyperparameters) == dict:
+                self.hyperparameters_obj.update(hyperparameters)
+            if type(hyperparameters) == Hyperparameters:
+                self.hyperparameters_obj.update(hyperparameters)
+            elif type(hyperparameters) == np.ndarray:
+                hyperparameters = self.hyperparameters_obj.reconstruct_params(
+                    hyperparameters)
+            else:
+                raise ValueError(
+                    "Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
+
+            if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
+            if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
+            self.hyperparameters_obj.update(hyperparameters)
+            # K = self.gp_kernel.compute_kernel(self.X, self.X)
+            # K += np.repeat(
+            #    np.array(np.eye(len(self.X)) * 1e-3)[:, :, np.newaxis],
+            #   self.X.shape[1], axis=2)
+            for i in range(1):
+                n = len(self.y)
+                #    L = scipy.linalg.cholesky(K[:, :, i], lower=True)
+                y_adj = np.squeeze(self.y - self.hyperparameters_obj.dict()[
+                    'mean_func_c'])
+                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX = self.K_XX_FITC()
+                #beta = self.hyperparameters_obj.dict()['noise_level'] ** -1
+                K_sigma_inv = self.K_sigma_inv()
+                #eigs = np.linalg.eigvalsh(K_sigma_inv)
+                #debug_print(f"cov eigenvalues: {eigs}")
+                n = K_XX.shape[0]
+                try:
+                    big_lambda = np.diag(np.diag(K_XX-Q_XX)) + self.hyperparameters_obj.dict()['noise_level'] ** 2 * n
+                    #eigs_big_lambda = np.linalg.eigvalsh(big_lambda)
+                    #debug_print(f"big lambda eigenvalues: {eigs_big_lambda}")
+                    in53 = Q_XX + big_lambda + 1E-3 * np.eye(n)
+                    cond_in53 = np.linalg.cond(in53)
+                    debug_print(f"cond_in53: {cond_in53}")
+                    fast_det = self.fast_det(K_XU, K_UU_inv_K_UX, big_lambda)
+                    debug_print(f"fast_det: {fast_det}")
+                    debug_print(f"K_sigma_inv: {K_sigma_inv}")
+                    nll = 0.5 * np.log(fast_det) + 0.5 * y_adj.T @ K_sigma_inv @ y_adj + 0.5 * n * np.log(2 * np.pi)
+                    nll = np.array(-nll)
+                except ValueError:
+                    nll = np.array([10E10])
+                    debug_print(
+                        "Compute NLL failed. Setting nll to a large value.")
         else:
             raise ValueError("Invalid compute_nll method")
         return nll.item()

@@ -22,7 +22,7 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
         else:
             for i, (lower, upper) in enumerate(bounds_array):
 
-                exponent = np.random.normal(0,4)
+                exponent = np.random.normal(0,3)
                 modifier = np.exp(exponent)
                 hyperparameters_prime = hyperparameters.copy()
                 hyperparameters_prime[i] = np.clip(hyperparameters_prime[i] * modifier, lower, upper)
@@ -31,11 +31,21 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
                     best_nll = nll_prime
                     best_hyperparameters = hyperparameters_prime.copy()
                     # debug_print(f"best_hyperparameters set as {best_hyperparameters} with nll {compute_nll(best_hyperparameters)}")
-                A = map_number((nll_prime-nll),0,1000,1.0,0.0)
+
+                if np.isinf(nll_prime-nll):
+                    var34 = 0
+                else:
+                    var34 = 1
+
+
+                A = map_number((nll_prime-nll),0,1000,1.0,0.0) * var34
+                debug_print(f"nll_prime: {nll_prime}")
+                debug_print(f"nll: {nll}")
+                debug_print((f"nll_prime - nll: {nll_prime - nll}"))
                 #A = min(0, map_number_out)
                 #debug_print(f"nll_prime = :{nll_prime}")
                 #debug_print(f"nll = :{nll}")
-                #debug_print(A)
+                debug_print(f"A: {A}")
                 update = np.random.binomial(1,A)
                 if update:
                     nll = nll_prime

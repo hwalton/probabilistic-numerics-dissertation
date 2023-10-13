@@ -18,7 +18,7 @@ class Hyperparameters:
                 'l': 0.01,
                 'p': 1E-3,
                 'mean_func_c': 0.001,
-                'noise_level': 0.001
+                'noise_level': 0.1
             }
 
             self._hyperparameter_bounds = {
@@ -27,7 +27,7 @@ class Hyperparameters:
                 'l': (0.001,10),
                 'p': (0.0001,1),
                 'mean_func_c': (-1000,1000),
-                'noise_level': (0.0001,1)
+                'noise_level': (0.1,1)
             }
         elif self.kernel_type == 'periodic':
             self._initial_hyperparameters = {
@@ -45,7 +45,7 @@ class Hyperparameters:
                 'l': (0.001, 10),
                 'p': (0.0001, 1),
                 'mean_func_c': (-1000,1000),
-                'noise_level': (0.0001, 0.25)
+                'noise_level': (0.1, 0.25)
             }
         elif self.kernel_type == 'p_se_composite':
             self._initial_hyperparameters = {
@@ -56,7 +56,7 @@ class Hyperparameters:
                 ],
                 'se_params': {'sigma': 0.1, 'l': 0.01},
                 'mean_func_c': 0.001,
-                'noise_level': 0.001
+                'noise_level': 0.1
             }
 
             self._hyperparameter_bounds = {
@@ -67,7 +67,7 @@ class Hyperparameters:
                 ],
                 'se_param_bounds': {'sigma': (0.0001,100), 'l': (0.0001,100)},
                 'mean_func_c': (-1000,1000),
-                'noise_level': (0.0001,1)
+                'noise_level': (0.1,1)
             }
         elif self.kernel_type == 'white_noise':
             self._initial_hyperparameters = {
@@ -81,7 +81,7 @@ class Hyperparameters:
                 'kernel_type': 'white_noise',
                 'sigma': (0.001, 100),
                 'mean_func_c': (-1000,1000),
-                'noise_level': (0.0001, 0.25)
+                'noise_level': (0.1, 1)
             }
         elif self.kernel_type == 'wn_se_composite':
             self._initial_hyperparameters = {
@@ -89,7 +89,7 @@ class Hyperparameters:
                 'wn_params': {'sigma': 0.1},
                 'se_params': {'sigma': 0.1, 'l': 0.01},
                 'mean_func_c': 0.0001,
-                'noise_level': 0.001
+                'noise_level': 0.1
             }
 
             self._hyperparameter_bounds = {
@@ -97,7 +97,7 @@ class Hyperparameters:
                 'periodic_param_bounds': {'sigma': (0.001,10)},
                 'se_param_bounds': {'sigma': (0.001,10), 'l': (0.001,10)},
                 'mean_func_c': (-1E-3, 1E-3),
-                'noise_level': (0.0001,1)
+                'noise_level': (0.1,1)
             }
         else:
             raise ValueError("Invalid kernel_type")
