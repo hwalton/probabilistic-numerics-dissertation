@@ -16,7 +16,6 @@ class Hyperparameters:
                 'kernel_type': 'squared_exponential',
                 'sigma': 0.1,
                 'l': 0.01,
-                'p': 1E-3,
                 'mean_func_c': 0.001,
                 'noise_level': 0.1
             }
@@ -25,7 +24,6 @@ class Hyperparameters:
                 'kernel_type': 'squared_exponential',
                 'sigma': (0.001,10),
                 'l': (0.001,10),
-                'p': (0.0001,1),
                 'mean_func_c': (-1000,1000),
                 'noise_level': (0.1,1)
             }
