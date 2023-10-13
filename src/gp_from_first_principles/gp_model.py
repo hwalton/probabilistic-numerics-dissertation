@@ -57,7 +57,7 @@ class GPModel:
     import numpy as np
     import scipy.linalg
 
-    def U_induced(self, M_one_in = 1, method ='k_means'):
+    def U_induced(self, M_one_in = 3, method ='k_means'):
         M = len(self.X) // M_one_in
         if method == 'k_means':
             kmeans = KMeans(n_clusters=M, n_init = 3).fit(self.X)
@@ -185,7 +185,7 @@ class GPModel:
                 return False
         return True
 
-    def compute_nll(self, hyperparameters, method = 'FITC4'):
+    def compute_nll(self, hyperparameters, method = 'FITC6'):
         if method == 'cholesky':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
@@ -388,6 +388,45 @@ class GPModel:
                 try:
                     nll = 0.5 * np.log(np.linalg.det(Q_XX + sigma_2)) + 0.5 * y_adj.T @ (self.K_sigma_inv()) @ y_adj + 0.5 * len(self.X) * np.log(2 * np.pi)
                     nll = np.array(nll)
+                except np.linalg.LinAlgError:
+                    nll = np.array([10E10])
+                    debug_print(
+                        "Cholesky decomposition failed. Setting nll to a large value.")
+        elif method == 'FITC6':
+            if type(hyperparameters) == dict:
+                self.hyperparameters_obj.update(hyperparameters)
+            if type(hyperparameters) == Hyperparameters:
+                self.hyperparameters_obj.update(hyperparameters)
+            elif type(hyperparameters) == np.ndarray:
+                hyperparameters = self.hyperparameters_obj.reconstruct_params(
+                    hyperparameters)
+            else:
+                raise ValueError(
+                    "Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
+
+            if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
+            if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
+            self.hyperparameters_obj.update(hyperparameters)
+            #K = self.gp_kernel.compute_kernel(self.X, self.X)
+            #K += np.repeat(
+            #    np.array(np.eye(len(self.X)) * 1e-3)[:, :, np.newaxis],
+            #    self.X.shape[1], axis=2)
+            for i in range(1):
+                n = len(self.y)
+                K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX = self.K_XX_FITC()
+                K_UU_inv = np.linalg.pinv(K_UU + 1E-3)
+                K_tilde = K_XU @ K_UU_inv @ K_UX
+
+                y_adj = np.squeeze(self.y - self.hyperparameters_obj.dict()[
+                    'mean_func_c'])
+                sigma_2 = self.hyperparameters_obj.dict()[
+                             'noise_level'] ** 2
+                K = K_XX
+                try:
+                    var923 = K/sigma_2+np.eye(K.shape[0])
+                    L = scipy.linalg.cholesky(var923).T
+                    alpha = scipy.linalg.cho_solve((L,True), y_adj) / sigma_2
+                    nll = 0.5 * np.dot(y_adj.T, alpha) + np.log(np.diag(L)).sum() + 0.5 * n*np.log(2*np.pi*sigma_2)
                 except np.linalg.LinAlgError:
                     nll = np.array([10E10])
                     debug_print(
