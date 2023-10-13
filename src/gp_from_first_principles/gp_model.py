@@ -57,10 +57,10 @@ class GPModel:
     import numpy as np
     import scipy.linalg
 
-    def U_induced(self, M_one_in = 3, method ='k_means'):
+    def U_induced(self, M_one_in = 5, method ='k_means'):
         M = len(self.X) // M_one_in
         if method == 'k_means':
-            kmeans = KMeans(n_clusters=M, n_init = 3).fit(self.X)
+            kmeans = KMeans(n_clusters=M, n_init = 5).fit(self.X)
             U = kmeans.cluster_centers_
         else:
             raise ValueError("Invalid inducing method")
@@ -292,10 +292,10 @@ class GPModel:
                     L = scipy.linalg.cholesky(K_tilde + 1E-4 * np.eye(n),
                                               lower=True)
                     alpha = scipy.linalg.cho_solve((L, True), self.y)
-                    y_adj = self.y - self.hyperparameters_obj.dict()[
-                        'mean_func_c']
+                    y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
                     nll = 0.5 * y_adj.T @ alpha + np.sum(
                         np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
+                    nll = nll
                 except np.linalg.LinAlgError:
                     nll = np.array([10E10])
                     debug_print(

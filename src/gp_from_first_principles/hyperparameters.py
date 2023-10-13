@@ -17,7 +17,7 @@ class Hyperparameters:
                 'sigma': 0.1,
                 'l': 0.01,
                 'p': 1E-3,
-                'mean_func_c': 1.0,
+                'mean_func_c': 0.0,
                 'noise_level': 0.001
             }
 
@@ -35,7 +35,7 @@ class Hyperparameters:
                 'sigma': 1,
                 'l': 0.1,
                 'p': 0.08,
-                'mean_func_c': 1.0,
+                'mean_func_c': 0.0,
                 'noise_level': 0.1
             }
 
@@ -55,7 +55,7 @@ class Hyperparameters:
                 {'sigma': 0.1, 'l': 0.02, 'p': 1E-3}
                 ],
                 'se_params': {'sigma': 0.1, 'l': 0.01},
-                'mean_func_c': 1.0,
+                'mean_func_c': 0.0,
                 'noise_level': 0.001
             }
 
@@ -73,7 +73,7 @@ class Hyperparameters:
             self._initial_hyperparameters = {
                 'kernel_type': 'white_noise',
                 'sigma': 1,
-                'mean_func_c': 1.0,
+                'mean_func_c': 0.0,
                 'noise_level': 0.1
             }
 
@@ -88,7 +88,7 @@ class Hyperparameters:
                 'kernel_type': 'wn_se_composite',
                 'wn_params': {'sigma': 0.1},
                 'se_params': {'sigma': 0.1, 'l': 0.01},
-                'mean_func_c': 1.0,
+                'mean_func_c': 0.0,
                 'noise_level': 0.001
             }
 
@@ -96,7 +96,7 @@ class Hyperparameters:
                 'kernel_type': 'wn_se_composite',
                 'periodic_param_bounds': {'sigma': (0.001,10)},
                 'se_param_bounds': {'sigma': (0.001,10), 'l': (0.001,10)},
-                'mean_func_c': (-1E-10,1E-10),
+                'mean_func_c': (-1E-3, 1E-3),
                 'noise_level': (0.0001,1)
             }
         else:
