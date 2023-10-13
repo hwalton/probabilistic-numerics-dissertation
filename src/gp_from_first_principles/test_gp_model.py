@@ -12,7 +12,7 @@ class TestGPModel(unittest.TestCase):
     def test_fast_det(self):
         force_input_model = self.setup_object()
 
-        U = np.ones((4000,2))
+        U = np.ones((1000,2))
         V_T = U.T
         D = 1.001 * np.eye(U.shape[0])
 
@@ -79,7 +79,18 @@ class TestGPModel(unittest.TestCase):
             assert np.allclose(Q_XX, Q_XX_C, atol=1E-2), "incorrect Q_XX"
             assert np.allclose(K_UU_inv_KUX, K_UU_inv_KUX_C, atol=1E-2), "incorrect K_UU_inv_KUX"
 
+    def test_K_sigma_inv(self):
+        gp = self.setup_object(1)
+        gp.X = np.array([2,4,6,8])
+        gp.U = np.array([3,7])
 
+        gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 0.1]))
+
+        result = gp.K_sigma_inv()
+
+        correct = np.linalg.inv(np.squeeze(gp.gp_kernel.compute_kernel(gp.X, gp.X)) + np.multiply(gp.hyperparameters_obj.dict()['noise_level'] ** 2, np.eye(gp.X.shape[0])))
+
+        assert np.allclose(result, correct, atol=2), "incorrect K_sigma_inv"
 
 
     def setup_object(self, force_input_kernel_index = 2):
