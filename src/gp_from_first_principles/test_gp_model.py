@@ -125,7 +125,13 @@ class TestGPModel(unittest.TestCase):
             assert np.allclose(K_UU_inv_KUX, K_UU_inv_KUX_C, atol=1E-2), "incorrect K_UU_inv_KUX"
 
     def test_K_sigma_inv(self):
-        gp = self.setup_object(1)
+        gp = self.setup_object(2, return_model='response')
+        # gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
+
+        gp.hyperparameters_obj.update(np.array(
+            [1.55651623e+00, 1.29376154e+00, 1.93658826e-03, 1.00000000e-04,
+             4.34121551e-01, 3.50302199e-01, 1.03262772e+01, 1.20501525e-04,
+             3.68744450e-13, 5.43714621e-01]))
         #gp.X = np.array([2,4,6,8])
         #gp.U = np.array([3,7])
 
@@ -137,39 +143,39 @@ class TestGPModel(unittest.TestCase):
 
         assert np.allclose(result, correct, atol=1E-3, rtol=2E-2), "incorrect K_sigma_inv"
 
-    # def test_def_compute_nll_input(self):
-    #     gp = self.setup_object(2, return_model='input')
-    #     # gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
-    #
-    #     gp.hyperparameters_obj.update(np.array([6.91127308e-02, 3.04299891e-11, 1.00000000e+00]))
-    #
-    #     hyp_array = gp.hyperparameters_obj.array()
-    #     print(f"test hyperparameters updated to: {hyp_array}")
-    #
-    #     result = gp.compute_nll(gp.hyperparameters_obj,
-    #                             method='FITC_18_134')
-    #
-    #     K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX = gp.K_XX_FITC()
-    #     n = K_XX.shape[0]
-    #     y_adj = np.squeeze(
-    #         gp.y - gp.hyperparameters_obj.dict()['mean_func_c'])
-    #     big_lambda = np.diag(np.diag(K_XX - Q_XX)) + \
-    #                  gp.hyperparameters_obj.dict()[
-    #                      'noise_level'] ** 2 * np.eye(n)
-    #     det = np.linalg.det(Q_XX + big_lambda)
-    #     lml = 0.5 * np.log(
-    #         det) + 0.5 * y_adj.T @ gp.K_sigma_inv() @ y_adj + 0.5 * n * np.log(
-    #         2 * np.pi)
-    #     nlml = np.array(-lml)
-    #
-    #     cholesky = gp.compute_nll(gp.hyperparameters_obj,
-    #                               method='cholesky')
-    #     correct = nlml
-    #     assert correct < 1000, "nll too large"
-    #     assert np.allclose(result, cholesky, atol=1E-3,
-    #                        rtol=15E-2), "nll mismatch with cholesky"
-    #     assert np.allclose(result, correct, atol=1E-3,
-    #                        rtol=2E-2), "nll mismatch with correct"
+    def test_def_compute_nll_input(self):
+        gp = self.setup_object(2, return_model='input')
+        # gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
+
+        gp.hyperparameters_obj.update(np.array([6.91127308e-02, 3.04299891e-11, 1.00000000e+00]))
+
+        hyp_array = gp.hyperparameters_obj.array()
+        print(f"test hyperparameters updated to: {hyp_array}")
+
+        result = gp.compute_nll(gp.hyperparameters_obj,
+                                method='FITC_18_134')
+
+        K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX = gp.K_XX_FITC()
+        n = K_XX.shape[0]
+        y_adj = np.squeeze(
+            gp.y - gp.hyperparameters_obj.dict()['mean_func_c'])
+        big_lambda = np.diag(np.diag(K_XX - Q_XX)) + \
+                     gp.hyperparameters_obj.dict()[
+                         'noise_level'] ** 2 * np.eye(n)
+        det = np.linalg.det(Q_XX + big_lambda)
+        lml = 0.5 * np.log(
+            det) + 0.5 * y_adj.T @ gp.K_sigma_inv() @ y_adj + 0.5 * n * np.log(
+            2 * np.pi)
+        nlml = np.array(-lml)
+
+        cholesky = gp.compute_nll(gp.hyperparameters_obj,
+                                  method='cholesky')
+        correct = nlml
+        assert correct < 1000, "nll too large"
+        assert np.allclose(result, cholesky, atol=1E-3,
+                           rtol=15E-2), "nll mismatch with cholesky"
+        assert np.allclose(result, correct, atol=1E-3,
+                           rtol=2E-2), "nll mismatch with correct"
 
     def test_def_compute_nll_response(self):
 
