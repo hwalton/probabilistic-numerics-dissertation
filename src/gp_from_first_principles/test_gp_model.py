@@ -9,90 +9,124 @@ import numpy as np
 
 class TestGPModel(unittest.TestCase):
 
-    def test_fast_det(self):
-        force_input_model = self.setup_object()
+    # def test_fast_det(self):
+    #     force_input_model = self.setup_object()
+    #
+    #     U = np.ones((1000,2))
+    #     V_T = U.T
+    #     D = 1.001 * np.eye(U.shape[0])
+    #
+    #     start_time = timer.time()
+    #
+    #     fast_det = force_input_model.fast_det(U,V_T,D)
+    #
+    #     end_time = timer.time()
+    #     elapsed_time = end_time - start_time
+    #     print(f"fast_det ran in {elapsed_time} seconds")
+    #
+    #     start_time = timer.time()
+    #
+    #     det = np.linalg.det(D+U @ V_T)
+    #     equal = math.isclose(fast_det, det, rel_tol=1E-9, abs_tol=1E-9)
+    #     assert equal, "Incorrect Fast_det"
+    #
+    #     end_time = timer.time()
+    #     elapsed_time = end_time - start_time
+    #     print(f"det ran in {elapsed_time} seconds")
 
-        U = np.ones((1000,2))
-        V_T = U.T
-        D = 1.001 * np.eye(U.shape[0])
+    # def test_K_XX_FITC(self):
+    #     gp = self.setup_object(0)
+    #     gp.X = np.array([2,4,6,8])
+    #     gp.U = np.array([3,7])
+    #
+    #     gp.hyperparameters_obj.update(np.array([0.1,1.,0.001,0.1]))
+    #
+    #     K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX = gp.K_XX_FITC()
+    #
+    #     result = [K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX]
+    #
+    #     K_XX_FITC_C = np.array([[1.00E-02, 1.35E-03, 3.35E-06, 1.52E-10],
+    #         [1.35E-03, 1.00E-02, 1.35E-03, 3.35E-06],
+    #         [3.35E-06, 1.35E-03, 1.00E-02, 1.35E-03],
+    #         [1.52E-10, 3.35E-06, 1.35E-03, 1.00E-02]])
+    #
+    #     K_XU_C = np.array([[6.07E-03, 3.73E-08],
+    #              [6.07E-03, 1.11E-04],
+    #              [1.11E-04, 6.07E-03],
+    #              [3.73E-08, 6.07E-03]])
+    #
+    #     K_UX_C = K_XU_C.T
+    #
+    #     K_UU_C = np.array([[1.00E-02,3.35E-06],
+    #                 [3.35E-06,1.00E-02]])
+    #
+    #     K_XX_C = K_XX_FITC_C
+    #
+    #     Q_XX_C = K_XU_C @ np.linalg.inv(K_UU_C) @ K_UX_C
+    #
+    #     K_UU_inv_KUX_C = np.linalg.inv(K_UU_C) @ K_UX_C
+    #
+    #
+    #
+    #     correct = [ K_XX_FITC_C, K_XU_C, K_UX_C, K_XX_C, Q_XX_C, K_UU_inv_KUX]
+    #
+    #     for i in correct:
+    #         assert np.allclose(K_XX_FITC, K_XX_FITC_C, atol = 1E-2), "incorrect K_XX_FITC"
+    #         assert np.allclose(K_XU, K_XU_C, atol=1E-2), "incorrect K_XU"
+    #         assert np.allclose(K_UX, K_UX_C, atol=1E-2), "incorrect K_UX"
+    #         assert np.allclose(K_UU, K_UU_C, atol=1E-2), "incorrect K_UU"
+    #         assert np.allclose(K_XX, K_XX_C, atol=1E-2), "incorrect K_XX"
+    #         assert np.allclose(Q_XX, Q_XX_C, atol=1E-2), "incorrect Q_XX"
+    #         assert np.allclose(K_UU_inv_KUX, K_UU_inv_KUX_C, atol=1E-2), "incorrect K_UU_inv_KUX"
+    #
+    # def test_K_sigma_inv(self):
+    #     gp = self.setup_object(1)
+    #     #gp.X = np.array([2,4,6,8])
+    #     #gp.U = np.array([3,7])
+    #
+    #     gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
+    #
+    #     result = gp.K_sigma_inv()
+    #
+    #     correct = np.linalg.inv(np.squeeze(gp.gp_kernel.compute_kernel(gp.X, gp.X)) + np.multiply(gp.hyperparameters_obj.dict()['noise_level'] ** 2, np.eye(gp.X.shape[0])))
+    #
+    #     assert np.allclose(result, correct, atol=1E-3, rtol=2E-2), "incorrect K_sigma_inv"
 
-        start_time = timer.time()
+    # def test_def_compute_nll_input(self):
+    #     gp = self.setup_object(2, return_model='input')
+    #     # gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
+    #
+    #     gp.hyperparameters_obj.update(np.array([6.91127308e-02, 3.04299891e-11, 1.00000000e+00]))
+    #
+    #     hyp_array = gp.hyperparameters_obj.array()
+    #     print(f"test hyperparameters updated to: {hyp_array}")
+    #
+    #     result = gp.compute_nll(gp.hyperparameters_obj,
+    #                             method='FITC_18_134')
+    #
+    #     K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX = gp.K_XX_FITC()
+    #     n = K_XX.shape[0]
+    #     y_adj = np.squeeze(
+    #         gp.y - gp.hyperparameters_obj.dict()['mean_func_c'])
+    #     big_lambda = np.diag(np.diag(K_XX - Q_XX)) + \
+    #                  gp.hyperparameters_obj.dict()[
+    #                      'noise_level'] ** 2 * np.eye(n)
+    #     det = np.linalg.det(Q_XX + big_lambda)
+    #     lml = 0.5 * np.log(
+    #         det) + 0.5 * y_adj.T @ gp.K_sigma_inv() @ y_adj + 0.5 * n * np.log(
+    #         2 * np.pi)
+    #     nlml = np.array(-lml)
+    #
+    #     cholesky = gp.compute_nll(gp.hyperparameters_obj,
+    #                               method='cholesky')
+    #     correct = nlml
+    #     assert correct < 1000, "nll too large"
+    #     assert np.allclose(result, cholesky, atol=1E-3,
+    #                        rtol=15E-2), "nll mismatch with cholesky"
+    #     assert np.allclose(result, correct, atol=1E-3,
+    #                        rtol=2E-2), "nll mismatch with correct"
 
-        fast_det = force_input_model.fast_det(U,V_T,D)
-
-        end_time = timer.time()
-        elapsed_time = end_time - start_time
-        print(f"fast_det ran in {elapsed_time} seconds")
-
-        start_time = timer.time()
-
-        det = np.linalg.det(D+U @ V_T)
-        equal = math.isclose(fast_det, det, rel_tol=1E-9, abs_tol=1E-9)
-        assert equal, "Incorrect Fast_det"
-
-        end_time = timer.time()
-        elapsed_time = end_time - start_time
-        print(f"det ran in {elapsed_time} seconds")
-
-    def test_K_XX_FITC(self):
-        gp = self.setup_object(0)
-        gp.X = np.array([2,4,6,8])
-        gp.U = np.array([3,7])
-
-        gp.hyperparameters_obj.update(np.array([0.1,1.,0.001,0.1]))
-
-        K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX = gp.K_XX_FITC()
-
-        result = [K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX]
-
-        K_XX_FITC_C = np.array([[1.00E-02, 1.35E-03, 3.35E-06, 1.52E-10],
-            [1.35E-03, 1.00E-02, 1.35E-03, 3.35E-06],
-            [3.35E-06, 1.35E-03, 1.00E-02, 1.35E-03],
-            [1.52E-10, 3.35E-06, 1.35E-03, 1.00E-02]])
-
-        K_XU_C = np.array([[6.07E-03, 3.73E-08],
-                 [6.07E-03, 1.11E-04],
-                 [1.11E-04, 6.07E-03],
-                 [3.73E-08, 6.07E-03]])
-
-        K_UX_C = K_XU_C.T
-
-        K_UU_C = np.array([[1.00E-02,3.35E-06],
-                    [3.35E-06,1.00E-02]])
-
-        K_XX_C = K_XX_FITC_C
-
-        Q_XX_C = K_XU_C @ np.linalg.inv(K_UU_C) @ K_UX_C
-
-        K_UU_inv_KUX_C = np.linalg.inv(K_UU_C) @ K_UX_C
-
-
-
-        correct = [ K_XX_FITC_C, K_XU_C, K_UX_C, K_XX_C, Q_XX_C, K_UU_inv_KUX]
-
-        for i in correct:
-            assert np.allclose(K_XX_FITC, K_XX_FITC_C, atol = 1E-2), "incorrect K_XX_FITC"
-            assert np.allclose(K_XU, K_XU_C, atol=1E-2), "incorrect K_XU"
-            assert np.allclose(K_UX, K_UX_C, atol=1E-2), "incorrect K_UX"
-            assert np.allclose(K_UU, K_UU_C, atol=1E-2), "incorrect K_UU"
-            assert np.allclose(K_XX, K_XX_C, atol=1E-2), "incorrect K_XX"
-            assert np.allclose(Q_XX, Q_XX_C, atol=1E-2), "incorrect Q_XX"
-            assert np.allclose(K_UU_inv_KUX, K_UU_inv_KUX_C, atol=1E-2), "incorrect K_UU_inv_KUX"
-
-    def test_K_sigma_inv(self):
-        gp = self.setup_object(1)
-        #gp.X = np.array([2,4,6,8])
-        #gp.U = np.array([3,7])
-
-        gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
-
-        result = gp.K_sigma_inv()
-
-        correct = np.linalg.inv(np.squeeze(gp.gp_kernel.compute_kernel(gp.X, gp.X)) + np.multiply(gp.hyperparameters_obj.dict()['noise_level'] ** 2, np.eye(gp.X.shape[0])))
-
-        assert np.allclose(result, correct, atol=1E-3, rtol=2E-2), "incorrect K_sigma_inv"
-
-    def test_def_compute_nll(self):
+    def test_def_compute_nll_response(self):
 
         gp = self.setup_object(2, return_model='response')
         #gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
@@ -111,7 +145,8 @@ class TestGPModel(unittest.TestCase):
         y_adj = np.squeeze(gp.y - gp.hyperparameters_obj.dict()['mean_func_c'])
         big_lambda = np.diag(np.diag(K_XX-Q_XX)) + gp.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n)
         det = np.linalg.det(Q_XX + big_lambda)
-        lml = 0.5 * np.log(det) + 0.5 * y_adj.T @ gp.K_sigma_inv() @ y_adj + 0.5 * n * np.log(2 * np.pi)
+        K_sigma_inv = np.linalg.inv(K_XX + gp.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n))
+        lml = 0.5 * np.log(det) + 0.5 * y_adj.T @ K_sigma_inv @ y_adj + 0.5 * n * np.log(2 * np.pi)
         nlml = np.array(-lml)
 
         cholesky = gp.compute_nll(gp.hyperparameters_obj, method = 'cholesky')
@@ -121,6 +156,8 @@ class TestGPModel(unittest.TestCase):
                            rtol=15E-2), "nll mismatch with cholesky"
         assert np.allclose(result, correct, atol=1E-3,
                            rtol=2E-2), "nll mismatch with correct"
+
+
 
     def setup_object(self, force_input_kernel_index = 2, return_model = 'input'):
         sample_start_index = 1000

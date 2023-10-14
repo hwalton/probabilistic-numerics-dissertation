@@ -131,7 +131,7 @@ class GPModel:
         if method == 'woodbury':
             K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX= self.K_XX_FITC()
             sigma_n_neg2 = np.multiply(self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X)))
-            #sigma_n_neg2 = np.multiply(0.001, np.eye(len(self.X)))
+            #sigma_n_neg2 = np.multiply(1, np.eye(len(self.X)))
 
             var237 = np.linalg.solve(K_UU, K_UX)
             var = sigma_n_neg2 @ K_XU @ (var237 + K_UX @ sigma_n_neg2 @ K_XU @ K_UX) @ sigma_n_neg2
@@ -218,7 +218,7 @@ class GPModel:
         return fast_det
 
 
-    def compute_nll(self, hyperparameters, method = 'cholesky'):
+    def compute_nll(self, hyperparameters, method = 'FITC_18_134'):
         if method == 'cholesky':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
