@@ -217,7 +217,7 @@ class GPModel:
         return fast_det
 
 
-    def compute_nll(self, hyperparameters, method = 'FITC_18_134'):
+    def compute_nll(self, hyperparameters, method = 'cholesky'):
         if method == 'cholesky':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)

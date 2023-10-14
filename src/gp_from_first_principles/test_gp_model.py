@@ -94,8 +94,10 @@ class TestGPModel(unittest.TestCase):
 
     def test_def_compute_nll(self):
 
-        gp = self.setup_object(1)
-        gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
+        gp = self.setup_object(2)
+        #gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
+
+        gp.hyperparameters_obj.update(np.array([0.06633017449273457, 7.004970898314861, 0.0001, 0.4867646587607245, 4.281271818191017, 10.0, 100.0, 0.0003041366875158192, 0.041461452548918816, 1.0]))
 
         result = gp.compute_nll(gp.hyperparameters_obj, method = 'FITC_18_134')
 
@@ -108,9 +110,9 @@ class TestGPModel(unittest.TestCase):
         nlml = np.array(-lml)
 
         correct = nlml
-
+        assert correct < 1000, "nll too large"
         assert np.allclose(result, correct, atol=1E-3,
-                           rtol=2E-2), "incorrect nll"
+                           rtol=2E-2), "nll mismatch"
 
     def setup_object(self, force_input_kernel_index = 2):
         sample_start_index = 1000
