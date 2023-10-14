@@ -92,6 +92,25 @@ class TestGPModel(unittest.TestCase):
 
         assert np.allclose(result, correct, atol=1E-3, rtol=2E-2), "incorrect K_sigma_inv"
 
+    def test_def_compute_nll(self):
+
+        gp = self.setup_object(1)
+        gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
+
+        result = gp.compute_nll(gp.hyperparameters_obj, method = 'FITC_18_134')
+
+        K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX = gp.K_XX_FITC()
+        n = K_XX.shape[0]
+        y_adj = np.squeeze(gp.y - gp.hyperparameters_obj.dict()['mean_func_c'])
+        big_lambda = np.diag(np.diag(K_XX-Q_XX)) + gp.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n)
+        det = np.linalg.det(Q_XX + big_lambda)
+        lml = 0.5 * np.log(det) + 0.5 * y_adj.T @ gp.K_sigma_inv() @ y_adj + 0.5 * n * np.log(2 * np.pi)
+        nlml = np.array(-lml)
+
+        correct = nlml
+
+        assert np.allclose(result, correct, atol=1E-3,
+                           rtol=2E-2), "incorrect nll"
 
     def setup_object(self, force_input_kernel_index = 2):
         sample_start_index = 1000

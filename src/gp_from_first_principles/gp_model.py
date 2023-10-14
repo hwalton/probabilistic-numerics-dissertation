@@ -321,7 +321,6 @@ class GPModel:
 
                 # Compute the lower bound on the log marginal likelihood
                 nll = np.array(-log_likelihood - trace_term)
-
         elif method == 'FITC3':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
@@ -516,7 +515,8 @@ class GPModel:
                 #debug_print(f"cov eigenvalues: {eigs}")
                 n = K_XX.shape[0]
                 try:
-                    big_lambda = np.diag(np.diag(K_XX-Q_XX)) + self.hyperparameters_obj.dict()['noise_level'] ** 2 * n
+                    #var645 = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n)
+                    big_lambda = np.diag(np.diag(K_XX-Q_XX)) + self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n)
                     #eigs_big_lambda = np.linalg.eigvalsh(big_lambda)
                     #debug_print(f"big lambda eigenvalues: {eigs_big_lambda}")
                     in53 = Q_XX + big_lambda + 1E-3 * np.eye(n)
