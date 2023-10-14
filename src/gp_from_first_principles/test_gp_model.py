@@ -94,10 +94,12 @@ class TestGPModel(unittest.TestCase):
 
     def test_def_compute_nll(self):
 
-        gp = self.setup_object(2)
+        gp = self.setup_object(2, return_model='response')
         #gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
 
-        gp.hyperparameters_obj.update(np.array([1.03219361e-01, 8.72316961e-05, 1.00000000e+00]))
+        gp.hyperparameters_obj.update(np.array([1.55651623e+00, 1.29376154e+00, 1.93658826e-03, 1.00000000e-04,
+ 4.34121551e-01, 3.50302199e-01, 1.03262772e+01, 1.20501525e-04,
+ 3.68744450e-13, 5.43714621e-01]))
 
         hyp_array = gp.hyperparameters_obj.array()
         print(f"test hyperparameters updated to: {hyp_array}")
@@ -120,7 +122,7 @@ class TestGPModel(unittest.TestCase):
         assert np.allclose(result, correct, atol=1E-3,
                            rtol=2E-2), "nll mismatch with correct"
 
-    def setup_object(self, force_input_kernel_index = 2):
+    def setup_object(self, force_input_kernel_index = 2, return_model = 'input'):
         sample_start_index = 1000
         sample_length = 100
         num_predictions = 40
@@ -155,7 +157,17 @@ class TestGPModel(unittest.TestCase):
                                     force_input,
                                     solver_type=force_input_solver_type,
                                     n_iter=force_input_n_iter)
-        return force_input_model
+
+        force_response_model = GPModel(force_response_kernel_type,
+                                       time,
+                                       force_response,
+                                       solver_type=force_response_solver_type,
+                                       n_iter=force_response_n_iter)
+
+        if return_model == 'input':
+            return force_input_model
+        if return_model == 'response':
+            return force_response_model
 
 
 if __name__ == '__main__':
