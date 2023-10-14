@@ -228,7 +228,8 @@ class GPModel:
                 self.hyperparameters_obj.update(hyperparameters)
             else:
                 raise ValueError("Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
-
+            debug_var = self.hyperparameters_obj.array()
+            debug_print(f"compute_NLL cholesky method hyperparameters: {debug_var}")
             if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
             if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
             #self.hyperparameters_obj.update(hyperparameters)

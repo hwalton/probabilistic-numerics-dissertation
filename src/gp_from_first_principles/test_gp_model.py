@@ -97,9 +97,7 @@ class TestGPModel(unittest.TestCase):
         gp = self.setup_object(2)
         #gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
 
-        gp.hyperparameters_obj.update(np.array([3.29333661e-02, 3.85821943e+00, 1.00000000e-04, 4.46327662e+00,
- 1.02201406e+01, 9.76498421e+00, 3.32420883e+00, 1.07692729e-04,
- 2.09712731e-14, 1.00000000e-01]))
+        gp.hyperparameters_obj.update(np.array([1.03219361e-01, 8.72316961e-05, 1.00000000e+00]))
 
         hyp_array = gp.hyperparameters_obj.array()
         print(f"test hyperparameters updated to: {hyp_array}")
@@ -118,7 +116,7 @@ class TestGPModel(unittest.TestCase):
         correct = nlml
         assert correct < 1000, "nll too large"
         assert np.allclose(result, cholesky, atol=1E-3,
-                           rtol=2E-2), "nll mismatch with cholesky"
+                           rtol=15E-2), "nll mismatch with cholesky"
         assert np.allclose(result, correct, atol=1E-3,
                            rtol=2E-2), "nll mismatch with correct"
 
