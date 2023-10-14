@@ -54,7 +54,7 @@ class Hyperparameters:
                 ],
                 'se_params': {'sigma': 0.1, 'l': 0.01},
                 'mean_func_c': 0.001,
-                'noise_level': 0.1
+                'noise_level': 1.
             }
 
             self._hyperparameter_bounds = {
