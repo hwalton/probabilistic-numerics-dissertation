@@ -30,6 +30,7 @@ class GPModel:
         optimal_hyperparameters = self.get_optimal_hyperparameters()
         self.hyperparameters_obj.update(optimal_hyperparameters)
         debug_print(optimal_hyperparameters)
+        debug_print(self.hyperparameters_obj.array())
         nll = self.compute_nll(self.hyperparameters_obj)
         debug_print(nll)
         return(nll)
@@ -217,20 +218,20 @@ class GPModel:
         return fast_det
 
 
-    def compute_nll(self, hyperparameters, method = 'cholesky'):
+    def compute_nll(self, hyperparameters, method = 'FITC_18_134'):
         if method == 'cholesky':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
             if type(hyperparameters) == Hyperparameters:
                 self.hyperparameters_obj.update(hyperparameters)
             elif type(hyperparameters) == np.ndarray:
-                hyperparameters = self.hyperparameters_obj.reconstruct_params(hyperparameters)
+                self.hyperparameters_obj.update(hyperparameters)
             else:
                 raise ValueError("Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
 
             if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
             if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
-            self.hyperparameters_obj.update(hyperparameters)
+            #self.hyperparameters_obj.update(hyperparameters)
             K = self.gp_kernel.compute_kernel(self.X, self.X)
             K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
             for i in range(K.shape[2]):
@@ -246,13 +247,13 @@ class GPModel:
             if type(hyperparameters) == Hyperparameters:
                 self.hyperparameters_obj.update(hyperparameters)
             elif type(hyperparameters) == np.ndarray:
-                hyperparameters = self.hyperparameters_obj.reconstruct_params(hyperparameters)
+                self.hyperparameters_obj.update(hyperparameters)
             else:
                 raise ValueError("Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
 
             if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
             if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
-            self.hyperparameters_obj.update(hyperparameters)
+            #self.hyperparameters_obj.update(hyperparameters)
             K = self.gp_kernel.compute_kernel(self.X, self.X)
             K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
             for i in range(K.shape[2]):
@@ -268,13 +269,13 @@ class GPModel:
             if type(hyperparameters) == Hyperparameters:
                 self.hyperparameters_obj.update(hyperparameters)
             elif type(hyperparameters) == np.ndarray:
-                hyperparameters = self.hyperparameters_obj.reconstruct_params(hyperparameters)
+                self.hyperparameters_obj.update(hyperparameters)
             else:
                 raise ValueError("Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
 
             if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
             if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
-            self.hyperparameters_obj.update(hyperparameters)
+            #self.hyperparameters_obj.update(hyperparameters)
             K = self.gp_kernel.compute_kernel(self.X, self.X)
             K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
             for i in range(K.shape[2]):
@@ -290,15 +291,13 @@ class GPModel:
             if type(hyperparameters) == Hyperparameters:
                 self.hyperparameters_obj.update(hyperparameters)
             elif type(hyperparameters) == np.ndarray:
-                hyperparameters = self.hyperparameters_obj.reconstruct_params(
-                    hyperparameters)
+                self.hyperparameters_obj.update(hyperparameters)
             else:
-                raise ValueError(
-                    "Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
+                raise ValueError("Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
 
             if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
             if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
-            self.hyperparameters_obj.update(hyperparameters)
+            #self.hyperparameters_obj.update(hyperparameters)
             #K = self.gp_kernel.compute_kernel(self.X, self.X)
             #K += np.repeat(
             #    np.array(np.eye(len(self.X)) * 1e-3)[:, :, np.newaxis],
@@ -331,11 +330,11 @@ class GPModel:
                     hyperparameters)
             else:
                 raise ValueError(
-                    "Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
+                    "Incorrect hyperparameter type: must be 'Hyperparameters', 'dict' or 'ndarray'")
 
             if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
             if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
-            self.hyperparameters_obj.update(hyperparameters)
+            #self.hyperparameters_obj.update(hyperparameters)
             #K = self.gp_kernel.compute_kernel(self.X, self.X)
             #K += np.repeat(
             #    np.array(np.eye(len(self.X)) * 1e-3)[:, :, np.newaxis],
@@ -490,15 +489,13 @@ class GPModel:
             if type(hyperparameters) == Hyperparameters:
                 self.hyperparameters_obj.update(hyperparameters)
             elif type(hyperparameters) == np.ndarray:
-                hyperparameters = self.hyperparameters_obj.reconstruct_params(
-                    hyperparameters)
+                self.hyperparameters_obj.update(hyperparameters)
             else:
-                raise ValueError(
-                    "Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
+                raise ValueError("Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
 
             if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
             if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
-            self.hyperparameters_obj.update(hyperparameters)
+            #self.hyperparameters_obj.update(hyperparameters)
             # K = self.gp_kernel.compute_kernel(self.X, self.X)
             # K += np.repeat(
             #    np.array(np.eye(len(self.X)) * 1e-3)[:, :, np.newaxis],

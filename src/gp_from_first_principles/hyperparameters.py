@@ -186,4 +186,6 @@ class Hyperparameters:
             self._hyperparameters_dict = hyperparameters
         if type(hyperparameters) == np.ndarray:
             self._hyperparameters_dict = self.reconstruct_params(hyperparameters)
+        if type(hyperparameters) == Hyperparameters:
+            self._hyperparameters_dict = hyperparameters.dict()
         return

@@ -97,7 +97,12 @@ class TestGPModel(unittest.TestCase):
         gp = self.setup_object(2)
         #gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
 
-        gp.hyperparameters_obj.update(np.array([0.06633017449273457, 7.004970898314861, 0.0001, 0.4867646587607245, 4.281271818191017, 10.0, 100.0, 0.0003041366875158192, 0.041461452548918816, 1.0]))
+        gp.hyperparameters_obj.update(np.array([3.29333661e-02, 3.85821943e+00, 1.00000000e-04, 4.46327662e+00,
+ 1.02201406e+01, 9.76498421e+00, 3.32420883e+00, 1.07692729e-04,
+ 2.09712731e-14, 1.00000000e-01]))
+
+        hyp_array = gp.hyperparameters_obj.array()
+        print(f"test hyperparameters updated to: {hyp_array}")
 
         result = gp.compute_nll(gp.hyperparameters_obj, method = 'FITC_18_134')
 
@@ -109,10 +114,13 @@ class TestGPModel(unittest.TestCase):
         lml = 0.5 * np.log(det) + 0.5 * y_adj.T @ gp.K_sigma_inv() @ y_adj + 0.5 * n * np.log(2 * np.pi)
         nlml = np.array(-lml)
 
+        cholesky = gp.compute_nll(gp.hyperparameters_obj, method = 'cholesky')
         correct = nlml
         assert correct < 1000, "nll too large"
+        assert np.allclose(result, cholesky, atol=1E-3,
+                           rtol=2E-2), "nll mismatch with cholesky"
         assert np.allclose(result, correct, atol=1E-3,
-                           rtol=2E-2), "nll mismatch"
+                           rtol=2E-2), "nll mismatch with correct"
 
     def setup_object(self, force_input_kernel_index = 2):
         sample_start_index = 1000
