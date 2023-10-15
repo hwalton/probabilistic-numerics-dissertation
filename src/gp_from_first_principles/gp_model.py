@@ -1,6 +1,6 @@
 import numpy as np
 import scipy
-import freelunch
+#import freelunch
 from numpy import linalg as npla
 
 from hyperparameters import Hyperparameters
@@ -13,7 +13,7 @@ from sklearn.cluster import KMeans
 
 
 class GPModel:
-    def __init__(self, kernel_type, X, y, solver_type = 'iterative_search', n_iter=10):
+    def __init__(self, kernel_type, X, y, solver_type = 'iterative_search', n_iter=10, nll_method = 'cholesky'):
         self.hyperparameters_obj = Hyperparameters(kernel_type)
         self.initial_hyperparameters = self.hyperparameters_obj._initial_hyperparameters.copy()
         self.hyperparameter_bounds = self.hyperparameters_obj._hyperparameter_bounds.copy()
@@ -24,6 +24,7 @@ class GPModel:
         self.solver_type = solver_type
         self.gp_kernel = GaussianProcessKernel(self.hyperparameters_obj)
         self.U = self.U_induced()
+        self.nll_method = nll_method
 
     def fit_model(self):
         self.gp_kernel.set_params(self.hyperparameters_obj)
@@ -31,7 +32,7 @@ class GPModel:
         self.hyperparameters_obj.update(optimal_hyperparameters)
         debug_print(optimal_hyperparameters)
         debug_print(self.hyperparameters_obj.array())
-        nll = self.compute_nll(self.hyperparameters_obj)
+        nll = self.compute_nll(self.hyperparameters_obj, self.nll_method)
         debug_print(nll)
         return(nll)
 
@@ -218,7 +219,7 @@ class GPModel:
         return fast_det
 
 
-    def compute_nll(self, hyperparameters, method = 'FITC_18_134'):
+    def compute_nll(self, hyperparameters, method = 'cholesky'):
         if method == 'cholesky':
             if type(hyperparameters) == dict:
                 self.hyperparameters_obj.update(hyperparameters)
