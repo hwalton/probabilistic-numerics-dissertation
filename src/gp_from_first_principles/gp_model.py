@@ -2,7 +2,7 @@ import numpy as np
 import scipy
 #import freelunch
 from numpy import linalg as npla
-
+from gp_nll_FITC_18_134 import GP_NLL_FITC_18_134
 from hyperparameters import Hyperparameters
 from gaussian_process_kernel import GaussianProcessKernel
 from iterative_search import iterative_search_solve
@@ -256,7 +256,8 @@ class GPModel:
 
         elif gp_algo == 'FITC_18_134':
             #out_f = self.run_FITC_18_134()
-
+            gp_nll_fitc_18_134 = GP_NLL_FITC_18_134(self.X, self.y, self.hyperparameters_obj, self.K_sigma_inv, self.K_XX_FITC, self.fast_det)
+            out_f = gp_nll_fitc_18_134.compute()
             return out_f
 
         else:

@@ -1,9 +1,15 @@
 import gp_model
-
+from utils import debug_print
+import numpy as np
 
 class GP_NLL_FITC_18_134:
-    def __init__(self):
-        pass
+    def __init__(self,X, y, hyperparameters_obj, K_sigma_inv, K_XX_FITC, fast_det):
+        self.hyperparameters_obj = hyperparameters_obj
+        self.K_sigma_inv = K_sigma_inv
+        self.K_XX_FITC = K_XX_FITC
+        self.fast_det = fast_det
+        self.X = X
+        self.y = y
 
     def compute(self):
         # self.hyperparameters_obj.update(hyperparameters)
