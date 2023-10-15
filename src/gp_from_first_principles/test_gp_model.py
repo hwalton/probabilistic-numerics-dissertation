@@ -197,9 +197,9 @@ class TestGPModel(unittest.TestCase):
         hyp_array = gp_cholesky.hyperparameters_obj.array()
         print(f"test hyperparameters updated to: {hyp_array}")
 
-        result_cholesky = gp_cholesky.compute_nll(gp_cholesky.hyperparameters_obj, method = 'cholesky')
+        result_cholesky = gp_cholesky.compute_nll(gp_cholesky.hyperparameters_obj, gp_algo='cholesky')
         debug_print(f"result_cholesky: {result_cholesky}")
-        result_FITC = gp_FITC.compute_nll(gp_FITC.hyperparameters_obj, method = 'FITC_18_134')
+        result_FITC = gp_FITC.compute_nll(gp_FITC.hyperparameters_obj, gp_algo='FITC_18_134')
         debug_print(f"result_FITC: {result_FITC}")
 
 
