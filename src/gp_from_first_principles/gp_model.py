@@ -221,16 +221,7 @@ class GPModel:
 
     def compute_nll(self, hyperparameters, method = 'cholesky'):
         if method == 'cholesky':
-            if type(hyperparameters) == dict:
-                self.hyperparameters_obj.update(hyperparameters)
-            if type(hyperparameters) == Hyperparameters:
-                self.hyperparameters_obj.update(hyperparameters)
-            elif type(hyperparameters) == np.ndarray:
-                self.hyperparameters_obj.update(hyperparameters)
-            else:
-                raise ValueError("Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
-            debug_var = self.hyperparameters_obj.array()
-            debug_print(f"compute_NLL cholesky method hyperparameters: {debug_var}")
+            self.update_hyperparameters_and_debug(hyperparameters)
             if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
             if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
             #self.hyperparameters_obj.update(hyperparameters)
@@ -485,15 +476,7 @@ class GPModel:
                     debug_print(
                         "Cholesky decomposition failed. Setting nll to a large value.")
         elif method == 'FITC_18_134':
-            if type(hyperparameters) == dict:
-                self.hyperparameters_obj.update(hyperparameters)
-            if type(hyperparameters) == Hyperparameters:
-                self.hyperparameters_obj.update(hyperparameters)
-            elif type(hyperparameters) == np.ndarray:
-                self.hyperparameters_obj.update(hyperparameters)
-            else:
-                raise ValueError("Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
-
+            self.update_hyperparameters_and_debug(hyperparameters)
             if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
             if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
             #self.hyperparameters_obj.update(hyperparameters)
@@ -531,6 +514,18 @@ class GPModel:
         else:
             raise ValueError("Invalid compute_nll method")
         return nll.item()
+
+    def update_hyperparameters_and_debug(self, hyperparameters):
+        if type(hyperparameters) == dict or type(
+                hyperparameters) == Hyperparameters or type(
+                hyperparameters) == np.ndarray:
+            self.hyperparameters_obj.update(hyperparameters)
+        else:
+            raise ValueError(
+                "Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
+        debug_var = self.hyperparameters_obj.array()
+        debug_print(
+            f"compute_NLL cholesky method hyperparameters: {debug_var}")
 
     # def flatten_params(self, params):
     #     flat_params = []
