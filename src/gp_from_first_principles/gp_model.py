@@ -223,6 +223,8 @@ class GPModel:
         self.update_hyperparameters_and_debug(hyperparameters)
         self.reshape_X_and_y()
 
+
+
         if method == 'cholesky':
             #self.hyperparameters_obj.update(hyperparameters)
             K = self.gp_kernel.compute_kernel(self.X, self.X)
@@ -232,7 +234,20 @@ class GPModel:
             one_vector = np.ones(n)
             y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
             alpha = scipy.linalg.cho_solve((L, True), y_adj)
-            nll = 0.5 * y_adj.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
+
+            term_1 = self.term_1_cholesky(alpha, y_adj)
+
+
+
+            term_2 = self.term_2_cholesky(L)
+
+
+
+            term_3 = 0.5 * n * np.log(2 * np.pi)
+
+
+
+            nll = term_1 + term_2 + term_3
         elif method == 'FITC_18_134':
             #self.hyperparameters_obj.update(hyperparameters)
             # K = self.gp_kernel.compute_kernel(self.X, self.X)
@@ -269,6 +284,12 @@ class GPModel:
         else:
             raise ValueError("Invalid compute_nll method")
         return nll.item()
+
+    def term_2_cholesky(self, L):
+        return np.sum(np.log(np.diag(L)))
+
+    def term_1_cholesky(self, alpha, y_adj):
+        return 0.5 * y_adj.T @ alpha
 
     def reshape_X_and_y(self):
         if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
