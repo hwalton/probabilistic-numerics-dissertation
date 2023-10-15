@@ -220,10 +220,10 @@ class GPModel:
 
 
     def compute_nll(self, hyperparameters, method = 'cholesky'):
+        self.update_hyperparameters_and_debug(hyperparameters)
+        self.reshape_X_and_y()
+
         if method == 'cholesky':
-            self.update_hyperparameters_and_debug(hyperparameters)
-            if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
-            if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
             #self.hyperparameters_obj.update(hyperparameters)
             K = self.gp_kernel.compute_kernel(self.X, self.X)
             K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
@@ -233,32 +233,7 @@ class GPModel:
             y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
             alpha = scipy.linalg.cho_solve((L, True), y_adj)
             nll = 0.5 * y_adj.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
-        elif method == 'cholesky_KMeans':
-            if type(hyperparameters) == dict:
-                self.hyperparameters_obj.update(hyperparameters)
-            if type(hyperparameters) == Hyperparameters:
-                self.hyperparameters_obj.update(hyperparameters)
-            elif type(hyperparameters) == np.ndarray:
-                self.hyperparameters_obj.update(hyperparameters)
-            else:
-                raise ValueError("Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
-
-            if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
-            if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
-            #self.hyperparameters_obj.update(hyperparameters)
-            K = self.gp_kernel.compute_kernel(self.X, self.X)
-            K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
-            for i in range(K.shape[2]):
-                L = scipy.linalg.cholesky(K[:, :, i], lower=True)
-                n = len(self.y)
-                one_vector = np.ones(n)
-                y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
-                alpha = scipy.linalg.cho_solve((L, True), y_adj)
-                nll = 0.5 * y_adj.T @ alpha + np.sum(np.log(np.diag(L))) + 0.5 * n * np.log(2 * np.pi)
         elif method == 'FITC_18_134':
-            self.update_hyperparameters_and_debug(hyperparameters)
-            if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
-            if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
             #self.hyperparameters_obj.update(hyperparameters)
             # K = self.gp_kernel.compute_kernel(self.X, self.X)
             # K += np.repeat(
@@ -294,6 +269,10 @@ class GPModel:
         else:
             raise ValueError("Invalid compute_nll method")
         return nll.item()
+
+    def reshape_X_and_y(self):
+        if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
+        if self.y.ndim == 1: self.y = self.y.reshape(-1, 1)
 
     def update_hyperparameters_and_debug(self, hyperparameters):
         if type(hyperparameters) == dict or type(
