@@ -238,8 +238,8 @@ class GPModel:
             alpha = scipy.linalg.cho_solve((L, True), y_adj)
 
 
-            term_1_c = self.term_1_cholesky(alpha, y_adj)
-            term_2_c = self.term_2_cholesky(L)
+            term_1_c = (0.5 * y_adj.T @ alpha).item()
+            term_2_c = np.sum(np.log(np.diag(L)))
             term_3_c = 0.5 * n * np.log(2 * np.pi)
 
 
@@ -270,47 +270,37 @@ class GPModel:
             #eigs = np.linalg.eigvalsh(K_sigma_inv)
             #debug_print(f"cov eigenvalues: {eigs}")
             n = K_XX.shape[0]
-            try:
-                #var645 = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n)
-                big_lambda = np.diag(np.diag(K_XX-Q_XX)) + self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n)
-                #eigs_big_lambda = np.linalg.eigvalsh(big_lambda)
-                #debug_print(f"big lambda eigenvalues: {eigs_big_lambda}")
-                in53 = Q_XX + big_lambda + 1E-3 * np.eye(n)
-                cond_in53 = np.linalg.cond(in53)
-                debug_print(f"cond_in53: {cond_in53}")
-                fast_det = self.fast_det(K_XU, K_UU_inv_K_UX, big_lambda)
-                debug_print(f"fast_det: {fast_det}")
-                debug_print(f"K_sigma_inv: {K_sigma_inv}")
+            #var645 = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n)
+            big_lambda = np.diag(np.diag(K_XX-Q_XX)) + self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n)
+            #eigs_big_lambda = np.linalg.eigvalsh(big_lambda)
+            #debug_print(f"big lambda eigenvalues: {eigs_big_lambda}")
+            in53 = Q_XX + big_lambda + 1E-3 * np.eye(n)
+            cond_in53 = np.linalg.cond(in53)
+            debug_print(f"cond_in53: {cond_in53}")
+            fast_det = self.fast_det(K_XU, K_UU_inv_K_UX, big_lambda)
+            debug_print(f"fast_det: {fast_det}")
+            debug_print(f"K_sigma_inv: {K_sigma_inv}")
 
-                term_1_f = 0.5 * np.log(fast_det)
+            term_1_f = 0.5 * np.log(fast_det)
 
-                term_2_f = 0.5 * y_adj.T @ K_sigma_inv @ y_adj
+            term_2_f = 0.5 * y_adj.T @ K_sigma_inv @ y_adj
 
-                term_3_f = 0.5 * n * np.log(2 * np.pi)
+            term_3_f = 0.5 * n * np.log(2 * np.pi)
 
-                nll = term_1_f + term_2_f + term_3_f
-                nll = np.array(-nll).item()
+            nll = term_1_f + term_2_f + term_3_f
+            nll = np.array(-nll).item()
 
-                out_f = {
-                    'nll': nll,
-                    'term_1': term_1_f,
-                    'term_2': term_2_f,
-                    'term_3': term_3_f
-                }
+            out_f = {
+                'nll': nll,
+                'term_1': term_1_f,
+                'term_2': term_2_f,
+                'term_3': term_3_f
+            }
 
-                return out_f
-            except ValueError:
-                nll = np.array([10E10])
-                debug_print(
-                    "Compute NLL failed. Setting nll to a large value.")
+            return out_f
+
         else:
             raise ValueError("Invalid compute_nll method")
-
-    def term_2_cholesky(self, L):
-        return np.sum(np.log(np.diag(L)))
-
-    def term_1_cholesky(self, alpha, y_adj):
-        return (0.5 * y_adj.T @ alpha).item()
 
     def reshape_X_and_y(self):
         if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
