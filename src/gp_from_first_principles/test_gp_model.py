@@ -184,9 +184,10 @@ class TestGPModel(unittest.TestCase):
         #gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
 
 
-        optimal_hyperparameters = np.array([1.55651623e+00, 1.29376154e+00, 1.93658826e-03, 1.00000000e-04,
- 4.34121551e-01, 3.50302199e-01, 1.03262772e+01, 1.20501525e-04,
- 3.68744450e-13, 5.43714621e-01])
+        optimal_hyperparameters = np.array(
+            [1.55651623e+00, 1.29376154e+00, 1.93658826e-03, 1.00000000e-04,
+            4.34121551e-01, 3.50302199e-01, 1.03262772e+01, 1.20501525e-04,
+            3.68744450e-13, 5.43714621e-01])
 
         gp_cholesky.hyperparameters_obj.update(optimal_hyperparameters)
 
@@ -195,9 +196,12 @@ class TestGPModel(unittest.TestCase):
         hyp_array = gp_cholesky.hyperparameters_obj.array()
         print(f"test hyperparameters updated to: {hyp_array}")
 
-        result_cholesky = gp_cholesky.compute_nll(gp_cholesky.hyperparameters_obj)
-        result_FITC = gp_FITC.compute_nll(gp_FITC.hyperparameters_obj)
+        result_cholesky = gp_cholesky.compute_nll(gp_cholesky.hyperparameters_obj, method = 'cholesky')
 
+        result_FITC = gp_FITC.compute_nll(gp_FITC.hyperparameters_obj, method = 'FITC_18_134')
+
+
+        assert np.allclose(result_cholesky, result_FITC, atol=1E-3, rtol=15E-2), "nll mismatch cholesky with FITC"
 
 
         # K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX = gp.K_XX_FITC()
