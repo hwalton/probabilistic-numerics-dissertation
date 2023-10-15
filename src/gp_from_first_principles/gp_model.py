@@ -255,7 +255,7 @@ class GPModel:
             return out_c
 
         elif gp_algo == 'FITC_18_134':
-            out_f = self.run_FITC_18_134()
+            #out_f = self.run_FITC_18_134()
 
             return out_f
 

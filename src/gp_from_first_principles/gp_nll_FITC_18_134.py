@@ -1,11 +1,11 @@
 import gp_model
 
 
-class GPModel_FITC_18_134:
+class GP_NLL_FITC_18_134:
     def __init__(self):
+        pass
 
-
-    def run_FITC_18_134(self):
+    def compute(self):
         # self.hyperparameters_obj.update(hyperparameters)
         # K = self.gp_kernel.compute_kernel(self.X, self.X)
         # K += np.repeat(
