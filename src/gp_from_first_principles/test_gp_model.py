@@ -177,6 +177,17 @@ class TestGPModel(unittest.TestCase):
     #     assert np.allclose(result, correct, atol=1E-3,
     #                        rtol=2E-2), "nll mismatch with correct"
 
+
+    def test_term_1_choleksy(self):
+        gp_cholesky = self.setup_object(2, return_model='response', nll_method = 'cholesky')
+        alpha = np.loadtxt('test_resources/alpha_cholesky')
+        y_adj = np.loadtxt('test_resources/y_adj_cholesky')
+        result = gp_cholesky.term_1_cholesky(alpha,y_adj)
+
+
+
+    def test_term_2_choleksy(self):
+        pass
     def test_def_compute_nll_response(self):
 
         gp_cholesky = self.setup_object(2, return_model='response', nll_method = 'cholesky')

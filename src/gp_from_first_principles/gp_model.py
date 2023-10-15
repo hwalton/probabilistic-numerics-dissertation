@@ -233,17 +233,21 @@ class GPModel:
             n = len(self.y)
             one_vector = np.ones(n)
             y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
+            debug_print(f"y_adj: {y_adj}")
+
             alpha = scipy.linalg.cho_solve((L, True), y_adj)
 
-            term_1 = self.term_1_cholesky(alpha, y_adj)
 
+            term_1 = self.term_1_cholesky(alpha, y_adj)
+            np.savetxt('test_resources/term_1_cholesky', term_1, delimiter=', ')
 
 
             term_2 = self.term_2_cholesky(L)
-
+            np.savetxt('test_resources/term_2_cholesky', term_2, delimiter=', ')
 
 
             term_3 = 0.5 * n * np.log(2 * np.pi)
+            np.savetxt('test_resources/term_3_cholesky', term_3, delimiter=', ')
 
 
 
@@ -275,7 +279,14 @@ class GPModel:
                 fast_det = self.fast_det(K_XU, K_UU_inv_K_UX, big_lambda)
                 debug_print(f"fast_det: {fast_det}")
                 debug_print(f"K_sigma_inv: {K_sigma_inv}")
-                nll = 0.5 * np.log(fast_det) + 0.5 * y_adj.T @ K_sigma_inv @ y_adj + 0.5 * n * np.log(2 * np.pi)
+
+                term_1_FITC = 0.5 * np.log(fast_det)
+
+                term_2_FITC = 0.5 * y_adj.T @ K_sigma_inv @ y_adj
+
+                term_3_FITC = 0.5 * n * np.log(2 * np.pi)
+
+                nll = term_1_FITC + term_2_FITC + term_3_FITC
                 nll = np.array(-nll)
             except ValueError:
                 nll = np.array([10E10])
