@@ -1,12 +1,12 @@
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
 
-load_dotenv('/.env')
+#load_dotenv('/.env')
+developer = True
 
-#developer = True
 
-env = os.environ['ENV']
+#env = os.environ['ENV']
 
 def debug_print(text):
-    if env == 'DEVELOPMENT':
+    if developer:
         print(text)

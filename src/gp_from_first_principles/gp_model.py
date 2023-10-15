@@ -32,7 +32,7 @@ class GPModel:
         self.hyperparameters_obj.update(optimal_hyperparameters)
         debug_print(optimal_hyperparameters)
         debug_print(self.hyperparameters_obj.array())
-        nll = self.compute_nll(self.hyperparameters_obj, self.nll_method)
+        nll = self.compute_nll(self.hyperparameters_obj, self.nll_method)['nll']
         debug_print(nll)
         return(nll)
 
@@ -239,19 +239,21 @@ class GPModel:
 
 
             term_1 = self.term_1_cholesky(alpha, y_adj)
-            np.savetxt('test_resources/term_1_cholesky', term_1, delimiter=', ')
-
-
             term_2 = self.term_2_cholesky(L)
-            np.savetxt('test_resources/term_2_cholesky', term_2, delimiter=', ')
-
-
             term_3 = 0.5 * n * np.log(2 * np.pi)
-            np.savetxt('test_resources/term_3_cholesky', term_3, delimiter=', ')
 
 
 
             nll = term_1 + term_2 + term_3
+
+            out = {
+                'nll': nll,
+                'term_1': term_1,
+                'term_2': term_2,
+                'term_3': term_3
+            }
+            return out
+
         elif method == 'FITC_18_134':
             #self.hyperparameters_obj.update(hyperparameters)
             # K = self.gp_kernel.compute_kernel(self.X, self.X)
@@ -280,21 +282,33 @@ class GPModel:
                 debug_print(f"fast_det: {fast_det}")
                 debug_print(f"K_sigma_inv: {K_sigma_inv}")
 
-                term_1_FITC = 0.5 * np.log(fast_det)
+                term_1 = 0.5 * np.log(fast_det)
 
-                term_2_FITC = 0.5 * y_adj.T @ K_sigma_inv @ y_adj
+                term_2 = 0.5 * y_adj.T @ K_sigma_inv @ y_adj
 
-                term_3_FITC = 0.5 * n * np.log(2 * np.pi)
+                term_3 = 0.5 * n * np.log(2 * np.pi)
 
-                nll = term_1_FITC + term_2_FITC + term_3_FITC
-                nll = np.array(-nll)
+                nll = term_1 + term_2 + term_3
+                nll = np.array(-nll).item()
+
+                out = {
+                    'nll': nll,
+                    'term_1': term_1,
+                    'term_2': term_2,
+                    'term_3': term_3
+                }
+
+
+                # Your modified dictionary
+                print(out)
+
+                return out
             except ValueError:
                 nll = np.array([10E10])
                 debug_print(
                     "Compute NLL failed. Setting nll to a large value.")
         else:
             raise ValueError("Invalid compute_nll method")
-        return nll.item()
 
     def term_2_cholesky(self, L):
         return np.sum(np.log(np.diag(L)))

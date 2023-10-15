@@ -8,8 +8,8 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
                               compute_nll, n_iter=10, sample_length = 0):
     best_hyperparameters = initial_hyperparameters_array.copy()
     hyperparameters = initial_hyperparameters_array.copy()
-    best_nll = compute_nll(initial_hyperparameters_array)
-    nll = compute_nll(initial_hyperparameters_array)
+    best_nll = compute_nll(initial_hyperparameters_array)['nll']
+    nll = compute_nll(initial_hyperparameters_array)['nll']
     iter_since_update = 0
     for j in range(n_iter):
 
@@ -26,7 +26,7 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
                 modifier = np.exp(exponent)
                 hyperparameters_prime = hyperparameters.copy()
                 hyperparameters_prime[i] = np.clip(hyperparameters_prime[i] * modifier, lower, upper)
-                nll_prime = compute_nll(hyperparameters_prime)
+                nll_prime = compute_nll(hyperparameters_prime)['nll']
                 if nll_prime < best_nll:
                     best_nll = nll_prime
                     best_hyperparameters = hyperparameters_prime.copy()

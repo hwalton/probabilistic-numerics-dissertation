@@ -207,9 +207,9 @@ class TestGPModel(unittest.TestCase):
         hyp_array = gp_cholesky.hyperparameters_obj.array()
         print(f"test hyperparameters updated to: {hyp_array}")
 
-        result_cholesky = gp_cholesky.compute_nll(gp_cholesky.hyperparameters_obj, method = 'cholesky')
+        result_cholesky = gp_cholesky.compute_nll(gp_cholesky.hyperparameters_obj, method = 'cholesky')['nll']
 
-        result_FITC = gp_FITC.compute_nll(gp_FITC.hyperparameters_obj, method = 'FITC_18_134')
+        result_FITC = gp_FITC.compute_nll(gp_FITC.hyperparameters_obj, method = 'FITC_18_134')['nll']
 
 
         assert np.allclose(result_cholesky, result_FITC, atol=1E-3, rtol=15E-2), "nll mismatch cholesky with FITC"
