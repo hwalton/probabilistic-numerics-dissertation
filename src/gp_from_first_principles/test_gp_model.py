@@ -3,7 +3,7 @@ import math
 import time as timer
 from gp_model import GPModel
 import unittest
-import utils
+from utils import debug_print
 from main import format_data, load_data
 import numpy as np
 
@@ -178,16 +178,6 @@ class TestGPModel(unittest.TestCase):
     #                        rtol=2E-2), "nll mismatch with correct"
 
 
-    def test_term_1_choleksy(self):
-        gp_cholesky = self.setup_object(2, return_model='response', nll_method = 'cholesky')
-        alpha = np.loadtxt('test_resources/alpha_cholesky')
-        y_adj = np.loadtxt('test_resources/y_adj_cholesky')
-        result = gp_cholesky.term_1_cholesky(alpha,y_adj)
-
-
-
-    def test_term_2_choleksy(self):
-        pass
     def test_def_compute_nll_response(self):
 
         gp_cholesky = self.setup_object(2, return_model='response', nll_method = 'cholesky')
@@ -207,13 +197,24 @@ class TestGPModel(unittest.TestCase):
         hyp_array = gp_cholesky.hyperparameters_obj.array()
         print(f"test hyperparameters updated to: {hyp_array}")
 
-        result_cholesky = gp_cholesky.compute_nll(gp_cholesky.hyperparameters_obj, method = 'cholesky')['nll']
+        result_cholesky = gp_cholesky.compute_nll(gp_cholesky.hyperparameters_obj, method = 'cholesky')
+        debug_print(f"result_cholesky: {result_cholesky}")
+        result_FITC = gp_FITC.compute_nll(gp_FITC.hyperparameters_obj, method = 'FITC_18_134')
+        debug_print(f"result_FITC: {result_FITC}")
 
-        result_FITC = gp_FITC.compute_nll(gp_FITC.hyperparameters_obj, method = 'FITC_18_134')['nll']
 
-
-        assert np.allclose(result_cholesky, result_FITC, atol=1E-3, rtol=15E-2), "nll mismatch cholesky with FITC"
-
+        assert np.allclose(result_cholesky['nll'], result_FITC['nll'],
+                           atol=1E-3,
+                           rtol=15E-2), f"nll mismatch cholesky with FITC\nresult_cholesky['nll']: {result_cholesky['nll']}\nresult_FITC['nll']: {result_FITC['nll']}"
+        assert np.allclose(result_cholesky['term_1'], result_FITC['term_1'],
+                           atol=1E-3,
+                           rtol=15E-2), f"term_1 mismatch cholesky with FITC\nresult_cholesky['term_1']: {result_cholesky['term_1']}\nresult_FITC['term_1']: {result_FITC['term_1']}"
+        assert np.allclose(result_cholesky['term_2'], result_FITC['term_2'],
+                           atol=1E-3,
+                           rtol=15E-2), f"term_2 mismatch cholesky with FITC\nresult_cholesky['term_2']: {result_cholesky['term_2']}\nresult_FITC['term_2']: {result_FITC['term_2']}"
+        assert np.allclose(result_cholesky['term_3'], result_FITC['term_3'],
+                           atol=1E-3,
+                           rtol=15E-2), f"term_3 mismatch cholesky with FITC\nresult_cholesky['term_3']: {result_cholesky['term_3']}\nresult_FITC['term_3']: {result_FITC['term_3']}"
 
         # K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX = gp.K_XX_FITC()
         # n = K_XX.shape[0]

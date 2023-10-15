@@ -238,21 +238,21 @@ class GPModel:
             alpha = scipy.linalg.cho_solve((L, True), y_adj)
 
 
-            term_1 = self.term_1_cholesky(alpha, y_adj)
-            term_2 = self.term_2_cholesky(L)
-            term_3 = 0.5 * n * np.log(2 * np.pi)
+            term_1_c = self.term_1_cholesky(alpha, y_adj)
+            term_2_c = self.term_2_cholesky(L)
+            term_3_c = 0.5 * n * np.log(2 * np.pi)
 
 
 
-            nll = term_1 + term_2 + term_3
+            nll = term_1_c + term_2_c + term_3_c
 
-            out = {
+            out_c = {
                 'nll': nll,
-                'term_1': term_1,
-                'term_2': term_2,
-                'term_3': term_3
+                'term_1': term_1_c,
+                'term_2': term_2_c,
+                'term_3': term_3_c
             }
-            return out
+            return out_c
 
         elif method == 'FITC_18_134':
             #self.hyperparameters_obj.update(hyperparameters)
@@ -282,27 +282,23 @@ class GPModel:
                 debug_print(f"fast_det: {fast_det}")
                 debug_print(f"K_sigma_inv: {K_sigma_inv}")
 
-                term_1 = 0.5 * np.log(fast_det)
+                term_1_f = 0.5 * np.log(fast_det)
 
-                term_2 = 0.5 * y_adj.T @ K_sigma_inv @ y_adj
+                term_2_f = 0.5 * y_adj.T @ K_sigma_inv @ y_adj
 
-                term_3 = 0.5 * n * np.log(2 * np.pi)
+                term_3_f = 0.5 * n * np.log(2 * np.pi)
 
-                nll = term_1 + term_2 + term_3
+                nll = term_1_f + term_2_f + term_3_f
                 nll = np.array(-nll).item()
 
-                out = {
+                out_f = {
                     'nll': nll,
-                    'term_1': term_1,
-                    'term_2': term_2,
-                    'term_3': term_3
+                    'term_1': term_1_f,
+                    'term_2': term_2_f,
+                    'term_3': term_3_f
                 }
 
-
-                # Your modified dictionary
-                print(out)
-
-                return out
+                return out_f
             except ValueError:
                 nll = np.array([10E10])
                 debug_print(
@@ -314,7 +310,7 @@ class GPModel:
         return np.sum(np.log(np.diag(L)))
 
     def term_1_cholesky(self, alpha, y_adj):
-        return 0.5 * y_adj.T @ alpha
+        return (0.5 * y_adj.T @ alpha).item()
 
     def reshape_X_and_y(self):
         if self.X.ndim == 1: self.X = self.X.reshape(-1, 1)
