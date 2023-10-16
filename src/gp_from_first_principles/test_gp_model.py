@@ -6,6 +6,7 @@ import unittest
 from utils import debug_print
 from main import format_data, load_data
 import numpy as np
+from fast_det import compute_fast_det
 
 class TestGPModel(unittest.TestCase):
     def setup_object(self, force_input_kernel_index=2, return_model='input', nll_method = 'cholesky'):
@@ -63,11 +64,11 @@ class TestGPModel(unittest.TestCase):
 
         start_time = timer.time()
 
-        fast_det = force_input_model.fast_det(U,V_T,D)
+        fast_det = compute_fast_det(U,V_T,D)
 
         end_time = timer.time()
         elapsed_time = end_time - start_time
-        print(f"fast_det ran in {elapsed_time} seconds")
+        print(f"compute_fast_det ran in {elapsed_time} seconds")
 
         start_time = timer.time()
 

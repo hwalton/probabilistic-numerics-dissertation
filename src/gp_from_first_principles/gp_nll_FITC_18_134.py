@@ -2,10 +2,10 @@ import gp_model
 from utils import debug_print
 import numpy as np
 import scipy
+from fast_det import compute_fast_det
 class GP_NLL_FITC_18_134:
-    def __init__(self,X, y, U, gp_kernel, hyperparameters_obj, fast_det):
+    def __init__(self,X, y, U, gp_kernel, hyperparameters_obj):
         self.hyperparameters_obj = hyperparameters_obj
-        self.fast_det = fast_det
         self.X = X
         self.y = y
         self.U = U
@@ -36,8 +36,8 @@ class GP_NLL_FITC_18_134:
         in53 = Q_XX + big_lambda + 1E-3 * np.eye(n)
         cond_in53 = np.linalg.cond(in53)
         debug_print(f"cond_in53: {cond_in53}")
-        fast_det = self.fast_det(K_XU, K_UU_inv_K_UX, big_lambda)
-        debug_print(f"fast_det: {fast_det}")
+        fast_det = compute_fast_det(K_XU, K_UU_inv_K_UX, big_lambda)
+        debug_print(f"compute_fast_det: {fast_det}")
         debug_print(f"K_sigma_inv: {K_sigma_inv}")
         term_1_f = 0.5 * np.log(fast_det)
         term_2_f = 0.5 * y_adj.T @ K_sigma_inv @ y_adj
