@@ -1,16 +1,16 @@
 import gp_model
 from utils import debug_print
 import numpy as np
-
+import scipy
 class GP_NLL_FITC_18_134:
-    def __init__(self,X, y, U, hyperparameters_obj, K_sigma_inv, K_XX_FITC, fast_det):
+    def __init__(self,X, y, U, gp_kernel, hyperparameters_obj, K_sigma_inv, fast_det):
         self.hyperparameters_obj = hyperparameters_obj
         self.K_sigma_inv = K_sigma_inv
-        self.K_XX_FITC = K_XX_FITC
         self.fast_det = fast_det
         self.X = X
         self.y = y
         self.U = U
+        self.gp_kernel = gp_kernel
 
     def compute(self):
         # self.hyperparameters_obj.update(hyperparameters)
@@ -52,3 +52,30 @@ class GP_NLL_FITC_18_134:
             'term_3': term_3_f
         }
         return out_f
+
+    def K_XX_FITC(self):
+        X = np.squeeze(self.X)
+        U = np.squeeze(self.U)
+
+        K_XU = np.squeeze(self.gp_kernel.compute_kernel(X, U))
+        K_UX = np.squeeze(self.gp_kernel.compute_kernel(U, X))
+        K_UU = np.squeeze(self.gp_kernel.compute_kernel(U, U))
+        K_XX = np.squeeze(self.gp_kernel.compute_kernel(X, X))
+
+        K_UU_stable = K_UU + 1e-6 * np.eye(U.shape[0])
+
+        L_UU = scipy.linalg.cholesky(K_UU_stable, lower=True)
+        K_UU_inv_KUX = scipy.linalg.cho_solve((L_UU, True), K_UX)
+        Q_XX = K_XU @ K_UU_inv_KUX
+        rank_Q_XX = np.linalg.matrix_rank(Q_XX)
+        debug_print(f"Q_XX Rank: {rank_Q_XX}")
+        # K_XX_FITC = K_XX + Q_XX - K_XU @ var4
+        K_XX_FITC = K_XU @ K_UU_inv_KUX
+
+        # out = {
+        #     'K_XX_FITC': K_XX_FITC,
+        #     'K_XU': K_XU,
+        #     'K_UU': K_UU,
+        #     'K_XX': K_XX,
+        # }
+        return K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX

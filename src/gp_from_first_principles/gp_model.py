@@ -25,7 +25,10 @@ class GPModel:
         self.gp_kernel = GaussianProcessKernel(self.hyperparameters_obj)
         self.U = self.U_induced()
         self.nll_method = nll_method
-
+        self.gp_nll_algo = GP_NLL_FITC_18_134(self.X, self.y, self.U,
+                                              self.gp_kernel,
+                                              self.hyperparameters_obj,
+                                              self.K_sigma_inv, self.fast_det)
     def fit_model(self):
         self.gp_kernel.set_params(self.hyperparameters_obj)
         optimal_hyperparameters = self.get_optimal_hyperparameters()
@@ -89,34 +92,34 @@ class GPModel:
         #self.y = U_y
         return U_X
 
-    def K_XX_FITC(self):
-
-        X = np.squeeze(self.X)
-        U = np.squeeze(self.U)
-
-        K_XU = np.squeeze(self.gp_kernel.compute_kernel(X, U))
-        K_UX = np.squeeze(self.gp_kernel.compute_kernel(U, X))
-        K_UU = np.squeeze(self.gp_kernel.compute_kernel(U, U))
-        K_XX = np.squeeze(self.gp_kernel.compute_kernel(X, X))
-
-        K_UU_stable = K_UU + 1e-6 * np.eye(U.shape[0])
-
-        L_UU = scipy.linalg.cholesky(K_UU_stable, lower=True)
-        K_UU_inv_KUX = scipy.linalg.cho_solve((L_UU, True), K_UX)
-        Q_XX = K_XU @ K_UU_inv_KUX
-        rank_Q_XX = np.linalg.matrix_rank(Q_XX)
-        debug_print(f"Q_XX Rank: {rank_Q_XX}")
-        #K_XX_FITC = K_XX + Q_XX - K_XU @ var4
-        K_XX_FITC = K_XU @ K_UU_inv_KUX
-
-
-        # out = {
-        #     'K_XX_FITC': K_XX_FITC,
-        #     'K_XU': K_XU,
-        #     'K_UU': K_UU,
-        #     'K_XX': K_XX,
-        # }
-        return K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX
+    # def K_XX_FITC(self):
+    #
+    #     X = np.squeeze(self.X)
+    #     U = np.squeeze(self.U)
+    #
+    #     K_XU = np.squeeze(self.gp_kernel.compute_kernel(X, U))
+    #     K_UX = np.squeeze(self.gp_kernel.compute_kernel(U, X))
+    #     K_UU = np.squeeze(self.gp_kernel.compute_kernel(U, U))
+    #     K_XX = np.squeeze(self.gp_kernel.compute_kernel(X, X))
+    #
+    #     K_UU_stable = K_UU + 1e-6 * np.eye(U.shape[0])
+    #
+    #     L_UU = scipy.linalg.cholesky(K_UU_stable, lower=True)
+    #     K_UU_inv_KUX = scipy.linalg.cho_solve((L_UU, True), K_UX)
+    #     Q_XX = K_XU @ K_UU_inv_KUX
+    #     rank_Q_XX = np.linalg.matrix_rank(Q_XX)
+    #     debug_print(f"Q_XX Rank: {rank_Q_XX}")
+    #     #K_XX_FITC = K_XX + Q_XX - K_XU @ var4
+    #     K_XX_FITC = K_XU @ K_UU_inv_KUX
+    #
+    #
+    #     # out = {
+    #     #     'K_XX_FITC': K_XX_FITC,
+    #     #     'K_XU': K_XU,
+    #     #     'K_UU': K_UU,
+    #     #     'K_XX': K_XX,
+    #     # }
+    #     return K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX
 
     # def K_sigma_inv(self, method = 'woodbury'):
     #     if method == 'woodbury':
@@ -130,7 +133,7 @@ class GPModel:
     #     return out
     def K_sigma_inv(self, method = 'woodbury'):
         if method == 'woodbury':
-            K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX= self.K_XX_FITC()
+            K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX= self.gp_nll_algo.K_XX_FITC()
             sigma_n_neg2 = np.multiply(self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X)))
             #sigma_n_neg2 = np.multiply(1, np.eye(len(self.X)))
 
@@ -256,8 +259,8 @@ class GPModel:
 
         elif gp_algo == 'FITC_18_134':
             #out_f = self.run_FITC_18_134()
-            gp_nll_fitc_18_134 = GP_NLL_FITC_18_134(self.X, self.y, self.U, self.hyperparameters_obj, self.K_sigma_inv, self.K_XX_FITC, self.fast_det)
-            out_f = gp_nll_fitc_18_134.compute()
+
+            out_f = self.gp_nll_algo.compute()
             return out_f
 
         else:
