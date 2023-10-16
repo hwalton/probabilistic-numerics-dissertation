@@ -4,7 +4,7 @@ import scipy
 from numpy import linalg as npla
 from gp_nll_FITC_18_134 import GP_NLL_FITC_18_134
 from hyperparameters import Hyperparameters
-from gaussian_process_kernel import GaussianProcessKernel
+from gp_kernel import GaussianProcessKernel
 from iterative_search import iterative_search_solve
 from metropolis_hastings import metropolis_hastings_solve
 from adam import adam_optimize
