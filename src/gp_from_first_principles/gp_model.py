@@ -256,7 +256,7 @@ class GPModel:
 
         elif gp_algo == 'FITC_18_134':
             #out_f = self.run_FITC_18_134()
-            gp_nll_fitc_18_134 = GP_NLL_FITC_18_134(self.X, self.y, self.hyperparameters_obj, self.K_sigma_inv, self.K_XX_FITC, self.fast_det)
+            gp_nll_fitc_18_134 = GP_NLL_FITC_18_134(self.X, self.y, self.U, self.hyperparameters_obj, self.K_sigma_inv, self.K_XX_FITC, self.fast_det)
             out_f = gp_nll_fitc_18_134.compute()
             return out_f
 
