@@ -3,9 +3,8 @@ from utils import debug_print
 import numpy as np
 import scipy
 class GP_NLL_FITC_18_134:
-    def __init__(self,X, y, U, gp_kernel, hyperparameters_obj, K_sigma_inv, fast_det):
+    def __init__(self,X, y, U, gp_kernel, hyperparameters_obj, fast_det):
         self.hyperparameters_obj = hyperparameters_obj
-        self.K_sigma_inv = K_sigma_inv
         self.fast_det = fast_det
         self.X = X
         self.y = y
@@ -52,6 +51,26 @@ class GP_NLL_FITC_18_134:
             'term_3': term_3_f
         }
         return out_f
+
+    def K_sigma_inv(self, method='woodbury'):
+        if method == 'woodbury':
+            K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX = self.K_XX_FITC()
+            sigma_n_neg2 = np.multiply(
+                self.hyperparameters_obj.dict()['noise_level'] ** -2,
+                np.eye(len(self.X)))
+            # sigma_n_neg2 = np.multiply(1, np.eye(len(self.X)))
+
+            # var237 = np.linalg.solve(K_UU, K_UX)
+            var = sigma_n_neg2 @ K_XU @ (
+                        K_UU_inv_K_UX + K_UX @ sigma_n_neg2 @ K_XU @ K_UX) @ sigma_n_neg2
+            # var2 = sigma_n_neg2 @ K_XU @ (K_UU_inv_K_UX + np.array(K_UX @ sigma_n_neg2 @ K_XU @ K_UX)) @ sigma_n_neg2
+            # debug_print(f"var == var2: {np.allclose(var,var2, atol = 1E-3)}")
+            out = sigma_n_neg2 - var
+
+        else:
+            raise ValueError("Invalid inducing method")
+        return out
+
 
     def K_XX_FITC(self):
         X = np.squeeze(self.X)

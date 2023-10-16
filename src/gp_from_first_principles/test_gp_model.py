@@ -137,7 +137,7 @@ class TestGPModel(unittest.TestCase):
 
         gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
 
-        result = gp.K_sigma_inv()
+        result = gp.gp_nll_algo.K_sigma_inv()
 
         correct = np.linalg.inv(np.squeeze(gp.gp_kernel.compute_kernel(gp.X, gp.X)) + np.multiply(gp.hyperparameters_obj.dict()['noise_level'] ** 2, np.eye(gp.X.shape[0])))
 

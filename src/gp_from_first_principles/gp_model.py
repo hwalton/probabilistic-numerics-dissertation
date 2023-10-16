@@ -28,7 +28,7 @@ class GPModel:
         self.gp_nll_algo = GP_NLL_FITC_18_134(self.X, self.y, self.U,
                                               self.gp_kernel,
                                               self.hyperparameters_obj,
-                                              self.K_sigma_inv, self.fast_det)
+                                              self.fast_det)
     def fit_model(self):
         self.gp_kernel.set_params(self.hyperparameters_obj)
         optimal_hyperparameters = self.get_optimal_hyperparameters()
@@ -131,21 +131,21 @@ class GPModel:
     #     else:
     #         raise ValueError("Invalid inducing method")
     #     return out
-    def K_sigma_inv(self, method = 'woodbury'):
-        if method == 'woodbury':
-            K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX= self.gp_nll_algo.K_XX_FITC()
-            sigma_n_neg2 = np.multiply(self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X)))
-            #sigma_n_neg2 = np.multiply(1, np.eye(len(self.X)))
-
-            #var237 = np.linalg.solve(K_UU, K_UX)
-            var = sigma_n_neg2 @ K_XU @ (K_UU_inv_K_UX + K_UX @ sigma_n_neg2 @ K_XU @ K_UX) @ sigma_n_neg2
-            #var2 = sigma_n_neg2 @ K_XU @ (K_UU_inv_K_UX + np.array(K_UX @ sigma_n_neg2 @ K_XU @ K_UX)) @ sigma_n_neg2
-            #debug_print(f"var == var2: {np.allclose(var,var2, atol = 1E-3)}")
-            out = sigma_n_neg2 - var
-
-        else:
-            raise ValueError("Invalid inducing method")
-        return out
+    # def K_sigma_inv(self, method = 'woodbury'):
+    #     if method == 'woodbury':
+    #         K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX= self.gp_nll_algo.K_XX_FITC()
+    #         sigma_n_neg2 = np.multiply(self.hyperparameters_obj.dict()['noise_level'] ** -2, np.eye(len(self.X)))
+    #         #sigma_n_neg2 = np.multiply(1, np.eye(len(self.X)))
+    #
+    #         #var237 = np.linalg.solve(K_UU, K_UX)
+    #         var = sigma_n_neg2 @ K_XU @ (K_UU_inv_K_UX + K_UX @ sigma_n_neg2 @ K_XU @ K_UX) @ sigma_n_neg2
+    #         #var2 = sigma_n_neg2 @ K_XU @ (K_UU_inv_K_UX + np.array(K_UX @ sigma_n_neg2 @ K_XU @ K_UX)) @ sigma_n_neg2
+    #         #debug_print(f"var == var2: {np.allclose(var,var2, atol = 1E-3)}")
+    #         out = sigma_n_neg2 - var
+    #
+    #     else:
+    #         raise ValueError("Invalid inducing method")
+    #     return out
     # def K_sigma_inv(self, method = 'woodbury'):
     #     if method == 'woodbury':
     #         K_XX_FITC, K_XU, K_UX, K_UU, K_XX = self.K_XX_FITC()
@@ -163,7 +163,7 @@ class GPModel:
             K_X_X = self.gp_kernel.compute_kernel(self.X, self.X) + np.array(self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(len(self.X)))[:,:,None]
             K_star_X = self.gp_kernel.compute_kernel(self.X, X_star)
             K_star_star = self.gp_kernel.compute_kernel(X_star, X_star)
-            K_sigma_inv = self.K_sigma_inv()
+            K_sigma_inv = self.gp_nll_algo.K_sigma_inv()
             L = np.zeros_like(K_X_X)
             self.mu = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
             self.s2 = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
