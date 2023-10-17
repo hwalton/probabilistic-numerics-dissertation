@@ -73,28 +73,32 @@ class GP_NLL_FITC_18_134:
 
 
     def K_XX_FITC(self):
+        K_UU, K_UX, K_XU, K_XX, U = self._compute_kernels()
+
+        K_UU_inv_KUX, Q_XX = self._calculate_inputs_to_K_XX_FITC_calc(K_UU,
+                                                                      K_UX,
+                                                                      K_XU, U)
+
+        K_XX_FITC = self._compute_K_XX_FITC(K_UU_inv_KUX, K_XU)
+
+        return K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX
+
+    def _compute_K_XX_FITC(self, K_UU_inv_KUX, K_XU):
+        K_XX_FITC = K_XU @ K_UU_inv_KUX
+        return K_XX_FITC
+
+    def _calculate_inputs_to_K_XX_FITC_calc(self, K_UU, K_UX, K_XU, U):
+        K_UU_stable = K_UU + 1e-6 * np.eye(U.shape[0])
+        L_UU = scipy.linalg.cholesky(K_UU_stable, lower=True)
+        K_UU_inv_KUX = scipy.linalg.cho_solve((L_UU, True), K_UX)
+        Q_XX = K_XU @ K_UU_inv_KUX
+        return K_UU_inv_KUX, Q_XX
+
+    def _compute_kernels(self):
         X = np.squeeze(self.X)
         U = np.squeeze(self.U)
-
         K_XU = np.squeeze(self.gp_kernel.compute_kernel(X, U))
         K_UX = np.squeeze(self.gp_kernel.compute_kernel(U, X))
         K_UU = np.squeeze(self.gp_kernel.compute_kernel(U, U))
         K_XX = np.squeeze(self.gp_kernel.compute_kernel(X, X))
-
-        K_UU_stable = K_UU + 1e-6 * np.eye(U.shape[0])
-
-        L_UU = scipy.linalg.cholesky(K_UU_stable, lower=True)
-        K_UU_inv_KUX = scipy.linalg.cho_solve((L_UU, True), K_UX)
-        Q_XX = K_XU @ K_UU_inv_KUX
-        rank_Q_XX = np.linalg.matrix_rank(Q_XX)
-        debug_print(f"Q_XX Rank: {rank_Q_XX}")
-        # K_XX_FITC = K_XX + Q_XX - K_XU @ var4
-        K_XX_FITC = K_XU @ K_UU_inv_KUX
-
-        # out = {
-        #     'K_XX_FITC': K_XX_FITC,
-        #     'K_XU': K_XU,
-        #     'K_UU': K_UU,
-        #     'K_XX': K_XX,
-        # }
-        return K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX
+        return K_UU, K_UX, K_XU, K_XX, U

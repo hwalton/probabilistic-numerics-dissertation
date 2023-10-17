@@ -29,14 +29,24 @@ class TestGP_NLL_FITC_18_134(unittest.TestCase):
 
         result, K_XU_result, K_UX_result, K_UU_result, K_XX_result, Q_XX_result, K_UU_inv_KUX_result = gp_nll_fitc_18_134.K_XX_FITC()
 
-        K_XU = np.squeeze(kernel.compute_kernel(dummy_X, dummy_U))
-        K_UX = np.squeeze(kernel.compute_kernel(dummy_U, dummy_X))
-        K_UU = np.squeeze(kernel.compute_kernel(dummy_U, dummy_U))
+        # K_XU = np.squeeze(kernel.compute_kernel(dummy_X, dummy_U))
+        # K_UX = np.squeeze(kernel.compute_kernel(dummy_U, dummy_X))
+        # K_UU = np.squeeze(kernel.compute_kernel(dummy_U, dummy_U))
+        #
+        #
+        #
+        # correct = K_XU @ np.linalg.inv(K_UU) @ K_UX
+        #
+        # assert np.allclose(result, correct, atol=1E-2), "incorrect K_XX_FITC"
+
+
+        assert result is what_we_think
+        assert k_XU is what_we_think
+        assert k_UX_result is what_we_think
+        assert k_UU_result is what_we_think
 
 
 
-        correct = K_XU @ np.linalg.inv(K_UU) @ K_UX
 
-        assert np.allclose(result, correct, atol=1E-2), "incorrect K_XX_FITC"
 
         pass

@@ -232,12 +232,22 @@ class GPModel:
 
             alpha = scipy.linalg.cho_solve((L, True), y_adj)
 
+            # term_1_c_array = np.array()
+            # term_2_c_array = np.array()
+            # term_3_c_array = np.array()
+
 
             term_1_c = (0.5 * y_adj.T @ alpha).item()
             term_2_c = np.sum(np.log(np.diag(L)))
             term_3_c = 0.5 * n * np.log(2 * np.pi)
 
-
+            # # DEBUG
+            #
+            # term_1_c_array.append(term_1_c_array)
+            # term_2_c_array.append(term_2_c_array)
+            # term_3_c_array.append(term_3_c_array)
+            #
+            # # /DEBUG
 
             nll = term_1_c + term_2_c + term_3_c
 
