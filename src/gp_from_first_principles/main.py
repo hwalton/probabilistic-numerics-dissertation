@@ -76,12 +76,12 @@ def execute_gp_model():
     force_input_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
     force_input_predict_type = ['cholesky', 'FITC'][0]
     force_input_n_iter = 50
-    force_input_nll_method = 'FITC_18_134'
+    force_input_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_response_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite'][1]
     force_response_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
     force_response_predict_type = ['cholesky', 'FITC'][0]
     force_response_n_iter = 100
-    force_response_nll_method = 'FITC_18_134'
+    force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
 
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
