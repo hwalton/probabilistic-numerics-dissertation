@@ -14,7 +14,7 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
     for j in range(n_iter):
 
         debug_print(f"Iteration: {j+1}/{n_iter} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-        if j > 10 and best_nll < -sample_length:
+        if j > 10 and best_nll < -sample_length*10:
         #if j > 2:
             debug_print(
                 f"Stopping after {j} iterations due to nll sufficiently low: {best_nll}")
@@ -27,18 +27,20 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
                 hyperparameters_prime = hyperparameters.copy()
                 hyperparameters_prime[i] = np.clip(hyperparameters_prime[i] * modifier, lower, upper)
                 nll_prime = compute_nll(hyperparameters_prime)['nll']
+
+                if nll_prime < -1E4:
+                    debug_print(f"nll_prime: {nll_prime} too low, reject XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+                    nll_prime = nll + 1001.
+
+
+
                 if nll_prime < best_nll:
                     best_nll = nll_prime
                     best_hyperparameters = hyperparameters_prime.copy()
                     # debug_print(f"best_hyperparameters set as {best_hyperparameters} with nll {compute_nll(best_hyperparameters)}")
 
-                if np.abs(nll_prime-nll) > 1E5:
-                    var34 = 0
-                else:
-                    var34 = 1
 
-
-                A = map_number((nll_prime-nll),0,1000,1.0,0.0) * var34
+                A = map_number((nll_prime-nll),0.,1000.,1.0,0.0)
                 debug_print(f"nll_prime: {nll_prime}")
                 debug_print(f"nll: {nll}")
                 debug_print((f"nll_prime - nll: {nll_prime - nll}"))
