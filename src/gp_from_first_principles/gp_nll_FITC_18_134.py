@@ -3,6 +3,7 @@ from utils import debug_print
 import numpy as np
 import scipy
 from fast_det import compute_fast_det
+from woodbury_lemma import woodbury_lemma
 class GP_NLL_FITC_18_134:
     def __init__(self,X, y, y_mean, U, gp_kernel, hyperparameters_obj):
         self.hyperparameters_obj = hyperparameters_obj
@@ -62,17 +63,20 @@ class GP_NLL_FITC_18_134:
                 np.eye(len(self.X)))
             # sigma_n_neg2 = np.multiply(1, np.eye(len(self.X)))
 
-            # var237 = np.linalg.solve(K_UU, K_UX)
-            var = sigma_n_neg2 @ K_XU @ (
-                        K_UU_inv_K_UX + K_UX @ sigma_n_neg2 @ K_XU @ K_UX) @ sigma_n_neg2
+
             # var2 = sigma_n_neg2 @ K_XU @ (K_UU_inv_K_UX + np.array(K_UX @ sigma_n_neg2 @ K_XU @ K_UX)) @ sigma_n_neg2
             # debug_print(f"var == var2: {np.allclose(var,var2, atol = 1E-3)}")
-            out = sigma_n_neg2 - var
+
+            out = self.woodbury_lemma(K_UU_inv_K_UX, K_UX, K_XU, sigma_n_neg2)
 
         else:
             raise ValueError("Invalid inducing method")
         return out
 
+    def woodbury_lemma(self, K_UU_inv_K_UX, K_UX, K_XU, sigma_n_neg2):
+        out = sigma_n_neg2 - sigma_n_neg2 @ K_XU @ (
+                K_UU_inv_K_UX + K_UX @ sigma_n_neg2 @ K_XU @ K_UX) @ sigma_n_neg2
+        return out
 
     def K_XX_FITC(self):
         K_UU, K_UX, K_XU, K_XX, U = self._compute_kernels()
