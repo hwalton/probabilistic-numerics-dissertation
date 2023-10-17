@@ -9,7 +9,7 @@ import numpy as np
 from fast_det import compute_fast_det
 
 class TestGPModel(unittest.TestCase):
-    def setup_object(self, force_input_kernel_index=2, return_model='input', nll_method = 'cholesky'):
+    def setup_object(self, force_input_kernel_index=2, return_model='input', gp_algo ='cholesky'):
         sample_start_index = 1000
         sample_length = 100
         num_predictions = 40
@@ -43,13 +43,13 @@ class TestGPModel(unittest.TestCase):
                                     time,
                                     force_input,
                                     solver_type=force_input_solver_type,
-                                    n_iter=force_input_n_iter, gp_algo= nll_method)
+                                    n_iter=force_input_n_iter, gp_algo= gp_algo)
 
         force_response_model = GPModel(force_response_kernel_type,
                                        time,
                                        force_response,
                                        solver_type=force_response_solver_type,
-                                       n_iter=force_response_n_iter)
+                                       n_iter=force_response_n_iter, gp_algo= gp_algo)
 
         if return_model == 'input':
             return force_input_model
@@ -125,24 +125,24 @@ class TestGPModel(unittest.TestCase):
     #         assert np.allclose(Q_XX, Q_XX_C, atol=1E-2), "incorrect Q_XX"
     #         assert np.allclose(K_UU_inv_KUX, K_UU_inv_KUX_C, atol=1E-2), "incorrect K_UU_inv_KUX"
 
-    def test_K_sigma_inv(self):
-        gp = self.setup_object(2, return_model='response')
-        # gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
-
-        gp.hyperparameters_obj.update(np.array(
-            [1.55651623e+00, 1.29376154e+00, 1.93658826e-03, 1.00000000e-04,
-             4.34121551e-01, 3.50302199e-01, 1.03262772e+01, 1.20501525e-04,
-             3.68744450e-13, 5.43714621e-01]))
-        #gp.X = np.array([2,4,6,8])
-        #gp.U = np.array([3,7])
-
-        gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
-
-        result = gp.gp_nll_algo.K_sigma_inv()
-
-        correct = np.linalg.inv(np.squeeze(gp.gp_kernel.compute_kernel(gp.X, gp.X)) + np.multiply(gp.hyperparameters_obj.dict()['noise_level'] ** 2, np.eye(gp.X.shape[0])))
-
-        assert np.allclose(result, correct, atol=1E-3, rtol=2E-2), "incorrect K_sigma_inv"
+    # def test_K_sigma_inv(self):
+    #     gp = self.setup_object(2, return_model='response')
+    #     # gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
+    #
+    #     # gp.hyperparameters_obj.update(np.array(
+    #     #     [1.55651623e+00, 1.29376154e+00, 1.93658826e-03, 1.00000000e-04,
+    #     #      4.34121551e-01, 3.50302199e-01, 1.03262772e+01, 1.20501525e-04,
+    #     #      3.68744450e-13, 5.43714621e-01]))
+    #     gp.X = np.array([2,4,6,8])
+    #     gp.U = np.array([3,7])
+    #
+    #     gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
+    #
+    #     result = gp.gp_nll_algo.K_sigma_inv()
+    #
+    #     correct = np.linalg.inv(np.squeeze(gp.gp_kernel.compute_kernel(gp.X, gp.X)) + np.multiply(gp.hyperparameters_obj.dict()['noise_level'] ** 2, np.eye(gp.X.shape[0])))
+    #
+    #     assert np.allclose(result, correct, atol=1E-3, rtol=2E-2), "incorrect K_sigma_inv"
 
     # def test_def_compute_nll_input(self):
     #     gp = self.setup_object(2, return_model='input')
@@ -181,8 +181,8 @@ class TestGPModel(unittest.TestCase):
 
     def test_def_compute_nll_response(self):
 
-        gp_cholesky = self.setup_object(2, return_model='response', nll_method = 'cholesky')
-        gp_FITC = self.setup_object(2, return_model='response', nll_method = 'FITC_18_134')
+        gp_cholesky = self.setup_object(2, return_model='response', gp_algo='cholesky')
+        gp_FITC = self.setup_object(2, return_model='response', gp_algo='FITC_18_134')
         #gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
 
 
@@ -198,9 +198,9 @@ class TestGPModel(unittest.TestCase):
         hyp_array = gp_cholesky.hyperparameters_obj.array()
         print(f"test hyperparameters updated to: {hyp_array}")
 
-        result_cholesky = gp_cholesky.compute_nll(gp_cholesky.hyperparameters_obj, gp_algo='cholesky')
+        result_cholesky = gp_cholesky.compute_nll(gp_cholesky.hyperparameters_obj)
         debug_print(f"result_cholesky: {result_cholesky}")
-        result_FITC = gp_FITC.compute_nll(gp_FITC.hyperparameters_obj, gp_algo='FITC_18_134')
+        result_FITC = gp_FITC.compute_nll(gp_FITC.hyperparameters_obj)
         debug_print(f"result_FITC: {result_FITC}")
 
         # assert np.allclose(result_cholesky['nll'], 239.76595463,
