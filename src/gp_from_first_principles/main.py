@@ -106,7 +106,7 @@ def execute_gp_model():
                                    time,
                                    force_response,
                                    solver_type=force_response_solver_type,
-                                   n_iter=force_response_n_iter, gp_algo= force_input_nll_method)
+                                   n_iter=force_response_n_iter, gp_algo= force_response_nll_method)
     model_2_nll = force_response_model.fit_model()
     force_response_prediction = force_response_model.predict(time_test, method = force_response_predict_type)
 
