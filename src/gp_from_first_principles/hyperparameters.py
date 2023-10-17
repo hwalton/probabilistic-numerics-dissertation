@@ -36,9 +36,9 @@ class Hyperparameters:
 
             self._hyperparameter_bounds = {
                 'kernel_type': 'periodic',
-                'sigma': (0.001, 100),
-                'l': (0.01, 10),
-                'p': (0.0001, 1),
+                'sigma': (0.001, 1000),
+                'l': (0.01, 100),
+                'p': (0.0001, 100),
                 'noise_level': (0.1, 0.25)
             }
         elif self.kernel_type == 'p_se_composite':
