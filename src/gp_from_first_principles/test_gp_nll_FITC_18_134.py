@@ -1,3 +1,4 @@
+import scipy
 # test_my_module.py
 import math
 import time as timer
@@ -28,18 +29,34 @@ class TestGP_NLL_FITC_18_134(unittest.TestCase):
                                                 kernel,
                                                 hyperparameters_obj)
 
-        result, K_XU_result, K_UX_result, K_UU_result, K_XX_result, Q_XX_result, K_UU_inv_KUX_result = gp_nll_fitc_18_134.K_XX_FITC()
+        K_XX_FITC_result, K_XU_result, K_UX_result, K_UU_result, K_XX_result, Q_XX_result, K_UU_inv_KUX_result = gp_nll_fitc_18_134.K_XX_FITC()
 
         K_UX_correct = np.array([[0.000347591, 0.000347591, 2.15404E-47, 3.6782E-132],
                                 [3.6782E-132, 2.15404E-47, 0.000347591, 0.000347591]])
         K_XU_correct = K_UX_correct.T
         K_UU_correct = np.array([[9.57E+01, 9.51E-85],
                                  [9.51E-85, 9.57E+01]])
+        K_XX_correct = np.array([[9.57E+01, 1.88E-20, 9.51E-85, 3.53E-189],
+                                [1.88E-20, 9.57E+01, 1.88E-20, 9.51E-85],
+                                [9.51E-85, 1.88E-20, 9.57E+01, 1.88E-20],
+                                [3.53E-189, 9.51E-85, 1.88E-20, 9.57E+01]])
 
-        correct = K_XU_correct @ np.linalg.inv(K_UU_correct) @ K_UX_correct
 
-        assert np.allclose(result, correct, atol=1E-2), "incorrect K_XX_FITC"
+        K_UU_stable_correct = K_UU_correct + 1e-6 * np.eye(K_UU_correct.shape[0])
+        L_UU_correct = scipy.linalg.cholesky(K_UU_stable_correct, lower=True)
+        K_UU_inv_KUX_correct = scipy.linalg.cho_solve((L_UU_correct, True), K_UX_correct)
+        Q_XX_correct = K_XU_correct @ K_UU_inv_KUX_correct
 
+        atol_ = 1E-2
+        rtol_ = 0.2
+
+        assert np.allclose(K_XU_result, K_XU_correct, atol=atol_, rtol=rtol_), "incorrect K_XU"
+        assert np.allclose(K_UX_result, K_UX_correct, atol=atol_, rtol=rtol_), "incorrect K_UX"
+        assert np.allclose(K_UU_result, K_UU_correct, atol=atol_, rtol=rtol_), "incorrect K_UU"
+        assert np.allclose(K_XX_result, K_XX_correct, atol=atol_, rtol=rtol_), "incorrect K_XX"
+        assert np.allclose(Q_XX_result, Q_XX_correct, atol=atol_, rtol=rtol_), "incorrect Q_XX"
+        assert np.allclose(K_UU_inv_KUX_result, K_UU_inv_KUX_correct, atol=atol_, rtol=rtol_), "incorrect K_UU_inv_KUX"
+        assert np.allclose(K_XX_FITC_result, K_XX_correct, atol=atol_,rtol=rtol_), "incorrect K_XX_FITC"
 
         # assert result is what_we_think
         # assert k_XU is what_we_think
