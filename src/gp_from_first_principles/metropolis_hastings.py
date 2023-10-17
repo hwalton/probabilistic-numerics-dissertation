@@ -28,10 +28,6 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
                 hyperparameters_prime[i] = np.clip(hyperparameters_prime[i] * modifier, lower, upper)
                 nll_prime = compute_nll(hyperparameters_prime)['nll']
 
-                if nll_prime < -1E4:
-                    debug_print(f"nll_prime: {nll_prime} too low, reject XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-                    nll_prime = nll + 1001.
-
 
 
                 if nll_prime < best_nll:
