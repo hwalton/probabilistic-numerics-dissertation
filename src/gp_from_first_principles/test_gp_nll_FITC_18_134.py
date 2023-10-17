@@ -17,9 +17,9 @@ class TestGP_NLL_FITC_18_134(unittest.TestCase):
     def test_K_XX_FITC(self):
         hyperparameters_obj = Hyperparameters('periodic')
         kernel = GaussianProcessKernel(hyperparameters_obj)
-        dummy_X = np.array([1., 2., 3., 4.]).reshape(-1,1)
-        dummy_y = np.array([2., 4., 6., 8.]).reshape(-1,1)
-        dummy_U = np.array([1.5, 3.5]).reshape(-1,1)
+        dummy_X = np.array([0.001, 0.002, 0.003, 0.004]).reshape(-1,1)
+        dummy_y = np.array([0.002, 0.004, 0.006, 0.008]).reshape(-1,1)
+        dummy_U = np.array([0.0015, 0.0035]).reshape(-1,1)
         mean_dummy_y = np.mean(dummy_y)
         gp_nll_fitc_18_134 = GP_NLL_FITC_18_134(dummy_X,
                                                 dummy_y,
@@ -30,16 +30,11 @@ class TestGP_NLL_FITC_18_134(unittest.TestCase):
 
         result, K_XU_result, K_UX_result, K_UU_result, K_XX_result, Q_XX_result, K_UU_inv_KUX_result = gp_nll_fitc_18_134.K_XX_FITC()
 
-        K_UX_correct = np.array([[369.6729787, 369.6729787, 671.2020158,1499.851851],
-                                    [1499.851851, 671.2020158, 369.6729787, 369.6729787]])
+        K_UX_correct = np.array([[0.000347591, 0.000347591, 2.15404E-47, 3.6782E-132],
+                                [3.6782E-132, 2.15404E-47, 0.000347591, 0.000347591]])
         K_XU_correct = K_UX_correct.T
-        K_UU_correct = np.array([[2508.659511, 842.2988772],
-                                 [842.2988772, 2508.659511]])
-
-
-
-
-
+        K_UU_correct = np.array([[9.57E+01, 9.51E-85],
+                                 [9.51E-85, 9.57E+01]])
 
         correct = K_XU_correct @ np.linalg.inv(K_UU_correct) @ K_UX_correct
 
