@@ -68,8 +68,7 @@ class GaussianProcessKernel:
 
     def periodic_kernel(self, X1, X2, **params):
         delta_X = X1[:, None, :] - X2[None, :, :]
-        out = params['sigma'] ** 2 * np.exp(
-            -2 * np.sin(np.pi * np.abs(delta_X) / params['p']) ** 2 / params['l'] ** 2)
+        out = params['sigma'] ** 2 * np.exp(-2 * np.sin(np.pi * np.abs(delta_X) / params['p']) ** 2 / params['l'] ** 2)
         return out
 
     def squared_exponential_kernel(self, X1, X2, **params):

@@ -30,13 +30,18 @@ class TestGP_NLL_FITC_18_134(unittest.TestCase):
 
         result, K_XU_result, K_UX_result, K_UU_result, K_XX_result, Q_XX_result, K_UU_inv_KUX_result = gp_nll_fitc_18_134.K_XX_FITC()
 
-        K_XU = np.squeeze(kernel.compute_kernel(dummy_X, dummy_U))
-        K_UX = np.squeeze(kernel.compute_kernel(dummy_U, dummy_X))
-        K_UU = np.squeeze(kernel.compute_kernel(dummy_U, dummy_U))
+        K_UX_correct = np.array([[369.6729787, 369.6729787, 671.2020158,1499.851851],
+                                    [1499.851851, 671.2020158, 369.6729787, 369.6729787]])
+        K_XU_correct = K_UX_correct.T
+        K_UU_correct = np.array([[2508.659511, 842.2988772],
+                                 [842.2988772, 2508.659511]])
 
 
 
-        correct = K_XU @ np.linalg.inv(K_UU) @ K_UX
+
+
+
+        correct = K_XU_correct @ np.linalg.inv(K_UU_correct) @ K_UX_correct
 
         assert np.allclose(result, correct, atol=1E-2), "incorrect K_XX_FITC"
 
