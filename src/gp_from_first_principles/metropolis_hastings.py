@@ -32,7 +32,7 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
                     best_hyperparameters = hyperparameters_prime.copy()
                     # debug_print(f"best_hyperparameters set as {best_hyperparameters} with nll {compute_nll(best_hyperparameters)}")
 
-                if np.isinf(nll_prime-nll):
+                if np.abs(nll_prime-nll) > 1E5:
                     var34 = 0
                 else:
                     var34 = 1

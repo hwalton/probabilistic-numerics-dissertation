@@ -66,7 +66,7 @@ class GPModel:
     from sklearn.cluster import KMeans
     import numpy as np
 
-    def U_induced(self, M_one_in=1, method='k_means'):
+    def U_induced(self, M_one_in=2, method='k_means'):
         M = len(self.X) // M_one_in
 
         if method == 'k_means':
