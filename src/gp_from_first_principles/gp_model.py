@@ -13,7 +13,7 @@ from sklearn.cluster import KMeans
 
 
 class GPModel:
-    def __init__(self, kernel_type, X, y, solver_type = 'iterative_search', n_iter=10, nll_method = 'cholesky'):
+    def __init__(self, kernel_type, X, y, solver_type = 'iterative_search', n_iter=10, gp_algo ='cholesky'):
         self.hyperparameters_obj = Hyperparameters(kernel_type)
         self.initial_hyperparameters = self.hyperparameters_obj._initial_hyperparameters.copy()
         self.hyperparameter_bounds = self.hyperparameters_obj._hyperparameter_bounds.copy()
@@ -24,7 +24,7 @@ class GPModel:
         self.solver_type = solver_type
         self.gp_kernel = GaussianProcessKernel(self.hyperparameters_obj)
         self.U = self.U_induced()
-        self.nll_method = nll_method
+        self.gp_algo = gp_algo
         self.y_mean = np.mean(y)
         self.gp_nll_algo = GP_NLL_FITC_18_134(self.X, self.y, self.y_mean, self.U,
                                               self.gp_kernel,
@@ -36,7 +36,7 @@ class GPModel:
         self.hyperparameters_obj.update(optimal_hyperparameters)
         debug_print(optimal_hyperparameters)
         debug_print(self.hyperparameters_obj.array())
-        nll = self.compute_nll(self.hyperparameters_obj, self.nll_method)['nll']
+        nll = self.compute_nll(self.hyperparameters_obj)['nll']
         debug_print(nll)
         return(nll)
 
@@ -213,13 +213,13 @@ class GPModel:
 
 
 
-    def compute_nll(self, hyperparameters, gp_algo ='cholesky'):
+    def compute_nll(self, hyperparameters):
         self.update_hyperparameters_and_debug(hyperparameters)
         self.reshape_X_and_y()
 
 
 
-        if gp_algo == 'cholesky':
+        if self.gp_algo == 'cholesky':
             #self.hyperparameters_obj.update(hyperparameters)
             K = self.gp_kernel.compute_kernel(self.X, self.X)
             K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
@@ -258,7 +258,7 @@ class GPModel:
             }
             return out_c
 
-        elif gp_algo == 'FITC_18_134':
+        elif self.gp_algo == 'FITC_18_134':
             #out_f = self.run_FITC_18_134()
 
             out_f = self.gp_nll_algo.compute()

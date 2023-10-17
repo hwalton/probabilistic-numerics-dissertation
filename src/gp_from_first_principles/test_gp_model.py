@@ -43,7 +43,7 @@ class TestGPModel(unittest.TestCase):
                                     time,
                                     force_input,
                                     solver_type=force_input_solver_type,
-                                    n_iter=force_input_n_iter, nll_method = nll_method)
+                                    n_iter=force_input_n_iter, gp_algo= nll_method)
 
         force_response_model = GPModel(force_response_kernel_type,
                                        time,

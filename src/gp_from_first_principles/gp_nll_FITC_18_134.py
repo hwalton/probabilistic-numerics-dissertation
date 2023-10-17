@@ -28,7 +28,7 @@ class GP_NLL_FITC_18_134:
         term_2_f = self._compute_term_2_f(K_sigma_inv, y_adj)
         term_3_f = self._compute_term_3_f(n)
         nll = term_1_f + term_2_f + term_3_f
-        nll = np.array(-nll).item()
+        nll = np.array(nll).item()
         out_f = {
             'nll': nll,
             'term_1': term_1_f,
