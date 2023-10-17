@@ -67,16 +67,12 @@ class GP_NLL_FITC_18_134:
             # var2 = sigma_n_neg2 @ K_XU @ (K_UU_inv_K_UX + np.array(K_UX @ sigma_n_neg2 @ K_XU @ K_UX)) @ sigma_n_neg2
             # debug_print(f"var == var2: {np.allclose(var,var2, atol = 1E-3)}")
 
-            out = self.woodbury_lemma(K_UU_inv_K_UX, K_UX, K_XU, sigma_n_neg2)
+            out = woodbury_lemma(K_UU_inv_K_UX, K_UX, K_XU, sigma_n_neg2)
 
         else:
             raise ValueError("Invalid inducing method")
         return out
 
-    def woodbury_lemma(self, K_UU_inv_K_UX, K_UX, K_XU, sigma_n_neg2):
-        out = sigma_n_neg2 - sigma_n_neg2 @ K_XU @ (
-                K_UU_inv_K_UX + K_UX @ sigma_n_neg2 @ K_XU @ K_UX) @ sigma_n_neg2
-        return out
 
     def K_XX_FITC(self):
         K_UU, K_UX, K_XU, K_XX, U = self._compute_kernels()
