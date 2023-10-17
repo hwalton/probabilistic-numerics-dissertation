@@ -28,9 +28,9 @@ class Hyperparameters:
         elif self.kernel_type == 'periodic':
             self._initial_hyperparameters = {
                 'kernel_type': 'periodic',
-                'sigma': 1.,
-                'l': 1.,
-                'p': 0.08,
+                'sigma': 9.7834,
+                'l': 0.019533,
+                'p': 0.032121,
                 'noise_level': 0.1
             }
 
@@ -64,8 +64,8 @@ class Hyperparameters:
         elif self.kernel_type == 'white_noise':
             self._initial_hyperparameters = {
                 'kernel_type': 'white_noise',
-                'sigma': 1.,
-                'noise_level': 0.1
+                'sigma': 0.0791306,
+                'noise_level': 0.641445
             }
 
             self._hyperparameter_bounds = {

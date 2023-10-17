@@ -26,9 +26,9 @@ class GPModel:
         self.U = self.U_induced()
         self.gp_algo = gp_algo
         self.y_mean = np.mean(y)
-        self.gp_nll_algo = GP_NLL_FITC_18_134(self.X, self.y, self.y_mean, self.U,
-                                              self.gp_kernel,
-                                              self.hyperparameters_obj)
+        self.gp_nll_algo_obj = GP_NLL_FITC_18_134(self.X, self.y, self.y_mean, self.U,
+                                                  self.gp_kernel,
+                                                  self.hyperparameters_obj)
 
     def fit_model(self):
         self.gp_kernel.set_params(self.hyperparameters_obj)
@@ -164,7 +164,7 @@ class GPModel:
             K_X_X = self.gp_kernel.compute_kernel(self.X, self.X) + np.array(self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(len(self.X)))[:,:,None]
             K_star_X = self.gp_kernel.compute_kernel(self.X, X_star)
             K_star_star = self.gp_kernel.compute_kernel(X_star, X_star)
-            K_sigma_inv = self.gp_nll_algo.K_sigma_inv()
+            K_sigma_inv = self.gp_nll_algo_obj.K_sigma_inv()
             L = np.zeros_like(K_X_X)
             self.mu = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
             self.s2 = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
@@ -227,7 +227,7 @@ class GPModel:
             n = len(self.y)
             one_vector = np.ones(n)
             y_adj = self.y - self.y_mean
-            debug_print(f"y_adj: {y_adj}")
+            #debug_print(f"y_adj: {y_adj}")
 
             alpha = scipy.linalg.cho_solve((L, True), y_adj)
 
@@ -261,7 +261,7 @@ class GPModel:
         elif self.gp_algo == 'FITC_18_134':
             #out_f = self.run_FITC_18_134()
 
-            out_f = self.gp_nll_algo.compute()
+            out_f = self.gp_nll_algo_obj.compute()
             return out_f
 
         else:
@@ -282,7 +282,7 @@ class GPModel:
                 "Incorrect hyperparameter type: must be 'dict' or 'ndarray'")
         debug_var = self.hyperparameters_obj.array()
         debug_print(
-            f"compute_NLL cholesky method hyperparameters: {debug_var}")
+            f"compute_NLL {self.gp_algo} hyperparameters: {debug_var}")
 
     # def flatten_params(self, params):
     #     flat_params = []
