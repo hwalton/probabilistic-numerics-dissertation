@@ -69,7 +69,7 @@ def format_data(X):
 
 
 def execute_gp_model():
-    sample_start_index = 1000
+    sample_start_index = 10000
     sample_length = 75
     num_predictions = 40
     force_input_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic'][4]
@@ -83,7 +83,7 @@ def execute_gp_model():
     force_response_nll_method = ['cholesky', 'FITC_18_134'][1]
     force_response_n_iter = 50
 
-    M_one_in = 4
+    M_one_in = 20
 
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
