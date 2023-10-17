@@ -13,7 +13,7 @@ from sklearn.cluster import KMeans
 
 
 class GPModel:
-    def __init__(self, kernel_type, X, y, solver_type = 'iterative_search', n_iter=10, gp_algo ='cholesky'):
+    def __init__(self, kernel_type, X, y, solver_type = 'iterative_search', n_iter=10, gp_algo ='cholesky', M_one_in = 1):
         self.hyperparameters_obj = Hyperparameters(kernel_type)
         self.initial_hyperparameters = self.hyperparameters_obj._initial_hyperparameters.copy()
         self.hyperparameter_bounds = self.hyperparameters_obj._hyperparameter_bounds.copy()
@@ -23,12 +23,13 @@ class GPModel:
         self.template = self.hyperparameters_obj._initial_hyperparameters.copy()
         self.solver_type = solver_type
         self.gp_kernel = GaussianProcessKernel(self.hyperparameters_obj)
-        self.U = self.U_induced()
+        self.U = self.U_induced(M_one_in)
         self.gp_algo = gp_algo
         self.y_mean = np.mean(y)
         self.gp_nll_algo_obj = GP_NLL_FITC_18_134(self.X, self.y, self.y_mean, self.U,
                                                   self.gp_kernel,
                                                   self.hyperparameters_obj)
+        self.M_one_in = M_one_in
 
     def fit_model(self):
         self.gp_kernel.set_params(self.hyperparameters_obj)
@@ -66,7 +67,7 @@ class GPModel:
     from sklearn.cluster import KMeans
     import numpy as np
 
-    def U_induced(self, M_one_in=4, method='k_means'):
+    def U_induced(self, M_one_in = 1, method='k_means'):
         M = len(self.X) // M_one_in
 
         if method == 'k_means':

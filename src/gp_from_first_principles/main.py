@@ -69,7 +69,7 @@ def format_data(X):
 
 
 def execute_gp_model():
-    sample_start_index = 1000
+    sample_start_index = 0
     sample_length = 75
     num_predictions = 40
     force_input_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic'][4]
@@ -82,6 +82,8 @@ def execute_gp_model():
     force_response_predict_type = ['cholesky', 'FITC'][0]
     force_response_nll_method = ['cholesky', 'FITC_18_134'][1]
     force_response_n_iter = 20
+
+    M_one_in = 4
 
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
@@ -98,7 +100,7 @@ def execute_gp_model():
                                 time,
                                 force_input,
                                 solver_type=force_input_solver_type,
-                                n_iter=force_input_n_iter, gp_algo= force_input_nll_method)
+                                n_iter=force_input_n_iter, gp_algo= force_input_nll_method, M_one_in=M_one_in)
     model_1_nll = force_input_model.fit_model()
     force_input_prediction = force_input_model.predict(time_test, method = force_input_predict_type)
 
@@ -106,7 +108,7 @@ def execute_gp_model():
                                    time,
                                    force_response,
                                    solver_type=force_response_solver_type,
-                                   n_iter=force_response_n_iter, gp_algo= force_response_nll_method)
+                                   n_iter=force_response_n_iter, gp_algo= force_response_nll_method, M_one_in=M_one_in)
     model_2_nll = force_response_model.fit_model()
     force_response_prediction = force_response_model.predict(time_test, method = force_response_predict_type)
 
