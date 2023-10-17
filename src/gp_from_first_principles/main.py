@@ -69,19 +69,19 @@ def format_data(X):
 
 
 def execute_gp_model():
-    sample_start_index = 0
+    sample_start_index = 1000
     sample_length = 75
     num_predictions = 40
     force_input_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic'][4]
     force_input_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
     force_input_predict_type = ['cholesky', 'FITC'][0]
     force_input_nll_method = ['cholesky', 'FITC_18_134'][1]
-    force_input_n_iter = 20
+    force_input_n_iter = 50
     force_response_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic'][4]
     force_response_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
     force_response_predict_type = ['cholesky', 'FITC'][0]
     force_response_nll_method = ['cholesky', 'FITC_18_134'][1]
-    force_response_n_iter = 20
+    force_response_n_iter = 50
 
     M_one_in = 4
 
