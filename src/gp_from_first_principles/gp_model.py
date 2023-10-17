@@ -25,9 +25,11 @@ class GPModel:
         self.gp_kernel = GaussianProcessKernel(self.hyperparameters_obj)
         self.U = self.U_induced()
         self.nll_method = nll_method
-        self.gp_nll_algo = GP_NLL_FITC_18_134(self.X, self.y, self.U,
+        self.y_mean = np.mean(y)
+        self.gp_nll_algo = GP_NLL_FITC_18_134(self.X, self.y, self.y_mean, self.U,
                                               self.gp_kernel,
                                               self.hyperparameters_obj)
+
     def fit_model(self):
         self.gp_kernel.set_params(self.hyperparameters_obj)
         optimal_hyperparameters = self.get_optimal_hyperparameters()
@@ -170,7 +172,7 @@ class GPModel:
                 L[:, :, i] = npla.cholesky(K_X_X[:, :, i] + 1e-10 * np.eye(K_X_X.shape[0]))
                 Lk = np.squeeze(npla.solve(L[:, :, i], K_star_X[:,:,i]))
                 alpha = K_sigma_inv @ self.y
-                self.mu[:, i] = self.hyperparameters_obj.dict()['mean_func_c'] + np.array(K_star_X.T @ alpha).flatten()
+                self.mu[:, i] = self.y_mean + np.array(K_star_X.T @ alpha).flatten()
                 self.s2[:, i] = np.diag(K_star_star[:, :, i]) - np.sum(Lk ** 2, axis=0)
                 self.stdv = np.sqrt(self.s2)
         elif method == 'cholesky':
@@ -186,13 +188,10 @@ class GPModel:
             for i in range(K_X_X.shape[2]):
                 L[:, :, i] = npla.cholesky( K_X_X[:, :, i] + 1e-10 * np.eye(K_X_X.shape[0]))
                 Lk = np.squeeze(npla.solve(L[:, :, i], K_star_X[:, :, i]))
-                self.mu[:, i] = self.hyperparameters_obj.dict()[
-                                    'mean_func_c'] + np.dot(Lk.T,
-                                                            npla.solve(
+                self.mu[:, i] = self.y_mean + np.dot(Lk.T,npla.solve(
                                                                 L[:, :, i],
                                                                 self.y -
-                                                                self.hyperparameters_obj.dict()[
-                                                                    'mean_func_c'])).flatten()
+                                                                self.y_mean).flatten())
                 self.s2[:, i] = np.diag(K_star_star[:, :, i]) - np.sum(
                     Lk ** 2, axis=0)
                 self.stdv = np.sqrt(self.s2)
@@ -227,7 +226,7 @@ class GPModel:
             L = scipy.linalg.cholesky(K[:, :, 0], lower=True)
             n = len(self.y)
             one_vector = np.ones(n)
-            y_adj = self.y - self.hyperparameters_obj.dict()['mean_func_c']
+            y_adj = self.y - self.y_mean
             debug_print(f"y_adj: {y_adj}")
 
             alpha = scipy.linalg.cho_solve((L, True), y_adj)

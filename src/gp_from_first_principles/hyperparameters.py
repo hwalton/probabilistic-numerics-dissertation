@@ -16,7 +16,6 @@ class Hyperparameters:
                 'kernel_type': 'squared_exponential',
                 'sigma': 0.1,
                 'l': 1.,
-                'mean_func_c': 0.001,
                 'noise_level': 0.1
             }
 
@@ -24,7 +23,6 @@ class Hyperparameters:
                 'kernel_type': 'squared_exponential',
                 'sigma': (0.001,10),
                 'l': (0.01,10),
-                'mean_func_c': (-1000,1000),
                 'noise_level': (0.1,1)
             }
         elif self.kernel_type == 'periodic':
@@ -33,7 +31,6 @@ class Hyperparameters:
                 'sigma': 1.,
                 'l': 1.,
                 'p': 0.08,
-                'mean_func_c': 0.0001,
                 'noise_level': 0.1
             }
 
@@ -42,7 +39,6 @@ class Hyperparameters:
                 'sigma': (0.001, 100),
                 'l': (0.01, 10),
                 'p': (0.0001, 1),
-                'mean_func_c': (-1000,1000),
                 'noise_level': (0.1, 0.25)
             }
         elif self.kernel_type == 'p_se_composite':
@@ -53,7 +49,6 @@ class Hyperparameters:
                 {'sigma': 0.1, 'l': 1., 'p': 1E-3}
                 ],
                 'se_params': {'sigma': 0.1, 'l': 0.01},
-                'mean_func_c': 0.001,
                 'noise_level': 1.
             }
 
@@ -64,21 +59,18 @@ class Hyperparameters:
                 {'sigma': (0.0001,100), 'l': (0.01,100), 'p': (0.0001,10)}
                 ],
                 'se_param_bounds': {'sigma': (0.0001,100), 'l': (0.0001,100)},
-                'mean_func_c': (-1000,1000),
                 'noise_level': (0.1,1.)
             }
         elif self.kernel_type == 'white_noise':
             self._initial_hyperparameters = {
                 'kernel_type': 'white_noise',
                 'sigma': 1.,
-                'mean_func_c': 0.0001,
                 'noise_level': 0.1
             }
 
             self._hyperparameter_bounds = {
                 'kernel_type': 'white_noise',
                 'sigma': (0.001, 100),
-                'mean_func_c': (-1000,1000),
                 'noise_level': (0.1, 1)
             }
         elif self.kernel_type == 'wn_se_composite':
@@ -86,7 +78,6 @@ class Hyperparameters:
                 'kernel_type': 'wn_se_composite',
                 'wn_params': {'sigma': 0.1},
                 'se_params': {'sigma': 0.1, 'l': 1.},
-                'mean_func_c': 0.0001,
                 'noise_level': 0.1
             }
 
@@ -94,7 +85,6 @@ class Hyperparameters:
                 'kernel_type': 'wn_se_composite',
                 'periodic_param_bounds': {'sigma': (0.001,10)},
                 'se_param_bounds': {'sigma': (0.001,10), 'l': (0.01,10)},
-                'mean_func_c': (-1E-3, 1E-3),
                 'noise_level': (0.1,1)
             }
         else:
