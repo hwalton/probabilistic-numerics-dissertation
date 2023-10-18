@@ -46,13 +46,12 @@ class GP_NLL_FITC_18_134:
 
     def _compute_term_1_f(self, K_UU_inv_K_UX, K_XU, big_lambda):
         fast_det = compute_fast_det(K_XU, K_UU_inv_K_UX, big_lambda)
+        fast_det = self.clip_array(fast_det)
         term_1_f = 0.5 * np.log(fast_det)
         return term_1_f
 
     def _compute_big_lambda(self, K_XX, Q_XX, n):
-        big_lambda = np.diag(np.diag(K_XX - Q_XX)) + \
-                     self.hyperparameters_obj.dict()[
-                         'noise_level'] ** 2 * np.eye(n)
+        big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n) #+ np.diag(np.diag(K_XX - Q_XX))
         return big_lambda
 
     def K_sigma_inv(self, method='woodbury'):
@@ -62,13 +61,13 @@ class GP_NLL_FITC_18_134:
             lower = 1E-24
             upper = 1E24
 
-            self.clip_K_sigma_inv(K_XX_FITC, lower, upper)
-            self.clip_K_sigma_inv(K_XU, lower, upper)
-            self.clip_K_sigma_inv(K_UX, lower, upper)
-            self.clip_K_sigma_inv(K_UU, lower, upper)
-            self.clip_K_sigma_inv(K_XX, lower, upper)
-            self.clip_K_sigma_inv(Q_XX, lower, upper)
-            self.clip_K_sigma_inv(K_UU_inv_K_UX, lower, upper)
+            self.clip_array(K_XX_FITC, lower, upper)
+            self.clip_array(K_XU, lower, upper)
+            self.clip_array(K_UX, lower, upper)
+            self.clip_array(K_UU, lower, upper)
+            self.clip_array(K_XX, lower, upper)
+            self.clip_array(Q_XX, lower, upper)
+            self.clip_array(K_UU_inv_K_UX, lower, upper)
 
             sigma_n_neg2 = np.multiply(
                 self.hyperparameters_obj.dict()['noise_level'] ** -2,
@@ -85,17 +84,25 @@ class GP_NLL_FITC_18_134:
             raise ValueError("Invalid inducing method")
         return out
 
-    def clip_K_sigma_inv(self, K_XX_FITC, lower = 1E-24, upper = 1E24):
-        K_XX_FITC = np.clip(K_XX_FITC, lower, upper)
+    def clip_array(self, array, lower = 1E-24, upper = 1E24):
+        array = np.clip(array, lower, upper)
+        return array
 
     def K_XX_FITC(self):
         K_UU, K_UX, K_XU, K_XX, U = self._compute_kernels()
+
+        K_UU = self.clip_array(K_UU)
+        K_UX = self.clip_array(K_UX)
+        K_XU = self.clip_array(K_XU)
+        K_XX = self.clip_array(K_XX)
+
+
 
         K_UU_inv_KUX, Q_XX = self._calculate_inputs_to_K_XX_FITC_calc(K_UU,
                                                                       K_UX,
                                                                       K_XU, U)
 
-        K_XX_FITC = np.clip(self._compute_K_XX_FITC(K_UU_inv_KUX, K_XU), 1E-6, 1E6)
+        K_XX_FITC = self.clip_array(self._compute_K_XX_FITC(K_UU_inv_KUX, K_XU), 1E-6, 1E6)
 
         return K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX
 
