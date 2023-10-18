@@ -99,7 +99,7 @@ class GaussianProcessKernel:
 
     def cosine_kernel(self, X1, X2, **params):
         delta_X = X1[:, None, :] - X2[None, :, :]
-        return params['sigma'] ** 2 * np.cos(2 * np.pi * delta_X / params['p'])
+        return params['sigma'] ** 2 * np.cos(2 * np.pi * delta_X / params['p'])+1E-6
 
     def cosine_composite_kernel(self, X1, X2, **params):
         #test3 = X1.shape
