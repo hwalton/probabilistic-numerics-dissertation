@@ -81,7 +81,7 @@ def execute_gp_model():
     force_response_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
     force_response_predict_type = ['cholesky', 'FITC'][0]
     force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
-    force_response_n_iter = 100
+    force_response_n_iter = 50
 
     M_one_in = 1
 

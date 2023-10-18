@@ -76,9 +76,9 @@ class Hyperparameters:
         elif self.kernel_type == 'cosine':
             self._initial_hyperparameters = {
             'kernel_type': 'cosine',
-            'sigma': 9.7834,
-            'p': 0.032121,
-            'noise_level': 1
+            'sigma': 1.46,
+            'p': 0.002881,
+            'noise_level': 0.8
         }
 
             self._hyperparameter_bounds = {
