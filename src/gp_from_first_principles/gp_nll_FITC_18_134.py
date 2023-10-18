@@ -46,7 +46,7 @@ class GP_NLL_FITC_18_134:
 
     def _compute_term_1_f(self, K_UU_inv_K_UX, K_XU, big_lambda):
         fast_det = compute_fast_det(K_XU, K_UU_inv_K_UX, big_lambda)
-        fast_det = self.clip_array(fast_det)
+        fast_det = self.clip_array(fast_det, 1E-30, 1E30)
         term_1_f = 0.5 * np.log(fast_det)
         return term_1_f
 
@@ -79,6 +79,7 @@ class GP_NLL_FITC_18_134:
             # debug_print(f"var == var2: {np.allclose(var,var2, atol = 1E-3)}")
 
             out = woodbury_lemma(K_UU_inv_K_UX, K_UX, K_XU, sigma_n_neg2)
+            out = self.clip_array(out, -1E24, -1E-24)
 
         else:
             raise ValueError("Invalid inducing method")
@@ -101,6 +102,9 @@ class GP_NLL_FITC_18_134:
         K_UU_inv_KUX, Q_XX = self._calculate_inputs_to_K_XX_FITC_calc(K_UU,
                                                                       K_UX,
                                                                       K_XU, U)
+
+        K_UU_inv_KUX = self.clip_array(K_UU_inv_KUX)
+        Q_XX = self.clip_array(Q_XX)
 
         K_XX_FITC = self.clip_array(self._compute_K_XX_FITC(K_UU_inv_KUX, K_XU), 1E-6, 1E6)
 
