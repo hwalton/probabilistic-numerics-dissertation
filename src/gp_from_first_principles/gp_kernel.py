@@ -33,6 +33,7 @@ class GaussianProcessKernel:
             'polynomial': self.polynomial_kernel,
             'p_se_composite': self.p_se_composite_kernel,
             'wn_se_composite': self.wn_se_composite_kernel,
+            'cosine_composite': self.cosine_composite_kernel
             # Add more kernel types as needed
         }
 
@@ -99,6 +100,14 @@ class GaussianProcessKernel:
     def cosine_kernel(self, X1, X2, **params):
         delta_X = X1[:, None, :] - X2[None, :, :]
         return params['sigma'] ** 2 * np.cos(2 * np.pi * delta_X / params['p'])
+
+    def cosine_composite_kernel(self, X1, X2, **params):
+        #test3 = X1.shape
+        cosine_sum = np.zeros((X1.shape[0], X2.shape[0], X1.shape[1]))
+        for param in params['cosine_params']:
+            cosine_sum += self.cosine_kernel(X1, X2, **param)
+
+        return cosine_sum
 
     def white_noise_kernel(self, X1, X2, **params):
         delta_X = X1[:, None, :] - X2[None, :, :]
