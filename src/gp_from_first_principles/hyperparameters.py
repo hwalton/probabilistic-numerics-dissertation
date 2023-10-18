@@ -73,6 +73,21 @@ class Hyperparameters:
                 'sigma': (0.001, 100),
                 'noise_level': (0.1, 1)
             }
+        elif self.kernel_type == 'cosine':
+            self._initial_hyperparameters = {
+            'kernel_type': 'cosine',
+            'sigma': 9.7834,
+            'p': 0.032121,
+            'noise_level': 1
+        }
+
+            self._hyperparameter_bounds = {
+                'kernel_type': 'cosine',
+                'sigma': (0.001, 1000),
+                'p': (0.0001, 100),
+                'noise_level': (0.01, 10)
+            }
+
         elif self.kernel_type == 'wn_se_composite':
             self._initial_hyperparameters = {
                 'kernel_type': 'wn_se_composite',

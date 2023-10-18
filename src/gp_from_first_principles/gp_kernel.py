@@ -96,9 +96,9 @@ class GaussianProcessKernel:
             np.sum((X1[:, None, :] - X2[None, :, :]) ** 2, axis=-1))
         return sigma ** 2 * np.exp(-delta_X / l)
 
-    def cosine_kernel(self, X1, X2, sigma, p):
-        delta_X = np.sum(X1[:, None, :] - X2[None, :, :], axis=-1)
-        return sigma ** 2 * np.cos(2 * np.pi * delta_X / p)
+    def cosine_kernel(self, X1, X2, **params):
+        delta_X = X1[:, None, :] - X2[None, :, :]
+        return params['sigma'] ** 2 * np.cos(2 * np.pi * delta_X / params['p'])
 
     def white_noise_kernel(self, X1, X2, **params):
         delta_X = X1[:, None, :] - X2[None, :, :]
