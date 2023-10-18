@@ -224,6 +224,7 @@ class GPModel:
             #self.hyperparameters_obj.update(hyperparameters)
             K = self.gp_kernel.compute_kernel(self.X, self.X)
             K += np.repeat(np.array(np.eye(len(self.X)) * 1e-3)[:,:, np.newaxis], self.X.shape[1], axis=2)
+            debug_K = np.squeeze(K)
             L = scipy.linalg.cholesky(K[:, :, 0], lower=True)
             n = len(self.y)
             one_vector = np.ones(n)

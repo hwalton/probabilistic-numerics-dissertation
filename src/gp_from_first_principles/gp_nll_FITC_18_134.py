@@ -58,6 +58,18 @@ class GP_NLL_FITC_18_134:
     def K_sigma_inv(self, method='woodbury'):
         if method == 'woodbury':
             K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_K_UX = self.K_XX_FITC()
+
+            lower = 1E-24
+            upper = 1E24
+
+            self.clip_K_sigma_inv(K_XX_FITC, lower, upper)
+            self.clip_K_sigma_inv(K_XU, lower, upper)
+            self.clip_K_sigma_inv(K_UX, lower, upper)
+            self.clip_K_sigma_inv(K_UU, lower, upper)
+            self.clip_K_sigma_inv(K_XX, lower, upper)
+            self.clip_K_sigma_inv(Q_XX, lower, upper)
+            self.clip_K_sigma_inv(K_UU_inv_K_UX, lower, upper)
+
             sigma_n_neg2 = np.multiply(
                 self.hyperparameters_obj.dict()['noise_level'] ** -2,
                 np.eye(len(self.X)))
@@ -73,6 +85,8 @@ class GP_NLL_FITC_18_134:
             raise ValueError("Invalid inducing method")
         return out
 
+    def clip_K_sigma_inv(self, K_XX_FITC, lower = 1E-24, upper = 1E24):
+        K_XX_FITC = np.clip(K_XX_FITC, lower, upper)
 
     def K_XX_FITC(self):
         K_UU, K_UX, K_XU, K_XX, U = self._compute_kernels()
@@ -81,7 +95,7 @@ class GP_NLL_FITC_18_134:
                                                                       K_UX,
                                                                       K_XU, U)
 
-        K_XX_FITC = self._compute_K_XX_FITC(K_UU_inv_KUX, K_XU)
+        K_XX_FITC = np.clip(self._compute_K_XX_FITC(K_UU_inv_KUX, K_XU), 1E-6, 1E6)
 
         return K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX
 
