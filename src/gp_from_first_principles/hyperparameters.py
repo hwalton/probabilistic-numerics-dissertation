@@ -39,7 +39,7 @@ class Hyperparameters:
                 'sigma': (0.001, 1000),
                 'l': (0.01, 100),
                 'p': (0.0001, 100),
-                'noise_level': (0.1, 25)
+                'noise_level': (0.01, 25)
             }
         elif self.kernel_type == 'p_se_composite':
             self._initial_hyperparameters = {
