@@ -22,10 +22,12 @@ class GP_NLL_FITC_18_134:
         K_UU = np.squeeze(self.gp_kernel.compute_kernel(self.U, self.U))
 
         L_UU = scipy.linalg.cholesky(K_UU, lower=True)
-        L_inv_T = self._inverse_lower_triangular(L_UU.T)
+        L_inv = self._inverse_lower_triangular(L_UU)
+        L_inv_T = L_inv.T
 
-        Q_ff = (K_fU @ L_inv_T) @ (K_fU @ L_inv_T).T
-
+        #Q_ff = (K_fU @ L_inv_T) @ (K_fU @ L_inv_T).T
+        Q_ff = K_fU @ scipy.linalg.cho_solve((L_UU, True), K_fU.T)
+        #Q_ff = K_fU @ np.linalg.inv(K_UU) @ K_fU.T
         n = np.shape(K_ff)[0]
 
         big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n) + K_ff - Q_ff
@@ -64,17 +66,50 @@ class GP_NLL_FITC_18_134:
         debug_print(f"out = {out_f}")
         return out_f
 
-    def _inverse_lower_triangular(self, L):
-            n = L.shape[0]
-            L_inv = np.zeros((n, n), dtype=float)  # Initialize an n x n matrix filled with zeros
+    def _inverse_lower_triangular(self, matrix):
+        # Convert the input matrix to a NumPy array for easier manipulation
+        A = np.array(matrix, dtype=float)
 
-            for j in range(n):
-                L_inv[j][j] = 1.0 / L[j][j]  # Set the diagonal element
+        # Check if the matrix is square
+        rows, cols = A.shape
+        if rows != cols:
+            raise ValueError("Input matrix is not square")
 
-                for i in range(j + 1, n):
-                    L_inv[i][j] = -np.dot(L[i][j:i], L_inv[j:i, j]) / L[j][j]
+        # Check if the matrix is lower triangular
+        if not np.allclose(np.triu(A, k=1), 0):
+            raise ValueError("Input matrix is not lower triangular")
 
-            return L_inv
+        # Check for zeros on the main diagonal
+        if any(np.isclose(np.diag(A), 0)):
+            return None  # Matrix is singular and has no inverse
+
+        # Create an identity matrix of the same size
+        I = np.identity(rows)
+
+        # Perform forward elimination to transform A into an identity matrix
+        for i in range(rows):
+            # Make the diagonal element of the current row equal to 1
+            A[i] /= A[i, i]
+            I[i] /= A[i, i]
+            for j in range(i + 1, rows):
+                # Eliminate non-zero elements above the diagonal
+                factor = A[j, i]
+                A[j] -= factor * A[i]
+                I[j] -= factor * I[i]
+
+        # At this point, A should be an identity matrix, and I will be the inverse
+        return np.array(I.tolist())
+    # def _inverse_lower_triangular(self, L):
+    #         n = L.shape[0]
+    #         L_inv = np.zeros((n, n), dtype=float)  # Initialize an n x n matrix filled with zeros
+    #
+    #         for j in range(n):
+    #             L_inv[j][j] = 1.0 / L[j][j]  # Set the diagonal element
+    #
+    #             for i in range(j + 1, n):
+    #                 L_inv[i][j] = -np.dot(L[i][j:i], L_inv[j:i, j]) / L[j][j]
+    #
+    #         return L_inv
 
 
 # class GP_NLL_FITC_18_134: # old from 24-10-23
