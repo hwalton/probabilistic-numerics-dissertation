@@ -28,8 +28,7 @@ class GP_NLL_FITC_18_134:
 
         n = np.shape(K_ff)[0]
 
-        big_lambda = (self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n) +
-                      np.diag(np.diag(K_ff - Q_ff)))                                        ###### remove double np.diag???????
+        big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n) + K_ff - Q_ff
 
         big_lambda_inv = np.diag(np.reciprocal(np.diag(big_lambda)))
 
