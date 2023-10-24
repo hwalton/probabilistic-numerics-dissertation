@@ -52,7 +52,7 @@ class GP_NLL_FITC_18_134:
         return term_1_f
 
     def _compute_big_lambda(self, K_XX, Q_XX, n):
-        big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n) #+ np.diag(np.diag(K_XX - Q_XX))
+        big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n) + np.diag(np.diag(K_XX - Q_XX))
         return big_lambda
 
     def K_sigma_inv(self, method='woodbury'):
