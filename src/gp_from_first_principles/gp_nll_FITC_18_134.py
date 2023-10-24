@@ -79,8 +79,10 @@ class GP_NLL_FITC_18_134:
             # var2 = sigma_n_neg2 @ K_XU @ (K_UU_inv_K_UX + np.array(K_UX @ sigma_n_neg2 @ K_XU @ K_UX)) @ sigma_n_neg2
             # debug_print(f"var == var2: {np.allclose(var,var2, atol = 1E-3)}")
 
-            out = sigma_n_neg2 - sigma_n_neg2 @ K_XU @ (
-            K_UU_inv_K_UX + K_UX @ sigma_n_neg2 @ K_XU @ K_UX) @ sigma_n_neg2
+            K_UU_stable = K_UU + np.eye(K_UU.shape[0]) * 1E-5
+            L = scipy.linalg.cholesky(K_UU_stable, lower=True)
+            L_inv_T = np.linalg.inv(L.T)
+            out = sigma_n_neg2 - sigma_n_neg2 @ ( K_XU @ K_UX @ sigma_n_neg2 @ K_XU @ K_UX + (K_XU @ L_inv_T) @ (K_XU @ L_inv_T).T) @ sigma_n_neg2
             out = self.clip_array(out, -1E24, -1E-24)
 
         else:
