@@ -51,9 +51,9 @@ class GP_NLL_FITC_18_134:
         E = K_fU.T @ big_lambda_inv
         D = scipy.linalg.cho_solve((L,True), E)
 
-        term_1_f = -0.5 *(A + B + C)
+        term_1_f = 0.5 *(A + B + C)
 
-        term_2_f = -0.5 * y_adj.T @ (big_lambda_inv - D.T @ D) @ y_adj
+        term_2_f = 0.5 * y_adj.T @ (big_lambda_inv - D.T @ D) @ y_adj
 
         term_3_f = n_f/2.0 * np.log(2 * np.pi)
 
