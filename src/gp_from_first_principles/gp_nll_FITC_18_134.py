@@ -81,13 +81,25 @@ class GP_NLL_FITC_18_134:
 
             K_UU_stable = K_UU + np.eye(K_UU.shape[0]) * 1E-5
             L = scipy.linalg.cholesky(K_UU_stable, lower=True)
-            L_inv_T = np.linalg.inv(L.T)
+            L_inv_T = self._inverse_lower_triangular(L.T)
             out = sigma_n_neg2 - sigma_n_neg2 @ ( K_XU @ K_UX @ sigma_n_neg2 @ K_XU @ K_UX + (K_XU @ L_inv_T) @ (K_XU @ L_inv_T).T) @ sigma_n_neg2
             out = self.clip_array(out, -1E24, -1E-24)
 
         else:
             raise ValueError("Invalid inducing method")
         return out
+
+    def _inverse_lower_triangular(self,L):
+        n = L.shape[0]
+        L_inv = np.zeros((n, n), dtype=float)  # Initialize an n x n matrix filled with zeros
+
+        for j in range(n):
+            L_inv[j][j] = 1.0 / L[j][j]  # Set the diagonal element
+
+            for i in range(j + 1, n):
+                L_inv[i][j] = -np.dot(L[i][j:i], L_inv[j:i, j]) / L[j][j]
+
+        return L_inv
 
     def clip_array(self, array, lower = 1E-24, upper = 1E24):
         array = np.clip(array, lower, upper)
@@ -123,7 +135,7 @@ class GP_NLL_FITC_18_134:
         K_UU_inv_KUX = np.linalg.pinv(K_UU, rcond = 1E-6) @ K_UX
 
         L_UU = scipy.linalg.cholesky(K_UU_stable, lower=True)
-        L_inv_T = np.linalg.inv(L_UU.T)
+        L_inv_T = self._inverse_lower_triangular(L_UU.T)
 
         Q_XX = (K_XU @ L_inv_T) @ (K_XU @ L_inv_T).T
         return K_UU_inv_KUX, Q_XX
