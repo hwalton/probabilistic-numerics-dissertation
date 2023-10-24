@@ -36,6 +36,7 @@ class GP_NLL_FITC_18_134:
             'term_2': term_2_f,
             'term_3': term_3_f
         }
+        debug_print(f"out = {out_f}")
         return out_f
 
     def _compute_term_3_f(self, n):
@@ -78,7 +79,8 @@ class GP_NLL_FITC_18_134:
             # var2 = sigma_n_neg2 @ K_XU @ (K_UU_inv_K_UX + np.array(K_UX @ sigma_n_neg2 @ K_XU @ K_UX)) @ sigma_n_neg2
             # debug_print(f"var == var2: {np.allclose(var,var2, atol = 1E-3)}")
 
-            out = woodbury_lemma(K_UU_inv_K_UX, K_UX, K_XU, sigma_n_neg2)
+            out = sigma_n_neg2 - sigma_n_neg2 @ K_XU @ (
+            K_UU_inv_K_UX + K_UX @ sigma_n_neg2 @ K_XU @ K_UX) @ sigma_n_neg2
             out = self.clip_array(out, -1E24, -1E-24)
 
         else:
