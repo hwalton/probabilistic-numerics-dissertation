@@ -13,7 +13,7 @@ from sklearn.cluster import KMeans
 
 
 class GPModel:
-    def __init__(self, kernel_type, X, y, solver_type = 'iterative_search', n_iter=10, gp_algo ='cholesky', M_one_in = 1):
+    def __init__(self, kernel_type, X, y, solver_type = 'iterative_search', n_iter=10, gp_algo ='cholesky', U_induced_method = 'even', M_one_in = 1):
         self.hyperparameters_obj = Hyperparameters(kernel_type)
         self.initial_hyperparameters = self.hyperparameters_obj._initial_hyperparameters.copy()
         self.hyperparameter_bounds = self.hyperparameters_obj._hyperparameter_bounds.copy()
@@ -23,7 +23,7 @@ class GPModel:
         self.template = self.hyperparameters_obj._initial_hyperparameters.copy()
         self.solver_type = solver_type
         self.gp_kernel = GaussianProcessKernel(self.hyperparameters_obj)
-        self.U = self.U_induced(M_one_in)
+        self.U = self.U_induced(M_one_in, method = U_induced_method)
         self.gp_algo = gp_algo
         self.y_mean = np.mean(y)
         self.gp_nll_algo_obj = GP_NLL_FITC_18_134(self.X, self.y, self.y_mean, self.U,
@@ -75,24 +75,38 @@ class GPModel:
             kmeans = KMeans(n_clusters=M, n_init=3).fit(self.X)
 
             # Extract the cluster centers for self.X
-            U_X = kmeans.cluster_centers_
+            self.U_X = kmeans.cluster_centers_
 
             # Determine the corresponding self.y values for the inducing points
-            U_y = np.zeros((M, self.y.shape[1] if self.y.ndim > 1 else 1))
+            self.U_y = np.zeros((M, self.y.shape[1] if self.y.ndim > 1 else 1))
             for i in range(M):
                 # Find the indices of the points assigned to cluster i
                 idx = np.where(kmeans.labels_ == i)[0]
 
                 # Assign the mean of the self.y values of the points in cluster i
                 # to the corresponding inducing output
-                U_y[i] = np.mean(self.y[idx], axis=0)
+                self.U_y[i] = np.mean(self.y[idx], axis=0)
+        elif method == 'even':
+            # Determine the number of inducing points M
+            M = len(self.X) // M_one_in
+
+            # Compute the step size for sampling from self.X
+            step_size = len(self.X) // M
+
+            # Initialize arrays for self.U_X and self.U_y
+            self.U_X = np.zeros((M, self.X.shape[1]))
+            self.U_y = np.zeros((M, self.y.shape[1] if self.y.ndim > 1 else 1))
+
+            # Sample evenly spaced points from self.X and compute self.U_y
+            for i in range(M):
+                idx = i * step_size  # Compute the index for sampling
+                self.U_X[i] = self.X[idx]  # Sample self.X
+                self.U_y[i] = self.y[idx]  # Compute corresponding self.U_y
         else:
             raise ValueError("Invalid inducing method")
-        self.U_X = U_X
-        self.U_y = U_y
         #self.X = U_X
         #self.y = U_y
-        return U_X
+        return self.U_X
 
     # def K_XX_FITC(self):
     #

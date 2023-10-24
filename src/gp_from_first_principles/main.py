@@ -76,11 +76,13 @@ def execute_gp_model():
     force_input_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
     force_input_predict_type = ['cholesky', 'FITC'][0]
     force_input_nll_method = ['cholesky', 'FITC_18_134'][1]
+    force_input_U_induced_method = ['k_means', 'even'][1]
     force_input_n_iter = 5
     force_response_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][4]
     force_response_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
     force_response_predict_type = ['cholesky', 'FITC'][0]
     force_response_nll_method = ['cholesky', 'FITC_18_134'][1]
+    force_response_U_induced_method = ['k_means', 'even'][1]
     force_response_n_iter = 5
 
     M_one_in = 3
@@ -100,7 +102,7 @@ def execute_gp_model():
                                 time,
                                 force_input,
                                 solver_type=force_input_solver_type,
-                                n_iter=force_input_n_iter, gp_algo= force_input_nll_method, M_one_in=M_one_in)
+                                n_iter=force_input_n_iter, gp_algo= force_input_nll_method, U_induced_method = force_input_U_induced_method, M_one_in=M_one_in)
     model_1_nll = force_input_model.fit_model()
     force_input_prediction = force_input_model.predict(time_test, method = force_input_predict_type)
 
@@ -108,7 +110,7 @@ def execute_gp_model():
                                    time,
                                    force_response,
                                    solver_type=force_response_solver_type,
-                                   n_iter=force_response_n_iter, gp_algo= force_response_nll_method, M_one_in=M_one_in)
+                                   n_iter=force_response_n_iter, gp_algo= force_response_nll_method, U_induced_method = force_response_U_induced_method, M_one_in=M_one_in)
     model_2_nll = force_response_model.fit_model()
     force_response_prediction = force_response_model.predict(time_test, method = force_response_predict_type)
 
