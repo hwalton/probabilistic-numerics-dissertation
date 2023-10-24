@@ -56,15 +56,19 @@ class GP_NLL_FITC_18_134:
         term_2_f = 0.5 * y_adj.T @ (big_lambda_inv - D.T @ D) @ y_adj
 
         term_3_f = n_f/2.0 * np.log(2 * np.pi)
+        l2_regularization = 1E3
 
+        # Compute L2 regularization term
+        l2_term = 0.5 * l2_regularization * np.sum(self.gp_kernel.hyperparameters_obj.array() ** 2)
 
-        nll = term_1_f + term_2_f + term_3_f
+        nll = term_1_f + term_2_f + term_3_f + l2_term
         nll = np.array(nll).item()
         out_f = {
             'nll': nll,
             'term_1': term_1_f,
             'term_2': term_2_f,
-            'term_3': term_3_f
+            'term_3': term_3_f,
+            'l2_term': l2_term
         }
         debug_print(f"out = {out_f}")
         return out_f

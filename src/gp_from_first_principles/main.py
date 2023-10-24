@@ -77,15 +77,15 @@ def execute_gp_model():
     force_input_predict_type = ['cholesky', 'FITC'][0]
     force_input_nll_method = ['cholesky', 'FITC_18_134'][1]
     force_input_U_induced_method = ['k_means', 'even'][1]
-    force_input_n_iter = 3
+    force_input_n_iter = 1
     force_response_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][4]
     force_response_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
     force_response_predict_type = ['cholesky', 'FITC'][0]
     force_response_nll_method = ['cholesky', 'FITC_18_134'][1]
     force_response_U_induced_method = ['k_means', 'even'][1]
-    force_response_n_iter = 3
+    force_response_n_iter = 1
 
-    M_one_in = 5
+    M_one_in = 1
 
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
