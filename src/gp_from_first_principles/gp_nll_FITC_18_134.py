@@ -40,7 +40,7 @@ class GP_NLL_FITC_18_134:
         det_big_lambda = np.prod(np.diag(big_lambda))
         det_big_lambda = np.clip(det_big_lambda, 1E-12, 1E12)
 
-        K_tilde = K_UU + K_fU.T @ big_lambda_inv @ K_fU + np.eye(n_u) * jitter
+        K_tilde = (K_UU + K_fU.T @ big_lambda_inv @ K_fU + np.eye(n_u)) * jitter
 
         L = scipy.linalg.cholesky(K_tilde, lower= True)
 
