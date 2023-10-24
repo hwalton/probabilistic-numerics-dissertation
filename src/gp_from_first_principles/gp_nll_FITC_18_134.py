@@ -17,9 +17,42 @@ class GP_NLL_FITC_18_134:
 
         y_adj = np.squeeze(self.y - self.y_mean)
 
-        term_1_f = self._compute_term_1_f(K_UU_inv_K_UX, K_XU, big_lambda)
-        term_2_f = self._compute_term_2_f(K_sigma_inv, y_adj)
-        term_3_f = self._compute_term_3_f(n)
+        K_ff = np.squeeze(self.gp_kernel.compute_kernel(self.y, self.y) + 1E-8)
+        K_fU = np.squeeze(self.gp_kernel.compute_kernel(self.y, self.U) + 1E-8)
+        K_UU = np.squeeze(self.gp_kernel.compute_kernel(self.U, self.U) + 1E-8)
+
+        L_UU = scipy.linalg.cholesky(K_UU, lower=True)
+        L_inv_T = self._inverse_lower_triangular(L_UU.T)
+
+        Q_ff = (K_fU @ L_inv_T) @ (K_fU @ L_inv_T).T
+
+        n = np.shape(K_ff)[0]
+
+        big_lambda = (self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n) +
+                      np.diag(np.diag(K_ff - Q_ff)))                                        ###### remove double np.diag???????
+
+        big_lambda_inv = np.diag(np.reciprocal(np.diag(big_lambda)))
+
+        det_big_lambda = np.prod(np.diag(big_lambda))
+
+        K_tilde = K_UU + K_fU.T @ big_lambda_inv @ K_fU
+
+        L = scipy.linalg.cholesky(K_tilde, lower= True)
+
+
+        A = 2 * np.sum(np.log(np.diag(L)))
+        B = np.log(np.reciprocal(np.linalg.det(K_UU)))
+        C = np.log(det_big_lambda)
+        E = K_fU.T @ big_lambda_inv
+        D = scipy.linalg.cho_solve(L, E)
+
+        term_1_f = -0.5 *(A + B + C)
+
+        term_2_f = -0.5 * y_adj.T @ (big_lambda_inv - D.T @ D) @ y_adj
+
+        term_3_f = n/2.0 * np.log(2 * np.pi())
+
+
         nll = term_1_f + term_2_f + term_3_f
         nll = np.array(nll).item()
         out_f = {
@@ -31,43 +64,18 @@ class GP_NLL_FITC_18_134:
         debug_print(f"out = {out_f}")
         return out_f
 
-    def _compute_term_3_f(self, n):
-        return 0.5 * n * np.log(2 * np.pi)
+    def _inverse_lower_triangular(self, L):
+            n = L.shape[0]
+            L_inv = np.zeros((n, n), dtype=float)  # Initialize an n x n matrix filled with zeros
 
-    def _compute_term_2_f(self, K_sigma_inv, y_adj):
-        return 0.5 * y_adj.T @ K_sigma_inv @ y_adj
+            for j in range(n):
+                L_inv[j][j] = 1.0 / L[j][j]  # Set the diagonal element
 
-    def _compute_term_1_f(self, K_UU_inv_K_UX, K_XU, big_lambda):
-        fast_det = compute_fast_det(K_XU, K_UU_inv_K_UX, big_lambda)
-        fast_det = self.clip_array(fast_det, 1E-30, 1E30)
-        term_1_f = 0.5 * np.log(fast_det)
-        return term_1_f
+                for i in range(j + 1, n):
+                    L_inv[i][j] = -np.dot(L[i][j:i], L_inv[j:i, j]) / L[j][j]
 
-    def _compute_big_lambda(self, K_XX, Q_XX, n):
-        big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n) + np.diag(np.diag(K_XX - Q_XX))
-        return big_lambda
+            return L_inv
 
-    def _inverse_lower_triangular(self,L):
-        n = L.shape[0]
-        L_inv = np.zeros((n, n), dtype=float)  # Initialize an n x n matrix filled with zeros
-
-        for j in range(n):
-            L_inv[j][j] = 1.0 / L[j][j]  # Set the diagonal element
-
-            for i in range(j + 1, n):
-                L_inv[i][j] = -np.dot(L[i][j:i], L_inv[j:i, j]) / L[j][j]
-
-        return L_inv
-
-
-    def _compute_kernels(self):
-        X = np.squeeze(self.X)
-        U = np.squeeze(self.U)
-        K_XU = np.squeeze(self.gp_kernel.compute_kernel(X, U))
-        K_UX = np.squeeze(self.gp_kernel.compute_kernel(U, X))
-        K_UU = np.squeeze(self.gp_kernel.compute_kernel(U, U))
-        K_XX = np.squeeze(self.gp_kernel.compute_kernel(X, X))
-        return K_UU, K_UX, K_XU, K_XX, U
 
 # class GP_NLL_FITC_18_134: # old from 24-10-23
 #     def __init__(self, X, y, y_mean, U, gp_kernel, hyperparameters_obj):

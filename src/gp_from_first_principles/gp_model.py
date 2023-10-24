@@ -253,7 +253,7 @@ class GPModel:
 
 
             term_1_c = (0.5 * y_adj.T @ alpha).item()
-            term_2_c = np.sum(np.log(np.diag(L)))
+            term_2_c = np.sum(np.log(np.diag(L)))       ###### 2x this??????
             term_3_c = 0.5 * n * np.log(2 * np.pi)
 
             # # DEBUG
