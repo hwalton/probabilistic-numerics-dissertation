@@ -122,7 +122,8 @@ class GP_NLL_FITC_18_134:
         K_UU_inv_KUX = self.clip_array(K_UU_inv_KUX)
         Q_XX = self.clip_array(Q_XX)
 
-        K_XX_FITC = self.clip_array(self._compute_K_XX_FITC(K_UU_inv_KUX, K_XU), 1E-6, 1E6)
+        #K_XX_FITC = self.clip_array(self._compute_K_XX_FITC(K_UU_inv_KUX, K_XU), 1E-6, 1E6)
+        K_XX_FITC = Q_XX
 
         return K_XX_FITC, K_XU, K_UX, K_UU, K_XX, Q_XX, K_UU_inv_KUX
 
