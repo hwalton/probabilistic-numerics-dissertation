@@ -17,8 +17,8 @@ class GP_NLL_FITC_18_134:
 
         y_adj = np.squeeze(self.y - self.y_mean)
 
-        K_ff = np.squeeze(self.gp_kernel.compute_kernel(self.y, self.y) + 1E-8)
-        K_fU = np.squeeze(self.gp_kernel.compute_kernel(self.y, self.U) + 1E-8)
+        K_ff = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.X) + 1E-8)
+        K_fU = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.U) + 1E-8)
         K_UU = np.squeeze(self.gp_kernel.compute_kernel(self.U, self.U) + 1E-8)
 
         L_UU = scipy.linalg.cholesky(K_UU, lower=True)
@@ -44,13 +44,13 @@ class GP_NLL_FITC_18_134:
         B = np.log(np.reciprocal(np.linalg.det(K_UU)))
         C = np.log(det_big_lambda)
         E = K_fU.T @ big_lambda_inv
-        D = scipy.linalg.cho_solve(L, E)
+        D = scipy.linalg.cho_solve((L,True), E)
 
         term_1_f = -0.5 *(A + B + C)
 
         term_2_f = -0.5 * y_adj.T @ (big_lambda_inv - D.T @ D) @ y_adj
 
-        term_3_f = n/2.0 * np.log(2 * np.pi())
+        term_3_f = n/2.0 * np.log(2 * np.pi)
 
 
         nll = term_1_f + term_2_f + term_3_f
