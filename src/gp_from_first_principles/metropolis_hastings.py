@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 from utils import debug_print
@@ -37,6 +39,8 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
 
 
                 A = map_number((nll_prime-nll),0.,1000.,1.0,0.0)
+                if math.isinf(nll) or math.isinf(nll_prime):
+                    A = 0.0
                 debug_print(f"nll_prime: {nll_prime}")
                 debug_print(f"nll: {nll}")
                 debug_print((f"nll_prime - nll: {nll_prime - nll}"))

@@ -16,10 +16,14 @@ class GP_NLL_FITC_18_134:
     def compute(self):
 
         y_adj = np.squeeze(self.y - self.y_mean)
+        n_f = np.shape(self.X)[0]
+        n_u = np.shape(self.U)[0]
+
+        jitter = 1E-4
 
         K_ff = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.X))
         K_fU = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.U))
-        K_UU = np.squeeze(self.gp_kernel.compute_kernel(self.U, self.U))
+        K_UU = np.squeeze(self.gp_kernel.compute_kernel(self.U, self.U)) + np.eye(n_u) * jitter
 
         L_UU = scipy.linalg.cholesky(K_UU, lower=True)
         L_inv = self._inverse_lower_triangular(L_UU)
@@ -28,16 +32,15 @@ class GP_NLL_FITC_18_134:
         #Q_ff = (K_fU @ L_inv_T) @ (K_fU @ L_inv_T).T
         Q_ff = K_fU @ scipy.linalg.cho_solve((L_UU, True), K_fU.T)
         #Q_ff = K_fU @ np.linalg.inv(K_UU) @ K_fU.T
-        n = np.shape(K_ff)[0]
 
-        big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n) + K_ff - Q_ff
+        big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n_f) + K_ff - Q_ff
 
         big_lambda_inv = np.diag(np.reciprocal(np.diag(big_lambda)))
 
         det_big_lambda = np.prod(np.diag(big_lambda))
         det_big_lambda = np.clip(det_big_lambda, 1E-12, 1E12)
 
-        K_tilde = K_UU + K_fU.T @ big_lambda_inv @ K_fU
+        K_tilde = K_UU + K_fU.T @ big_lambda_inv @ K_fU + np.eye(n_u) * jitter
 
         L = scipy.linalg.cholesky(K_tilde, lower= True)
 
@@ -52,7 +55,7 @@ class GP_NLL_FITC_18_134:
 
         term_2_f = -0.5 * y_adj.T @ (big_lambda_inv - D.T @ D) @ y_adj
 
-        term_3_f = n/2.0 * np.log(2 * np.pi)
+        term_3_f = n_f/2.0 * np.log(2 * np.pi)
 
 
         nll = term_1_f + term_2_f + term_3_f
