@@ -120,9 +120,12 @@ class GP_NLL_FITC_18_134:
 
     def _calculate_inputs_to_K_XX_FITC_calc(self, K_UU, K_UX, K_XU, U):
         K_UU_stable = K_UU + 1e-6 * np.eye(U.shape[0])
-        #L_UU = scipy.linalg.cholesky(K_UU_stable, lower=True)
         K_UU_inv_KUX = np.linalg.pinv(K_UU, rcond = 1E-6) @ K_UX
-        Q_XX = K_XU @ K_UU_inv_KUX
+
+        L_UU = scipy.linalg.cholesky(K_UU_stable, lower=True)
+        L_inv_T = np.linalg.inv(L_UU.T)
+
+        Q_XX = (K_XU @ L_inv_T) @ (K_XU @ L_inv_T).T
         return K_UU_inv_KUX, Q_XX
 
     def _compute_kernels(self):
