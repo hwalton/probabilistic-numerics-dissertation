@@ -70,7 +70,7 @@ def format_data(X):
 
 def execute_gp_model():
     sample_start_index = 2400
-    sample_length = 150
+    sample_length = 200
     num_predictions = sample_length * 4 // 5
     force_input_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][4]
     force_input_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
