@@ -19,7 +19,7 @@ class GP_NLL_FITC_18_134:
         n_f = np.shape(self.X)[0]
         n_u = np.shape(self.U)[0]
 
-        jitter = 1E-4
+        jitter = 1E-6
 
         K_ff = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.X))
         K_fU = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.U))

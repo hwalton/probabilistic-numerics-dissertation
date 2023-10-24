@@ -31,7 +31,7 @@ class Hyperparameters:
                 'sigma': 9.7834,
                 'l': 0.019533,
                 'p': 0.032121,
-                'noise_level': 1
+                'noise_level': 1.0
             }
 
             self._hyperparameter_bounds = {
