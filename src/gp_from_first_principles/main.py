@@ -85,7 +85,7 @@ def execute_gp_model():
     force_response_U_induced_method = ['k_means', 'even'][1]
     force_response_n_iter = 0
 
-    M_one_in = 75
+    M_one_in = 1
 
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
