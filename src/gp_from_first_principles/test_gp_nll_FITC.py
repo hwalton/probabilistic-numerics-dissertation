@@ -9,7 +9,7 @@ from main import format_data, load_data
 import numpy as np
 from hyperparameters import Hyperparameters
 from gp_kernel import GaussianProcessKernel
-from gp_nll_FITC_18_134 import GP_NLL_FITC_18_134
+from gp_nll_FITC import GP_NLL_FITC
 
 class TestGP_NLL_FITC_18_134(unittest.TestCase):
     def test_compute(self):
@@ -22,12 +22,12 @@ class TestGP_NLL_FITC_18_134(unittest.TestCase):
         dummy_y = np.array([0.002, 0.004, 0.006, 0.008]).reshape(-1,1)
         dummy_U = np.array([0.00101, 0.00401]).reshape(-1,1)
         mean_dummy_y = np.mean(dummy_y)
-        gp_nll_fitc_18_134 = GP_NLL_FITC_18_134(dummy_X,
-                                                dummy_y,
-                                                mean_dummy_y,
-                                                dummy_U,
-                                                kernel,
-                                                hyperparameters_obj)
+        gp_nll_fitc_18_134 = GP_NLL_FITC(dummy_X,
+                                         dummy_y,
+                                         mean_dummy_y,
+                                         dummy_U,
+                                         kernel,
+                                         hyperparameters_obj)
 
         K_XX_FITC_result, K_XU_result, K_UX_result, K_UU_result, K_XX_result, Q_XX_result, K_UU_inv_KUX_result = gp_nll_fitc_18_134.K_XX_FITC()
 

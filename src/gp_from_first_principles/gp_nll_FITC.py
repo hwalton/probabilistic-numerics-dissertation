@@ -4,7 +4,7 @@ import numpy as np
 import scipy
 from fast_det import compute_fast_det
 from woodbury_lemma import woodbury_lemma
-class GP_NLL_FITC_18_134:
+class GP_NLL_FITC:
     def __init__(self,X, y, y_mean, U, gp_kernel, hyperparameters_obj):
         self.hyperparameters_obj = hyperparameters_obj
         self.X = X
@@ -19,7 +19,7 @@ class GP_NLL_FITC_18_134:
         n_f = np.shape(self.X)[0]
         n_u = np.shape(self.U)[0]
 
-        jitter = 1E-4
+        jitter = 1E-3
 
         K_ff = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.X))
         K_fU = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.U))
@@ -105,7 +105,11 @@ class GP_NLL_FITC_18_134:
                 I[j] -= factor * I[i]
 
         # At this point, A should be an identity matrix, and I will be the inverse
+        if not np.allclose(A, np.eye(A.shape[0])* 1.0, rtol = 0.01):
+            raise ValueError("A should be identity matrix")
+
         return np.array(I.tolist())
+
     # def _inverse_lower_triangular(self, L):
     #         n = L.shape[0]
     #         L_inv = np.zeros((n, n), dtype=float)  # Initialize an n x n matrix filled with zeros

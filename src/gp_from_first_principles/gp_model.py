@@ -2,7 +2,7 @@ import numpy as np
 import scipy
 #import freelunch
 from numpy import linalg as npla
-from gp_nll_FITC_18_134 import GP_NLL_FITC_18_134
+from gp_nll_FITC import GP_NLL_FITC
 from hyperparameters import Hyperparameters
 from gp_kernel import GaussianProcessKernel
 from iterative_search import iterative_search_solve
@@ -26,9 +26,9 @@ class GPModel:
         self.U = self.U_induced(M_one_in, method = U_induced_method)
         self.gp_algo = gp_algo
         self.y_mean = np.mean(y)
-        self.gp_nll_algo_obj = GP_NLL_FITC_18_134(self.X, self.y, self.y_mean, self.U,
-                                                  self.gp_kernel,
-                                                  self.hyperparameters_obj)
+        self.gp_nll_algo_obj = GP_NLL_FITC(self.X, self.y, self.y_mean, self.U,
+                                           self.gp_kernel,
+                                           self.hyperparameters_obj)
         self.M_one_in = M_one_in
 
     def fit_model(self):
