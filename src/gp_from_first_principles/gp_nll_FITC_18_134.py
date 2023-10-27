@@ -61,7 +61,7 @@ class GP_NLL_FITC_18_134:
         # Compute L2 regularization term
         l2_term = 0.5 * l2_regularization * np.sum((self.gp_kernel.hyperparameters_obj.array())**2 / (self.gp_kernel.hyperparameters_obj.array(attribute = 'initial') ** 2))
 
-        nll = term_1_f + term_2_f + term_3_f + l2_term
+        nll = term_1_f + term_2_f + term_3_f# + l2_term
         nll = np.array(nll).item()
         out_f = {
             'nll': nll,
