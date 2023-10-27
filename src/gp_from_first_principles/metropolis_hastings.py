@@ -24,7 +24,7 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
         else:
             for i, (lower, upper) in enumerate(bounds_array):
 
-                exponent = np.random.normal(0,1.5)
+                exponent = np.random.normal(0,1.25)
                 modifier = np.exp(exponent)
                 hyperparameters_prime = hyperparameters.copy()
                 hyperparameters_prime[i] = np.clip(hyperparameters_prime[i] * modifier, lower, upper)
