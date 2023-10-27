@@ -33,12 +33,12 @@ class GPModel:
 
     def fit_model(self):
         self.gp_kernel.set_params(self.hyperparameters_obj)
-        optimal_hyperparameters = self.get_optimal_hyperparameters()
+        optimal_hyperparameters, nll = self.get_optimal_hyperparameters()
         self.hyperparameters_obj.update(optimal_hyperparameters)
         debug_print(optimal_hyperparameters)
         debug_print(self.hyperparameters_obj.array())
-        nll = self.compute_nll(self.hyperparameters_obj)['nll']
-        debug_print(nll)
+        #nll = self.compute_nll(self.hyperparameters_obj)['nll']
+        #debug_print(nll)
         return(nll)
 
     def solve(self, solver_type):
@@ -57,9 +57,10 @@ class GPModel:
 
     def get_optimal_hyperparameters(self):
         debug_print("solving")
-        optimal_hyperparameters = self.solve(self.solver_type).T
+        optimal_hyperparameters, nll = self.solve(self.solver_type)
+        optimal_hyperparameters = optimal_hyperparameters.T
         debug_print("solved")
-        return self.hyperparameters_obj.reconstruct_params(optimal_hyperparameters)
+        return self.hyperparameters_obj.reconstruct_params(optimal_hyperparameters), nll
 
     import numpy as np
     import scipy.linalg
@@ -277,7 +278,7 @@ class GPModel:
         elif self.gp_algo == 'FITC_18_134':
             #out_f = self.run_FITC_18_134()
 
-            out_f = self.gp_nll_algo_obj.compute()
+            out_f = self.gp_nll_algo_obj.compute_nll()
             return out_f
 
         else:

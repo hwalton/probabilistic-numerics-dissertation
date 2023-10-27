@@ -98,6 +98,14 @@ def execute_gp_model():
     time_test = format_data(time_test)
 
 
+    force_response_model = GPModel(force_response_kernel_type,
+                                   time,
+                                   force_response,
+                                   solver_type=force_response_solver_type,
+                                   n_iter=force_response_n_iter, gp_algo= force_response_nll_method, U_induced_method = force_response_U_induced_method, M_one_in=M_one_in)
+    model_2_nll = force_response_model.fit_model()
+    force_response_prediction = force_response_model.predict(time_test, method = force_response_predict_type)
+
     force_input_model = GPModel(force_input_kernel_type,
                                 time,
                                 force_input,
@@ -106,13 +114,6 @@ def execute_gp_model():
     model_1_nll = force_input_model.fit_model()
     force_input_prediction = force_input_model.predict(time_test, method = force_input_predict_type)
 
-    force_response_model = GPModel(force_response_kernel_type,
-                                   time,
-                                   force_response,
-                                   solver_type=force_response_solver_type,
-                                   n_iter=force_response_n_iter, gp_algo= force_response_nll_method, U_induced_method = force_response_U_induced_method, M_one_in=M_one_in)
-    model_2_nll = force_response_model.fit_model()
-    force_response_prediction = force_response_model.predict(time_test, method = force_response_predict_type)
 
     plot_data(force_input, force_response, force_input_prediction,
               force_response_prediction, time, time_test, force_input_model, force_response_model)

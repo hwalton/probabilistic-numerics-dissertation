@@ -13,7 +13,7 @@ class GP_NLL_FITC:
         self.gp_kernel = gp_kernel
         self.y_mean = y_mean
 
-    def compute(self):
+    def compute_nll(self):
 
         y_adj = np.squeeze(self.y - self.y_mean)
         n_f = np.shape(self.X)[0]
