@@ -16,7 +16,7 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
     for j in range(n_iter):
 
         debug_print(f"Iteration: {j+1}/{n_iter} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-        if j >= 5 and best_nll < -sample_length:
+        if j >= 2 and best_nll < sample_length:
         #if j > 2:
             debug_print(
                 f"Stopping after {j} iterations due to nll sufficiently low: {best_nll}")
@@ -24,7 +24,7 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
         else:
             for i, (lower, upper) in enumerate(bounds_array):
 
-                exponent = np.random.normal(0,2)
+                exponent = np.random.normal(0,3)
                 modifier = np.exp(exponent)
                 hyperparameters_prime = hyperparameters.copy()
                 hyperparameters_prime[i] = np.clip(hyperparameters_prime[i] * modifier, lower, upper)
