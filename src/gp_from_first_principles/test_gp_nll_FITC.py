@@ -54,4 +54,5 @@ class TestGP_NLL_FITC(unittest.TestCase):
         debug_print(f"correct2 = {correct2}")
         debug_print(f"difference2 = {result2 - correct2}")
 
+
         assert np.allclose(result2, correct2, atol = 1E-3, rtol= 1E-3 )

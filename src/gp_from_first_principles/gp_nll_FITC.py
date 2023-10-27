@@ -46,12 +46,13 @@ class GP_NLL_FITC:
 
 
         A = 2 * np.sum(np.log(np.diag(L)))
-        B = np.log(np.reciprocal(np.linalg.det(K_UU)))
+        B = np.log(np.linalg.det(K_UU) ** -1)
         C = np.log(det_big_lambda)
         E = K_fU.T @ big_lambda_inv
         D = scipy.linalg.cho_solve((L,True), E)
+        #D2 = np.linalg.solve(L.T,np.linalg.solve(L,E))
 
-        term_1_f = 0.5 *(A + B + C)
+        term_1_f = 0.5 * (A + B + C)
 
         term_2_f = 0.5 * y_adj.T @ (big_lambda_inv - D.T @ D) @ y_adj
 
@@ -61,7 +62,7 @@ class GP_NLL_FITC:
         # Compute L2 regularization term
         l2_term = 0.5 * l2_regularization * np.sum((self.gp_kernel.hyperparameters_obj.array())**2 / (self.gp_kernel.hyperparameters_obj.array(attribute = 'initial') ** 2))
 
-        nll = term_1_f + term_2_f + term_3_f# + l2_term
+        nll = term_1_f + term_2_f + term_3_f       # + l2_term
         nll = np.array(nll).item()
         out_f = {
             'nll': nll,
