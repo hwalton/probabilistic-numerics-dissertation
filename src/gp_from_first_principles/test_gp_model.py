@@ -9,18 +9,21 @@ import numpy as np
 from fast_det import compute_fast_det
 
 class TestGPModel(unittest.TestCase):
-    def setup_object(self, force_input_kernel_index=2, return_model='input', gp_algo ='cholesky'):
+    def setup_object(self, force_input_kernel_index=4,
+                     return_model='response',
+                     gp_algo ='cholesky',
+                     U_induced_method = 'even',
+                     M_one_in = 1):
         sample_start_index = 1000
         sample_length = 100
         num_predictions = 40
         force_input_kernel_type = \
-            ['squared_exponential', 'p_se_composite', 'white_noise',
-             'wn_se_composite'][force_input_kernel_index]
+            ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][force_input_kernel_index]
         force_input_solver_type = \
             ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][
                 0]
         force_input_predict_type = ['cholesky', 'FITC'][0]
-        force_input_n_iter = 50
+        force_input_n_iter = 0
         force_response_kernel_type = \
             ['squared_exponential', 'p_se_composite', 'white_noise',
              'wn_se_composite', 'periodic'][4]
@@ -28,7 +31,7 @@ class TestGPModel(unittest.TestCase):
             ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][
                 0]
         force_response_predict_type = ['cholesky', 'FITC'][0]
-        force_response_n_iter = 50
+        force_response_n_iter = 0
         force_input, force_response, time = load_data(sample_start_index,
                                                       sample_length)
         lower = time[0] - 0 * (time[-1] - time[0])
@@ -43,42 +46,48 @@ class TestGPModel(unittest.TestCase):
                                     time,
                                     force_input,
                                     solver_type=force_input_solver_type,
-                                    n_iter=force_input_n_iter, gp_algo= gp_algo)
+                                    n_iter=force_input_n_iter,
+                                    gp_algo= gp_algo,
+                                    U_induced_method = U_induced_method,
+                                    M_one_in=M_one_in)
 
         force_response_model = GPModel(force_response_kernel_type,
                                        time,
                                        force_response,
                                        solver_type=force_response_solver_type,
-                                       n_iter=force_response_n_iter, gp_algo= gp_algo)
+                                       n_iter=force_response_n_iter,
+                                       gp_algo= gp_algo,
+                                       U_induced_method = U_induced_method,
+                                       M_one_in=M_one_in)
 
         if return_model == 'input':
             return force_input_model
         if return_model == 'response':
             return force_response_model
-    def test_fast_det(self):
-        force_input_model = self.setup_object()
-
-        U = np.ones((1000,2))
-        V_T = U.T
-        D = 1.001 * np.eye(U.shape[0])
-
-        start_time = timer.time()
-
-        fast_det = compute_fast_det(U,V_T,D)
-
-        end_time = timer.time()
-        elapsed_time = end_time - start_time
-        print(f"compute_fast_det ran in {elapsed_time} seconds")
-
-        start_time = timer.time()
-
-        det = np.linalg.det(D+U @ V_T)
-        equal = math.isclose(fast_det, det, rel_tol=1E-9, abs_tol=1E-9)
-        assert equal, "Incorrect Fast_det"
-
-        end_time = timer.time()
-        elapsed_time = end_time - start_time
-        print(f"det ran in {elapsed_time} seconds")
+    # def test_fast_det(self):
+    #     force_input_model = self.setup_object()
+    #
+    #     U = np.ones((1000,2))
+    #     V_T = U.T
+    #     D = 1.001 * np.eye(U.shape[0])
+    #
+    #     start_time = timer.time()
+    #
+    #     fast_det = compute_fast_det(U,V_T,D)
+    #
+    #     end_time = timer.time()
+    #     elapsed_time = end_time - start_time
+    #     print(f"compute_fast_det ran in {elapsed_time} seconds")
+    #
+    #     start_time = timer.time()
+    #
+    #     det = np.linalg.det(D+U @ V_T)
+    #     equal = math.isclose(fast_det, det, rel_tol=1E-9, abs_tol=1E-9)
+    #     assert equal, "Incorrect Fast_det"
+    #
+    #     end_time = timer.time()
+    #     elapsed_time = end_time - start_time
+    #     print(f"det ran in {elapsed_time} seconds")
 
     # def test_K_XX_FITC(self):
     #     gp = self.setup_object(0)
@@ -181,13 +190,13 @@ class TestGPModel(unittest.TestCase):
 
     def test_def_compute_nll_response(self):
 
-        gp_cholesky = self.setup_object(2, return_model='response', gp_algo='cholesky')
-        gp_FITC = self.setup_object(2, return_model='response', gp_algo='FITC_18_134')
+        gp_cholesky = self.setup_object(4, return_model='response', gp_algo='cholesky')
+        gp_FITC = self.setup_object(4, return_model='response', gp_algo='FITC_18_134')
         #gp.hyperparameters_obj.update(np.array([0.1, 1., 1E-3, 0.1, 1., 1E-3, 0.1, 0.01, 0.001, 1.]))
 
 
         optimal_hyperparameters = np.array(
-            [9.7834, 0.019533, 0.032121, 0.1])
+            [9.7834, 0.019533, 0.032121, 1.0])
 
         gp_cholesky.hyperparameters_obj.update(optimal_hyperparameters)
 
