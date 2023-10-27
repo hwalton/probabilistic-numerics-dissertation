@@ -65,7 +65,7 @@ class Hyperparameters:
             self._initial_hyperparameters = {
                 'kernel_type': 'white_noise',
                 'sigma': 0.0791306,
-                'noise_level': 0.641445
+                'noise_level': 1.0
             }
 
             self._hyperparameter_bounds = {
