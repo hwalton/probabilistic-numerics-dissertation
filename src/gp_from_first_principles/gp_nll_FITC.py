@@ -93,20 +93,11 @@ class GP_NLL_FITC:
         # Create an identity matrix of the same size
         I = np.identity(rows)
 
-        # Perform forward elimination to transform A into an identity matrix
+        # Compute the inverse
         for i in range(rows):
-            # Make the diagonal element of the current row equal to 1
-            A[i] /= A[i, i]
-            I[i] /= A[i, i]
-            for j in range(i + 1, rows):
-                # Eliminate non-zero elements above the diagonal
-                factor = A[j, i]
-                A[j] -= factor * A[i]
-                I[j] -= factor * I[i]
-
-        # At this point, A should be an identity matrix, and I will be the inverse
-        if not np.allclose(A, np.eye(A.shape[0])* 1.0, rtol = 0.01):
-            raise ValueError("A should be identity matrix")
+            I[i, i] = 1 / A[i, i]
+            for j in range(i):
+                I[i, j] = -sum(A[i, k] * I[k, j] for k in range(j, i)) / A[i, i]
 
         return np.array(I.tolist())
 
