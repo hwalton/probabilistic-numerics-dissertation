@@ -38,7 +38,7 @@ class Hyperparameters:
                 'kernel_type': 'periodic',
                 'sigma': (0.001, 10),
                 'l': (0.01, 100),
-                'p': (0.1, 100),
+                'p': (0.01, 100),
                 'noise_level': (0.01, 25)
             }
         elif self.kernel_type == 'p_se_composite':
