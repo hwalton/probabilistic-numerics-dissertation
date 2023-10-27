@@ -51,8 +51,10 @@ class GPModel:
             self.solver = freelunch.DE(self.compute_nll, bounds = self.hyperparameters_obj.array(attribute='bounds'))
             return self.solver()
         elif solver_type == 'adam':
+            debug_print(f"nll before adam = {self.compute_nll(self.hyperparameters_obj.dict())}")
             optimal_hyperparameters = adam_optimize(self.compute_nll,self.X, self.y, self.hyperparameters_obj.array(), self.gp_kernel, self.hyperparameters_obj.reconstruct_params)
             nll = self.compute_nll(optimal_hyperparameters)
+            debug_print(f"nll after adam = {nll}")
             return optimal_hyperparameters, nll
         else:
             assert False, "invalid solver_type"
