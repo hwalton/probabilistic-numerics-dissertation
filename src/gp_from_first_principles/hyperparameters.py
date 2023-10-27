@@ -30,16 +30,16 @@ class Hyperparameters:
                 'kernel_type': 'periodic',
                 'sigma': 10.,
                 'l': 0.01,
-                'p': 0.01,
-                'noise_level': 0.8
+                'p': 0.02,
+                'noise_level': 1.
             }
 
             self._hyperparameter_bounds = {
                 'kernel_type': 'periodic',
-                'sigma': (0.001, 10),
+                'sigma': (0.001, 12.),
                 'l': (0.005, 100),
                 'p': (0.01, 100),
-                'noise_level': (0.01, 10.)
+                'noise_level': (0.999, 1.001)
             }
         elif self.kernel_type == 'p_se_composite':
             self._initial_hyperparameters = {
