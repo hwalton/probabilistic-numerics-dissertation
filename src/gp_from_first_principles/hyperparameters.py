@@ -28,17 +28,17 @@ class Hyperparameters:
         elif self.kernel_type == 'periodic':
             self._initial_hyperparameters = {
                 'kernel_type': 'periodic',
-                'sigma': 10.,
-                'l': 0.01,
-                'p': 0.02,
+                'sigma': 1.,
+                'l': 0.1,
+                'p': 0.2,
                 'noise_level': 1.
             }
 
             self._hyperparameter_bounds = {
                 'kernel_type': 'periodic',
-                'sigma': (0.001, 12.),
-                'l': (0.005, 100),
-                'p': (0.01, 100),
+                'sigma': (0.001, 20.),
+                'l': (0.05, 100),
+                'p': (0.001, 100),
                 'noise_level': (0.999, 1.001)
             }
         elif self.kernel_type == 'p_se_composite':

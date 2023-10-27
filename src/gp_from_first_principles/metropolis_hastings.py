@@ -11,6 +11,7 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
     best_hyperparameters = initial_hyperparameters_array.copy()
     hyperparameters = initial_hyperparameters_array.copy()
     best_nll = compute_nll(initial_hyperparameters_array)['nll']
+    debug_print(f"initial best_nll = {best_nll}")
     nll = compute_nll(initial_hyperparameters_array)['nll']
     iter_since_update = 0
     for j in range(n_iter):

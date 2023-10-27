@@ -20,7 +20,7 @@ class GP_NLL_FITC:
         n_u = np.shape(self.U)[0]
 
         K_UU_jitter = 1E-6
-        K_tilde_jitter = 1E-2
+        K_tilde_jitter = 1E-1
 
         K_ff = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.X))
         K_fU = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.U))
