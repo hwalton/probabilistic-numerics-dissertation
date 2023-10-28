@@ -2,11 +2,11 @@ import numpy as np
 from utils import debug_print
 
 
-def adam_optimize(objective_function, X, y, params, kernel, reconstruct_params, lr=0.01, beta1=0.9, beta2=0.999,
-                  epsilon=1e-4, epochs=4):
+def adam_optimize(objective_function, X, y, params, kernel, reconstruct_params, lr=0.06, beta1=0.9, beta2=0.999,
+                  epsilon=1e-4, epochs=100):
     m = np.zeros_like(params)
     v = np.zeros_like(params)
-
+    debug_print(f"params in {params}")
     for epoch in range(epochs):
         debug_print(f"Epoch: {epoch}/{epochs}")
         # Compute all gradients at once
@@ -23,7 +23,7 @@ def adam_optimize(objective_function, X, y, params, kernel, reconstruct_params, 
 
             # Update the j-th parameter
             params[j] = params[j] - lr * m_hat_j / (np.sqrt(v_hat_j) + epsilon)
-
+    debug_print(f"params out {params}")
     return params
 
 
@@ -38,7 +38,7 @@ def compute_all_gradients(objective_function,X, y, params, kernel, reconstruct_p
 
     # Define a kernel function and its derivative w.r.t. theta_j
     def kernel_function(x, y, theta, kernel):
-        kernel.set_params(reconstruct_params(theta))
+        kernel.hyperparameters_obj.update(theta)
         out = np.squeeze(kernel.compute_kernel(x,y))
         return out
 
