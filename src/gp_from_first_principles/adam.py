@@ -5,7 +5,7 @@ import numpy as np
 from utils import debug_print
 
 
-def adam_optimize(objective_function, X, y, params, kernel, reconstruct_params, initial_lr=0.06,
+def adam_optimize(objective_function, X, y, inducing_points, params, kernel, reconstruct_params, initial_lr=0.06,
                   beta1=0.9, beta2=0.999, epsilon=1e-4, epochs=5, lr_decay_rate=0.9):
     m = np.zeros_like(params)
     v = np.zeros_like(params)
@@ -15,7 +15,7 @@ def adam_optimize(objective_function, X, y, params, kernel, reconstruct_params, 
         debug_print(f"Epoch: {epoch}/{epochs}")
 
         # Compute all gradients at once
-        grads = compute_all_gradients(objective_function, X, y, params, kernel, reconstruct_params)
+        grads = compute_all_gradients(objective_function, X, y, inducing_points, params, kernel, reconstruct_params)
 
         for j, grad_j in enumerate(grads):
             # Update biased first and second moment estimates for j-th parameter
@@ -41,10 +41,7 @@ import numpy as np
 import numpy as np
 
 
-def compute_all_gradients(objective_function,X, y, params, kernel, reconstruct_params):
-    # Extract X, y, and theta from params or modify as per your use case
-    # X, y, theta = ...
-
+def compute_all_gradients(objective_function, X, y, inducing_points, params, kernel, reconstruct_params):
     # Define a kernel function and its derivative w.r.t. theta_j
     def kernel_function(x, y, theta, kernel):
         kernel.hyperparameters_obj.update(theta)
@@ -53,41 +50,40 @@ def compute_all_gradients(objective_function,X, y, params, kernel, reconstruct_p
 
     def dkernel_dtheta_j(x, y, theta, j, kernel):
         derivative = kernel.compute_kernel_derivative(x, y, j)
-        #debug_print(theta)
         out = derivative(theta)
-        #debug_print(out)
         return out
 
-    # Compute the covariance matrix K
-    K = np.array([[kernel_function(xi, xj, params, kernel) for xj in X] for xi in X])
+    # Compute the covariance matrices
+    K_ff = np.array([[kernel_function(xi, xj, params, kernel) for xj in X] for xi in X])
+    K_uu = np.array([[kernel_function(zi, zj, params, kernel) for zj in inducing_points] for zi in inducing_points])
+    K_uf = np.array([[kernel_function(zi, xj, params, kernel) for xj in X] for zi in inducing_points])
+    K_fu = K_uf.T
 
-    # Access mean_func_c as the second to last item in params
-    mean_func_c = params[-2]
+    # Compute the FITC approximated covariance matrix
+    Q_ff = K_fu @ np.linalg.solve(K_uu, K_uf)
+    K_tilde = np.diag(K_ff - np.diag(Q_ff))
 
-    # Compute alpha = K^(-1)(y - mean_func_c)
-    alpha = np.linalg.solve(K, y - mean_func_c)
+    # Compute the FITC approximated alpha
+    jitter = 1e-2
+    L = np.linalg.cholesky(Q_ff + np.diag(K_tilde) + jitter * np.eye(Q_ff.shape[0]))
+
+    alpha = np.linalg.solve(L.T, np.linalg.solve(L, y))
 
     # Initialize an array to store the gradients
     gradients = np.zeros_like(params)
 
-    # Compute the gradient for each parameter
+    # Compute the gradient for each hyperparameter
     for j in range(len(params)):
-        # Compute the derivative of K w.r.t. theta_j
-        dK_dthetaj = np.array(
-            [[dkernel_dtheta_j(xi, xj, params, j, kernel) for xj in X] for xi in X])
+        dK_uu_dtheta = np.array([[dkernel_dtheta_j(zi, zj, params, j, kernel) for zj in inducing_points] for zi in inducing_points])
+        dK_uf_dtheta = np.array([[dkernel_dtheta_j(zi, xj, params, j, kernel) for xj in X] for zi in inducing_points])
+        dK_fu_dtheta = dK_uf_dtheta.T
 
-        # Compute the gradient w.r.t. the covariance function hyperparameters
-        gradient_cov = 0.5 * np.trace(
-            (np.outer(alpha, alpha) - np.linalg.inv(K)) @ dK_dthetaj)
+        # Compute the gradient of the FITC approximated likelihood
+        dQ_ff_dtheta = dK_fu_dtheta @ np.linalg.solve(K_uu, K_uf) + K_fu @ np.linalg.solve(K_uu, dK_uf_dtheta)
+        dK_tilde_dtheta = np.diag(dK_fu_dtheta @ np.linalg.solve(K_uu, K_uf) - dQ_ff_dtheta)
 
-        # If j corresponds to mean_func_c, compute its gradient
-        if j == len(params) - 2:  # Check if j corresponds to mean_func_c
-            gradient_mean = -np.sum(alpha)
-        else:
-            gradient_mean = 0
-
-        # Total gradient is the sum of the two components
-        gradients[j] = gradient_cov + gradient_mean
+        gradient = -0.5 * np.trace(np.linalg.solve(L, dQ_ff_dtheta + np.diag(dK_tilde_dtheta)) @ np.linalg.solve(L.T, alpha @ alpha.T - np.linalg.inv(L)))
+        gradients[j] = gradient
 
     return gradients
 

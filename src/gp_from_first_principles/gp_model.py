@@ -52,7 +52,7 @@ class GPModel:
             return self.solver()
         elif solver_type == 'adam':
             debug_print(f"nll before adam = {self.compute_nll(self.hyperparameters_obj.dict())}")
-            optimal_hyperparameters = adam_optimize(self.compute_nll,self.X, self.y, self.hyperparameters_obj.array(), self.gp_kernel, self.hyperparameters_obj.reconstruct_params)
+            optimal_hyperparameters = adam_optimize(self.compute_nll,self.X, self.y, self.U_X, self.hyperparameters_obj.array(), self.gp_kernel, self.hyperparameters_obj.reconstruct_params)
             #self.hyperparameters_obj.update(optimal_hyperparameters)
             nll = self.compute_nll(optimal_hyperparameters)
             debug_print(f"hyperparameters after adam {optimal_hyperparameters}")
