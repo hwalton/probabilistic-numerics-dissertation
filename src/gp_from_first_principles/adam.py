@@ -1,14 +1,19 @@
 import numpy as np
 from utils import debug_print
 
+import numpy as np
+from utils import debug_print
 
-def adam_optimize(objective_function, X, y, params, kernel, reconstruct_params, lr=0.06, beta1=0.9, beta2=0.999,
-                  epsilon=1e-4, epochs=100):
+
+def adam_optimize(objective_function, X, y, params, kernel, reconstruct_params, initial_lr=0.06,
+                  beta1=0.9, beta2=0.999, epsilon=1e-4, epochs=5, lr_decay_rate=0.9):
     m = np.zeros_like(params)
     v = np.zeros_like(params)
-    debug_print(f"params in {params}")
+    lr = initial_lr  # Initialize the learning rate
+
     for epoch in range(epochs):
         debug_print(f"Epoch: {epoch}/{epochs}")
+
         # Compute all gradients at once
         grads = compute_all_gradients(objective_function, X, y, params, kernel, reconstruct_params)
 
@@ -21,8 +26,12 @@ def adam_optimize(objective_function, X, y, params, kernel, reconstruct_params, 
             m_hat_j = m[j] / (1 - beta1 ** (epoch + 1))
             v_hat_j = v[j] / (1 - beta2 ** (epoch + 1))
 
-            # Update the j-th parameter
+            # Update the j-th parameter with the scheduled learning rate
             params[j] = params[j] - lr * m_hat_j / (np.sqrt(v_hat_j) + epsilon)
+
+        # Update the learning rate using exponential decay
+        lr *= lr_decay_rate
+
     debug_print(f"params out {params}")
     return params
 
