@@ -83,7 +83,7 @@ def execute_gp_model():
     force_response_predict_type = ['cholesky', 'FITC'][0]
     force_response_nll_method = ['cholesky', 'FITC_18_134'][1]
     force_response_U_induced_method = ['k_means', 'even'][1]
-    force_response_n_iter = 100
+    force_response_n_iter = 25
 
     M_one_in = 5
 
