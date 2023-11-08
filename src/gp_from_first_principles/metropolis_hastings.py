@@ -7,7 +7,7 @@ from map_number import map_number
 
 
 def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
-                              compute_nll, n_iter=10, sample_length=0, restarts=5):
+                              compute_nll, n_iter=10, sample_length=0, restarts=1):
     # Initialize best hyperparameters and nll over all restarts
     overall_best_hyperparameters = initial_hyperparameters_array.copy()
     overall_best_nll = float('inf')
@@ -19,7 +19,7 @@ def metropolis_hastings_solve(initial_hyperparameters_array, bounds_array,
         best_nll = compute_nll(initial_hyperparameters_array)['nll']
         debug_print(f"Restart: {r+1}/{restarts} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         debug_print(f"initial best_nll = {best_nll}")
-        nll = compute_nll(initial_hyperparameters_array)['nll']
+        nll = best_nll
         iter_since_update = 0
         for j in range(n_iter):
             debug_print(f"Iteration: {j+1}/{n_iter} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
