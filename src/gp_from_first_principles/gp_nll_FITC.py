@@ -20,7 +20,7 @@ class GP_NLL_FITC:
         n_u = np.shape(self.U)[0]
 
         K_UU_jitter = 1E-6
-        K_tilde_jitter = 1E-3
+        K_tilde_jitter = 1E-6
 
         K_ff = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.X))
         K_fU = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.U))
@@ -39,7 +39,7 @@ class GP_NLL_FITC:
         big_lambda_inv = np.diag(np.reciprocal(np.diag(big_lambda)))
 
         det_big_lambda = np.prod(np.diag(big_lambda))
-        det_big_lambda = np.clip(det_big_lambda, 1E-12, 1E12)
+        det_big_lambda = np.clip(det_big_lambda, 1E-15, 1E15)
 
         K_tilde = (K_UU + K_fU.T @ big_lambda_inv @ K_fU) + np.eye(n_u) * K_tilde_jitter
 

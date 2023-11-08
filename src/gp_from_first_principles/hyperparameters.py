@@ -28,10 +28,10 @@ class Hyperparameters:
         elif self.kernel_type == 'periodic':
             self._initial_hyperparameters = {
                 'kernel_type': 'periodic',
-                'sigma': 20.,
-                'l': 0.05,
-                'p': 0.05,
-                'noise_level': 0.8
+                'sigma': 2.,
+                'l': 0.5,
+                'p': 0.5,
+                'noise_level': 1.2
             }
 
             self._hyperparameter_bounds = {
