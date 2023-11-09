@@ -6,6 +6,7 @@ from fast_det import compute_fast_det
 from woodbury_lemma import woodbury_lemma
 class GP_NLL_FITC:
     def __init__(self,X, y, y_mean, U, gp_kernel, hyperparameters_obj):
+        self.stdv = None
         self.K_y_hat_U_R = None
         self.K_y_hat_U = None
         self.K_y_hat_U_T = None
@@ -77,7 +78,9 @@ class GP_NLL_FITC:
 
         self.K_y_hat_U = self.K_y_hat_U_T.T
 
-        self.K_y_hat_U_R = self.K_y_hat_U @ self._inverse_upper_triangular(self.R)
+        self.R_inv = self._inverse_upper_triangular(self.R)
+
+        self.K_y_hat_U_R = self.K_y_hat_U @ self.R_inv
 
         term_1_f = self.n_f / 2.0 * np.log(2 * np.pi)
 
@@ -105,8 +108,23 @@ class GP_NLL_FITC:
             'big_lambda', 'Q_ff', 'L_UU', 'K_UU', 'K_fU', 'K_ff', 'n_u', 'n_f', 'y_adj']):
             self.compute_nll()
 
+        K_star_U = self.gp_kernel.compute_kernel(X_test, self.U)[:,:,0]
+
+        big_sigma = self.R_inv @ self.R_inv.T
+
+        self.mu = K_star_U @ big_sigma @ self.K_fU.T @ self.y_hat # from quinonero-candela eq. 24b
 
 
+
+        K_star_star = self.gp_kernel.compute_kernel(X_test, X_test)[:,:,0]
+
+        K_tilde_star_U = K_star_U @ self.R_inv
+
+        Q_star_star = K_star_star - K_star_U @ scipy.linalg.cho_solve((self.L_UU, True), K_star_U.T)
+
+        s2 = K_star_star - Q_star_star + K_tilde_star_U @ K_tilde_star_U.T # from quinonero-candela eq. 24b
+
+        self.stdv = np.sqrt(np.diag(s2))
 
         return self.mu, self.stdv
 
