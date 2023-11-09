@@ -183,20 +183,7 @@ class GPModel:
 
     def predict(self, X_star, method = 'FITC'):
         if method == 'FITC':
-            K_X_X = self.gp_kernel.compute_kernel(self.X, self.X) + np.array(self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(len(self.X)))[:,:,None]
-            K_star_X = self.gp_kernel.compute_kernel(self.X, X_star)
-            K_star_star = self.gp_kernel.compute_kernel(X_star, X_star)
-            K_sigma_inv = self.gp_nll_algo_obj.K_sigma_inv()
-            L = np.zeros_like(K_X_X)
-            self.mu = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
-            self.s2 = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
-            for i in range(K_X_X.shape[2]):
-                L[:, :, i] = npla.cholesky(K_X_X[:, :, i] + 1e-10 * np.eye(K_X_X.shape[0]))
-                Lk = np.squeeze(npla.solve(L[:, :, i], K_star_X[:,:,i]))
-                alpha = K_sigma_inv @ self.y
-                self.mu[:, i] = self.y_mean + np.array(K_star_X.T @ alpha).flatten()
-                self.s2[:, i] = np.diag(K_star_star[:, :, i]) - np.sum(Lk ** 2, axis=0)
-                self.stdv = np.sqrt(self.s2)
+            self.mu, self.stdv = self.gp_nll_algo_obj.predict(X_star)
         elif method == 'cholesky':
             K_X_X = self.gp_kernel.compute_kernel(self.X,
                                                   self.X) + np.array(

@@ -99,6 +99,16 @@ class GP_NLL_FITC:
         debug_print(f"out = {out_f}")
         return out_f
 
+    def predict(self, X_test):
+        if any(getattr(self, attr) is None for attr in [
+            'K_y_hat_U_R', 'K_y_hat_U', 'K_y_hat_U_T', 'y_hat', 'R', 'K_tilde_Uf',
+            'big_lambda', 'Q_ff', 'L_UU', 'K_UU', 'K_fU', 'K_ff', 'n_u', 'n_f', 'y_adj']):
+            self.compute_nll()
+
+
+
+
+        return self.mu, self.stdv
 
     def _inverse_lower_triangular(self, matrix):
         # Convert the input matrix to a NumPy array for easier manipulation
