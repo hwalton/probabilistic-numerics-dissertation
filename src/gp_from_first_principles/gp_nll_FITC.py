@@ -30,9 +30,9 @@ class GP_NLL_FITC:
         L_inv = self._inverse_lower_triangular(L_UU)
         L_inv_T = L_inv.T
 
-        #Q_ff = (K_fU @ L_inv_T) @ (K_fU @ L_inv_T).T
+        # Q_ff = (K_fU @ L_inv_T) @ (K_fU @ L_inv_T).T
         Q_ff = K_fU @ scipy.linalg.cho_solve((L_UU, True), K_fU.T)
-        #Q_ff = K_fU @ np.linalg.inv(K_UU) @ K_fU.T
+        # Q_ff = K_fU @ np.linalg.inv(K_UU) @ K_fU.T
 
         big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n_f) + K_ff - Q_ff
 
@@ -43,27 +43,28 @@ class GP_NLL_FITC:
 
         K_tilde = (K_UU + K_fU.T @ big_lambda_inv @ K_fU) + np.eye(n_u) * K_tilde_jitter
 
-        L = scipy.linalg.cholesky(K_tilde, lower= True)
-
+        L = scipy.linalg.cholesky(K_tilde, lower=True)
 
         A = 2 * np.sum(np.log(np.diag(L)))
         B = np.log(np.linalg.det(K_UU) ** -1)
         C = np.log(det_big_lambda)
         E = K_fU.T @ big_lambda_inv
-        D = scipy.linalg.cho_solve((L,True), E)
-        #D2 = np.linalg.solve(L.T,np.linalg.solve(L,E))
+        D = scipy.linalg.cho_solve((L, True), E)
+        # D2 = np.linalg.solve(L.T,np.linalg.solve(L,E))
 
         term_1_f = 0.5 * (A + B + C)
 
         term_2_f = 0.5 * y_adj.T @ (big_lambda_inv - D.T @ D) @ y_adj
 
-        term_3_f = n_f/2.0 * np.log(2 * np.pi)
+        term_3_f = n_f / 2.0 * np.log(2 * np.pi)
         l2_regularization = 1E15
 
         # Compute L2 regularization term
-        l2_term = 0.5 * l2_regularization * np.sum((self.gp_kernel.hyperparameters_obj.array())**2 / (self.gp_kernel.hyperparameters_obj.array(attribute = 'initial') ** 2))
+        l2_term = 0.5 * l2_regularization * np.sum(
+            (self.gp_kernel.hyperparameters_obj.array()) ** 2 / (
+                        self.gp_kernel.hyperparameters_obj.array(attribute='initial') ** 2))
 
-        nll = term_1_f + term_2_f + term_3_f       # + l2_term
+        nll = term_1_f + term_2_f + term_3_f  # + l2_term
         nll = np.array(nll).item()
         out_f = {
             'nll': nll,
@@ -74,6 +75,7 @@ class GP_NLL_FITC:
         }
         debug_print(f"out = {out_f}")
         return out_f
+
 
     def _inverse_lower_triangular(self, matrix):
         # Convert the input matrix to a NumPy array for easier manipulation
@@ -261,3 +263,66 @@ class GP_NLL_FITC:
 #         K_UU = np.squeeze(self.gp_kernel.compute_kernel(U, U))
 #         K_XX = np.squeeze(self.gp_kernel.compute_kernel(X, X))
 #         return K_UU, K_UX, K_XU, K_XX, U
+
+# before supervisor meeting 08-11-23
+# def compute_nll(self):
+    #
+    #     y_adj = np.squeeze(self.y - self.y_mean)
+    #     n_f = np.shape(self.X)[0]
+    #     n_u = np.shape(self.U)[0]
+    #
+    #     K_UU_jitter = 1E-6
+    #     K_tilde_jitter = 1E-6
+    #
+    #     K_ff = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.X))
+    #     K_fU = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.U))
+    #     K_UU = np.squeeze(self.gp_kernel.compute_kernel(self.U, self.U)) + np.eye(n_u) * K_UU_jitter
+    #
+    #     L_UU = scipy.linalg.cholesky(K_UU, lower=True)
+    #     L_inv = self._inverse_lower_triangular(L_UU)
+    #     L_inv_T = L_inv.T
+    #
+    #     #Q_ff = (K_fU @ L_inv_T) @ (K_fU @ L_inv_T).T
+    #     Q_ff = K_fU @ scipy.linalg.cho_solve((L_UU, True), K_fU.T)
+    #     #Q_ff = K_fU @ np.linalg.inv(K_UU) @ K_fU.T
+    #
+    #     big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(n_f) + K_ff - Q_ff
+    #
+    #     big_lambda_inv = np.diag(np.reciprocal(np.diag(big_lambda)))
+    #
+    #     det_big_lambda = np.prod(np.diag(big_lambda))
+    #     det_big_lambda = np.clip(det_big_lambda, 1E-15, 1E15)
+    #
+    #     K_tilde = (K_UU + K_fU.T @ big_lambda_inv @ K_fU) + np.eye(n_u) * K_tilde_jitter
+    #
+    #     L = scipy.linalg.cholesky(K_tilde, lower= True)
+    #
+    #
+    #     A = 2 * np.sum(np.log(np.diag(L)))
+    #     B = np.log(np.linalg.det(K_UU) ** -1)
+    #     C = np.log(det_big_lambda)
+    #     E = K_fU.T @ big_lambda_inv
+    #     D = scipy.linalg.cho_solve((L,True), E)
+    #     #D2 = np.linalg.solve(L.T,np.linalg.solve(L,E))
+    #
+    #     term_1_f = 0.5 * (A + B + C)
+    #
+    #     term_2_f = 0.5 * y_adj.T @ (big_lambda_inv - D.T @ D) @ y_adj
+    #
+    #     term_3_f = n_f/2.0 * np.log(2 * np.pi)
+    #     l2_regularization = 1E15
+    #
+    #     # Compute L2 regularization term
+    #     l2_term = 0.5 * l2_regularization * np.sum((self.gp_kernel.hyperparameters_obj.array())**2 / (self.gp_kernel.hyperparameters_obj.array(attribute = 'initial') ** 2))
+    #
+    #     nll = term_1_f + term_2_f + term_3_f       # + l2_term
+    #     nll = np.array(nll).item()
+    #     out_f = {
+    #         'nll': nll,
+    #         'term_1': term_1_f,
+    #         'term_2': term_2_f,
+    #         'term_3': term_3_f,
+    #         'l2_term': l2_term
+    #     }
+    #     debug_print(f"out = {out_f}")
+    #     return out_f
