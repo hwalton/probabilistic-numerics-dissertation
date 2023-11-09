@@ -27,7 +27,7 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
     plt.subplot(2, 1, 1)  # 2 rows, 1 column, plot 1
     plt.scatter(time, force_input, label='Force input', color='green')
     plt.scatter(time_test, force_input_prediction[0], label='Predicted Mean', color='red')
-    plt.scatter(force_input_model.U_X, force_input_model.U_y, label='KMeans Clusters', color='purple')
+    plt.scatter(force_input_model.U_X, force_input_model.U_y, label='Inducing Points', color='purple')
 
     upper_bound = force_input_prediction[0] + force_input_prediction[1]
     lower_bound = force_input_prediction[0] - force_input_prediction[1]
@@ -44,7 +44,7 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
     plt.subplot(2, 1, 2)  # 2 rows, 1 column, plot 2
     plt.scatter(time, force_response, label='Force Response', color='green')
     plt.scatter(time_test, force_response_prediction[0], label='Predicted Mean', color='red')
-    plt.scatter(force_response_model.U_X, force_response_model.U_y, label='KMeans Clusters', color='purple')
+    plt.scatter(force_response_model.U_X, force_response_model.U_y, label='Inducing Points', color='purple')
 
     # Assuming prediction[1] is the standard deviation
     upper_bound = force_response_prediction[0] + force_response_prediction[1]
