@@ -34,12 +34,11 @@ class GP_NLL_FITC:
         self.n_f = np.shape(self.X)[0]
         self.n_u = np.shape(self.U)[0]
 
-        L_UU_jitter = 1E-6
-        K_tilde_jitter = 1E-6
+        jitter = 1E-6
 
         self.K_ff = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.X))
         self.K_fU = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.U))
-        self.K_UU = np.squeeze(self.gp_kernel.compute_kernel(self.U, self.U)) + np.eye(self.n_u) * L_UU_jitter
+        self.K_UU = np.squeeze(self.gp_kernel.compute_kernel(self.U, self.U)) + np.eye(self.n_u) * jitter
 
         self.L_UU = scipy.linalg.cholesky(self.K_UU, lower=True)
         # L_inv = self._inverse_lower_triangular(L_UU)

@@ -28,7 +28,7 @@ class Hyperparameters:
         elif self.kernel_type == 'periodic':
             self._initial_hyperparameters = {
                 'kernel_type': 'periodic',
-                'sigma': 20.,
+                'sigma': 30.,
                 'l': 0.05,
                 'p': 0.05,
                 'noise_level': 0.8

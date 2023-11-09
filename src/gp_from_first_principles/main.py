@@ -69,7 +69,7 @@ def format_data(X):
 
 
 def execute_gp_model():
-    sample_start_index = 3400
+    sample_start_index = 5000
     sample_length = 50
     num_predictions = sample_length * 4 // 5
     force_input_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][2]
@@ -85,7 +85,7 @@ def execute_gp_model():
     force_response_U_induced_method = ['k_means', 'even'][1]
     force_response_n_iter = 10
 
-    M_one_in = 1
+    M_one_in = 4
 
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
