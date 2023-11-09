@@ -37,9 +37,9 @@ class Hyperparameters:
             self._hyperparameter_bounds = {
                 'kernel_type': 'periodic',
                 'sigma': (0.001, 20.),
-                'l': (0.05, 100),
+                'l': (0.04, 100),
                 'p': (0.001, 100),
-                'noise_level': (0.8, 2.0)
+                'noise_level': (0.1, 10.0)
             }
         elif self.kernel_type == 'p_se_composite':
             self._initial_hyperparameters = {
@@ -71,7 +71,7 @@ class Hyperparameters:
             self._hyperparameter_bounds = {
                 'kernel_type': 'white_noise',
                 'sigma': (0.001, 100),
-                'noise_level': (0.1, 1)
+                'noise_level': (1., 1.1)
             }
         elif self.kernel_type == 'cosine':
             self._initial_hyperparameters = {
