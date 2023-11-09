@@ -11,6 +11,7 @@ from hyperparameters import Hyperparameters
 from gp_kernel import GaussianProcessKernel
 from gp_nll_FITC import GP_NLL_FITC
 
+
 class TestGP_NLL_FITC(unittest.TestCase):
     def test__inverse_lower_triangular(self):
         obj = GP_NLL_FITC(1,2,3,4,5,6)
@@ -67,7 +68,14 @@ class TestGP_NLL_FITC(unittest.TestCase):
             [0, 0, 7]
         ])
 
+        start_time = timer.time()
+
         result = obj._inverse_upper_triangular(matrix)
+
+        end_time = timer.time()
+        elapsed_time = end_time - start_time
+        print(f"The _inverse_upper_triangular func ran in {elapsed_time} seconds")
+
 
         # The inverse of the upper triangular matrix calculated by hand or another method
         correct = np.array([
@@ -76,7 +84,13 @@ class TestGP_NLL_FITC(unittest.TestCase):
             [0, 0, 1. / 7.]
         ])
 
+        start_time = timer.time()
+
         correct = np.linalg.inv(matrix)
+
+        end_time = timer.time()
+        elapsed_time = end_time - start_time
+        print(f"The np.linalg.inv func ran in {elapsed_time} seconds")
 
         debug_print(f"result = {result}")
         debug_print(f"correct = {correct}")
