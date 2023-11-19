@@ -52,7 +52,7 @@ class GP_NLL_FITC:
         QR = np.transpose(np.concatenate((self.L_UU,self.K_tilde_Uf), axis=1))
         self.R = np.abs(np.linalg.qr(QR, mode='r'))
 
-        self.y_hat = np.reciprocal(np.diag(self.big_lambda)) * self.y_adj.T
+        self.y_hat = np.reciprocal(np.diag(self.big_lambda)) * self.y_adj
 
         self.K_y_hat_U_T = self.y_hat.T @ self.K_fU
 
