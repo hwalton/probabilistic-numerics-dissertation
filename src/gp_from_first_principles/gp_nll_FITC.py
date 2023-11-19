@@ -6,6 +6,7 @@ from fast_det import compute_fast_det
 from woodbury_lemma import woodbury_lemma
 class GP_NLL_FITC:
     def __init__(self,X, y, y_mean, U, gp_kernel, hyperparameters_obj):
+        self.big_lambda_reciprocal = None
         self.stdv = None
         self.K_y_hat_U_R = None
         self.K_y_hat_U = None
@@ -52,7 +53,9 @@ class GP_NLL_FITC:
         QR = np.transpose(np.concatenate((self.L_UU,self.K_tilde_Uf), axis=1))
         self.R = np.abs(np.linalg.qr(QR, mode='r'))
 
-        self.y_hat_adj = np.reciprocal(np.diag(self.big_lambda)) * self.y_adj
+        self.big_lambda_reciprocal = np.reciprocal(np.diag(self.big_lambda))
+
+        self.y_hat_adj = self.big_lambda_reciprocal * self.y_adj
 
 
 
@@ -93,7 +96,7 @@ class GP_NLL_FITC:
 
         big_sigma = self.R_inv @ self.R_inv.T
 
-        y_hat = np.reciprocal(np.diag(self.big_lambda)) * np.squeeze(self.y)
+        y_hat = self.big_lambda_reciprocal * np.squeeze(self.y)
 
         self.mu = K_star_U @ big_sigma @ self.K_fU.T @ y_hat # from quinonero-candela eq. 24b
 
