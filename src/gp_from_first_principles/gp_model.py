@@ -266,6 +266,7 @@ class GPModel:
                 'term_2': term_2_c,
                 'term_3': term_3_c
             }
+            debug_print(f"out_c = {out_c}")
             return out_c
 
         elif self.gp_algo == 'FITC_18_134':

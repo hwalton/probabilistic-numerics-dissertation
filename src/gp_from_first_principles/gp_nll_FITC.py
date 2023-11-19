@@ -64,14 +64,13 @@ class GP_NLL_FITC:
 
         self.K_y_hat_U_R = self.K_y_hat_U @ self.R_inv
 
-        term_1_f = (self.n_f / 2.0) * np.log(2 * np.pi)
+        term_1_f = np.inner(self.y_adj.T, self.y_hat) - (self.K_y_hat_U_R ** 2).sum()
 
         term_2_f =  0.5 * np.sum(np.log((np.diag(self.big_lambda)))) \
                     - np.sum(np.log(np.diag(self.L_UU))) \
                     + np.sum(np.log(np.diag(self.R)))
 
-        term_3_f = np.inner(self.y_adj.T, self.y_hat) - (self.K_y_hat_U_R ** 2).sum()
-
+        term_3_f = (self.n_f / 2.0) * np.log(2 * np.pi)
 
         nll = term_1_f + term_2_f + term_3_f
         nll = np.array(nll).item()
@@ -81,7 +80,7 @@ class GP_NLL_FITC:
             'term_2': term_2_f,
             'term_3': term_3_f,
         }
-        debug_print(f"out = {out_f}")
+        debug_print(f"out_f = {out_f}")
         return out_f
 
     def predict(self, X_test):
