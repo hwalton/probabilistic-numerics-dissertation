@@ -47,12 +47,12 @@ class GP_NLL_FITC:
 
         self.big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(self.n_f) + self.K_ff - self.Q_ff
 
-        self.K_tilde_Uf = self.K_fU.T + np.reciprocal(np.sqrt(np.diag(self.big_lambda)[None,:]))
+        self.K_tilde_Uf = self.K_fU.T * np.reciprocal(np.sqrt(np.diag(self.big_lambda)[None,:]))
 
         QR = np.transpose(np.concatenate((self.L_UU,self.K_tilde_Uf), axis=1))
         self.R = np.abs(np.linalg.qr(QR, mode='r'))
 
-        self.y_hat = np.reciprocal(np.diag(self.big_lambda)) * self.y_adj
+        self.y_hat = np.reciprocal(np.diag(self.big_lambda)) * self.y_adj.T
 
         self.K_y_hat_U_T = self.y_hat.T @ self.K_fU
 
