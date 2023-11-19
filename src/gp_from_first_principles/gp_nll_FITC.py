@@ -9,7 +9,6 @@ class GP_NLL_FITC:
         self.big_lambda_reciprocal = None
         self.stdv = None
         self.K_y_hat_U_R = None
-        self.K_y_hat_U = None
         self.K_y_hat_U_T = None
         self.y_hat_adj = None
         self.R = None
@@ -61,11 +60,9 @@ class GP_NLL_FITC:
 
         self.K_y_hat_U_T = self.y_hat_adj.T @ self.K_fU
 
-        self.K_y_hat_U = self.K_y_hat_U_T.T
-
         self.R_inv = self._inverse_upper_triangular(self.R)
 
-        self.K_y_hat_U_R = self.K_y_hat_U @ self.R_inv
+        self.K_y_hat_U_R = self.K_y_hat_U_T @ self.R_inv
 
         term_1_f = 0.5*(np.inner(self.y_adj.T, self.y_hat_adj) - (self.K_y_hat_U_R ** 2).sum())
 
@@ -88,7 +85,7 @@ class GP_NLL_FITC:
 
     def predict(self, X_test):
         if any(getattr(self, attr) is None for attr in [
-            'K_y_hat_U_R', 'K_y_hat_U', 'K_y_hat_U_T', 'y_hat_adj', 'R', 'K_tilde_Uf',
+            'K_y_hat_U_R', 'K_y_hat_U_T', 'y_hat_adj', 'R', 'K_tilde_Uf',
             'big_lambda', 'Q_ff', 'L_UU', 'K_UU', 'K_fU', 'K_ff', 'n_u', 'n_f', 'y_adj']):
             self.compute_nll()
 
