@@ -88,7 +88,7 @@ class GP_NLL_FITC:
             'big_lambda', 'Q_ff', 'L_UU', 'K_UU', 'K_fU', 'K_ff', 'n_u', 'n_f', 'y_adj']):
             self.compute_nll()
 
-        K_star_U = self.gp_kernel.compute_kernel(X_test, self.U)[:,:,0]
+        K_star_U = np.squeeze(self.gp_kernel.compute_kernel(X_test, self.U))
 
         big_sigma = self.R_inv @ self.R_inv.T
 
