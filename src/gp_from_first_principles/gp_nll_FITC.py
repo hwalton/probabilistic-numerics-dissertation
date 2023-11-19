@@ -64,7 +64,7 @@ class GP_NLL_FITC:
 
         self.K_y_hat_U_R = self.K_y_hat_U @ self.R_inv
 
-        term_1_f = np.inner(self.y_adj.T, self.y_hat) - (self.K_y_hat_U_R ** 2).sum()
+        term_1_f = 0.5*(np.inner(self.y_adj.T, self.y_hat) - (self.K_y_hat_U_R ** 2).sum())
 
         term_2_f =  0.5 * np.sum(np.log((np.diag(self.big_lambda)))) \
                     - np.sum(np.log(np.diag(self.L_UU))) \
