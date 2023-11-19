@@ -42,30 +42,10 @@ class GP_NLL_FITC:
         self.K_UU = np.squeeze(self.gp_kernel.compute_kernel(self.U, self.U)) + np.eye(self.n_u) * jitter
 
         self.L_UU = scipy.linalg.cholesky(self.K_UU, lower=True)
-        # L_inv = self._inverse_lower_triangular(L_UU)
-        # L_inv_T = L_inv.T
-        #
-        # # Q_ff = (K_fU @ L_inv_T) @ (K_fU @ L_inv_T).T
+
         self.Q_ff = self.K_fU @ scipy.linalg.cho_solve((self.L_UU, True), self.K_fU.T)
-        # # Q_ff = K_fU @ np.linalg.inv(K_UU) @ K_fU.T
-        #
+
         self.big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(self.n_f) + self.K_ff - self.Q_ff
-        #
-        # big_lambda_inv = np.diag(np.reciprocal(np.diag(big_lambda)))
-        #
-        # det_big_lambda = np.prod(np.diag(big_lambda))
-        # det_big_lambda = np.clip(det_big_lambda, 1E-15, 1E15)
-        #
-        # K_tilde = (K_UU + K_fU.T @ big_lambda_inv @ K_fU) + np.eye(n_u) * K_tilde_jitter
-        #
-        # L = scipy.linalg.cholesky(K_tilde, lower=True)
-        #
-        # A = 2 * np.sum(np.log(np.diag(L)))
-        # B = np.log(np.linalg.det(K_UU) ** -1)
-        # C = np.log(det_big_lambda)
-        # E = K_fU.T @ big_lambda_inv
-        # D = scipy.linalg.cho_solve((L, True), E)
-        # # D2 = np.linalg.solve(L.T,np.linalg.solve(L,E))
 
         self.K_tilde_Uf = self.K_fU.T + np.reciprocal(np.sqrt(np.diag(self.big_lambda)[None,:]))
 
@@ -82,7 +62,7 @@ class GP_NLL_FITC:
 
         self.K_y_hat_U_R = self.K_y_hat_U @ self.R_inv
 
-        term_1_f = self.n_f / 2.0 * np.log(2 * np.pi)
+        term_1_f = (self.n_f / 2.0) * np.log(2 * np.pi)
 
         term_2_f =  0.5 * np.sum(np.log((np.diag(self.big_lambda)))) \
                     - np.sum(np.log(np.diag(self.L_UU))) \
@@ -113,8 +93,6 @@ class GP_NLL_FITC:
         big_sigma = self.R_inv @ self.R_inv.T
 
         self.mu = K_star_U @ big_sigma @ self.K_fU.T @ self.y_hat # from quinonero-candela eq. 24b
-
-
 
         K_star_star = self.gp_kernel.compute_kernel(X_test, X_test)[:,:,0]
 
