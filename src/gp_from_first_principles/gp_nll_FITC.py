@@ -45,7 +45,7 @@ class GP_NLL_FITC:
 
         self.Q_ff = self.K_fU @ scipy.linalg.cho_solve((self.L_UU, True), self.K_fU.T)
 
-        self.big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(self.n_f) + self.K_ff - self.Q_ff
+        self.big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(self.n_f) + np.diag(self.K_ff - self.Q_ff) * np.eye(self.n_f)
 
         self.K_tilde_Uf = self.K_fU.T * np.reciprocal(np.sqrt(np.diag(self.big_lambda)[None,:]))
 
