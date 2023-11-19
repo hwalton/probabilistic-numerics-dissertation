@@ -98,7 +98,7 @@ class GP_NLL_FITC:
 
         K_tilde_star_U = K_star_U @ self.R_inv
 
-        Q_star_star = K_star_star - K_star_U @ scipy.linalg.cho_solve((self.L_UU, True), K_star_U.T)
+        Q_star_star = K_star_U @ scipy.linalg.cho_solve((self.L_UU, True), K_star_U.T)
 
         s2 = K_star_star - Q_star_star + K_tilde_star_U @ K_tilde_star_U.T # from quinonero-candela eq. 24b
 
