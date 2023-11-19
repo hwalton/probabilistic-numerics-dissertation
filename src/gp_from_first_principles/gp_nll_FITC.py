@@ -94,7 +94,7 @@ class GP_NLL_FITC:
 
         self.mu = K_star_U @ big_sigma @ self.K_fU.T @ self.y_hat # from quinonero-candela eq. 24b
 
-        K_star_star = self.gp_kernel.compute_kernel(X_test, X_test)[:,:,0]
+        K_star_star = np.squeeze(self.gp_kernel.compute_kernel(X_test, X_test))
 
         K_tilde_star_U = K_star_U @ self.R_inv
 
