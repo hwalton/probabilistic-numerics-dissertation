@@ -93,7 +93,9 @@ class GP_NLL_FITC:
 
         big_sigma = self.R_inv @ self.R_inv.T
 
-        self.mu = K_star_U @ big_sigma @ self.K_fU.T @ self.y_hat_adj # from quinonero-candela eq. 24b
+        y_hat = np.reciprocal(np.diag(self.big_lambda)) * np.squeeze(self.y)
+
+        self.mu = K_star_U @ big_sigma @ self.K_fU.T @ y_hat # from quinonero-candela eq. 24b
 
         K_star_star = np.squeeze(self.gp_kernel.compute_kernel(X_test, X_test))
 

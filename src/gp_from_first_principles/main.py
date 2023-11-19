@@ -15,8 +15,8 @@ def load_data(start = 0, length = 65536):
     output = np.loadtxt('../../datasets/output.csv', delimiter=',')
     time = np.loadtxt('../../datasets/time.csv', delimiter=',')
 
-    input= input[start:start+length]
-    output = output[start:start+length]
+    input= input[start:start+length] + 100.
+    output = output[start:start+length] + 100.
     time = time[start:start+length]
 
     return input, output, time
