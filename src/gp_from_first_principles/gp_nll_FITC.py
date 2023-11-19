@@ -54,6 +54,8 @@ class GP_NLL_FITC:
 
         self.y_hat = np.reciprocal(np.diag(self.big_lambda)) * self.y_adj
 
+
+
         self.K_y_hat_U_T = self.y_hat.T @ self.K_fU
 
         self.K_y_hat_U = self.K_y_hat_U_T.T
