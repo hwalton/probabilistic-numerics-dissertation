@@ -46,11 +46,12 @@ class GP_NLL_FITC:
         self.Q_ff = self.K_fU @ scipy.linalg.cho_solve((self.L_UU, True), self.K_fU.T)
 
         self.big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(self.n_f) + np.diag(self.K_ff - self.Q_ff) * np.eye(self.n_f)
+        # only compute this diagonal
 
         self.K_tilde_Uf = self.K_fU.T * np.reciprocal(np.sqrt(np.diag(self.big_lambda)[None,:]))
 
         QR = np.transpose(np.concatenate((self.L_UU,self.K_tilde_Uf), axis=1))
-        self.R = np.abs(np.linalg.qr(QR, mode='r'))
+        self.R = np.linalg.qr(QR, mode='r')
 
         self.big_lambda_reciprocal = np.reciprocal(np.diag(self.big_lambda))
 
@@ -68,7 +69,7 @@ class GP_NLL_FITC:
 
         term_2_f =  0.5 * np.sum(np.log((np.diag(self.big_lambda)))) \
                     - np.sum(np.log(np.diag(self.L_UU))) \
-                    + np.sum(np.log(np.diag(self.R)))
+                    + np.sum(np.log(np.abs(np.diag(self.R))))
 
         term_3_f = (self.n_f / 2.0) * np.log(2 * np.pi)
 
