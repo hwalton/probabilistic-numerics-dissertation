@@ -96,7 +96,7 @@ class TestGP_NLL_FITC(unittest.TestCase):
         debug_print(f"correct = {correct}")
         debug_print(f"difference = {result - correct}")
 
-        assert np.allclose(result, correct, rtol=0.01)
+        assert np.allclose(result, correct, atol=1E-5, rtol=1E-5)
 
         # Another upper triangular matrix with different values
         matrix2 = np.array([
@@ -120,4 +120,4 @@ class TestGP_NLL_FITC(unittest.TestCase):
         debug_print(f"correct2 = {correct2}")
         debug_print(f"difference2 = {result2 - correct2}")
 
-        assert np.allclose(result2, correct2, atol=1E-3, rtol=1E-3)
+        assert np.allclose(result2, correct2, atol=1E-5, rtol=1E-5)
