@@ -76,6 +76,7 @@ class GP_NLL_FITC:
 
         debug_x = self._inverse_upper_triangular(self.R)
         debug_y = np.linalg.inv(self.R)
+        difference = debug_x- debug_y
 
         assert np.allclose(debug_x, debug_y)
 

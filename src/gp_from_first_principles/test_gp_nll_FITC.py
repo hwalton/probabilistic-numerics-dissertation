@@ -76,14 +76,6 @@ class TestGP_NLL_FITC(unittest.TestCase):
         elapsed_time = end_time - start_time
         print(f"The _inverse_upper_triangular func ran in {elapsed_time} seconds")
 
-
-        # The inverse of the upper triangular matrix calculated by hand or another method
-        correct = np.array([
-            [0.5, -3. / 8., 1. / 28.],
-            [0, 0.25, -5. / 28.],
-            [0, 0, 1. / 7.]
-        ])
-
         start_time = timer.time()
 
         correct = np.linalg.inv(matrix)
@@ -104,17 +96,21 @@ class TestGP_NLL_FITC(unittest.TestCase):
             [0, -9.4199, 4.0],
             [0, 0, 1.7969]
         ])
+        start_time = timer.time()
 
         result2 = obj._inverse_upper_triangular(matrix2)
 
-        # The inverse of the second upper triangular matrix
-        correct2 = np.array([
-            [-0.5029, 0.1065, -0.1876],
-            [0, -0.1062, -0.2353],
-            [0, 0, 0.5565]
-        ])
+        end_time = timer.time()
+        elapsed_time = end_time - start_time
+        print(f"The _inverse_upper_triangular func ran in {elapsed_time} seconds")
+
+        start_time = timer.time()
 
         correct2 = np.linalg.inv(matrix2)
+
+        end_time = timer.time()
+        elapsed_time = end_time - start_time
+        print(f"The np.linalg.inv func ran in {elapsed_time} seconds")
 
         debug_print(f"result2 = {result2}")
         debug_print(f"correct2 = {correct2}")
