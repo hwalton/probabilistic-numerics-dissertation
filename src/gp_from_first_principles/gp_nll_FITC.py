@@ -52,8 +52,8 @@ class GP_NLL_FITC:
         self.K_UU = np.squeeze(self.gp_kernel.compute_kernel(self.U, self.U)) + np.eye(self.n_u) * jitter
 
         self.L_UU = scipy.linalg.cholesky(self.K_UU + np.eye(self.n_u) * 1E-8, lower=True)
-
-        self.Q_ff = self.K_fU @ scipy.linalg.cho_solve((self.L_UU, True), self.K_fU.T)
+        #
+        # self.Q_ff = self.K_fU @ scipy.linalg.cho_solve((self.L_UU, True), self.K_fU.T)
         #
         # self.big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(self.n_f) + np.diag(self.K_ff - self.Q_ff) * np.eye(self.n_f)
         # # Modify this to only compute this diagonal
