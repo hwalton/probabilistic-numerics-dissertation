@@ -37,7 +37,7 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
 
     plt.xlabel('Time [s]')
     plt.ylabel('Force Input')
-    plt.title('Force Input over Time')
+    plt.title('Force Input Over Time')
     plt.legend()
     plt.grid(True)
 
@@ -54,7 +54,7 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
 
     plt.xlabel('Time [s]')
     plt.ylabel('Force Response')
-    plt.title('Force Response over Time')
+    plt.title('Force Response Over Time')
     plt.legend()
     plt.grid(True)
 
