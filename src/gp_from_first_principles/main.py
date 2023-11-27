@@ -22,10 +22,11 @@ def load_data(start = 0, length = 65536):
     return input, output, time
 
 def plot_data(force_input, force_response, force_input_prediction, force_response_prediction, time, time_test, force_input_model, force_response_model):
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(12, 9))
+    plt.rcParams.update({'font.size': 14})
 
     plt.subplot(2, 1, 1)  # 2 rows, 1 column, plot 1
-    plt.scatter(time, force_input, label='Force input', color='green')
+    plt.scatter(time, force_input, label='Force Input', color='green')
     plt.scatter(time_test, force_input_prediction[0], label='Predicted Mean', color='red')
     plt.scatter(force_input_model.U_X, force_input_model.U_y, label='Inducing Points', color='purple')
 
