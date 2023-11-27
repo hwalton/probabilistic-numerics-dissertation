@@ -52,57 +52,8 @@ class GP_NLL_FITC:
         self.K_UU = np.squeeze(self.gp_kernel.compute_kernel(self.U, self.U)) + np.eye(self.n_u) * jitter
 
         self.L_UU = scipy.linalg.cholesky(self.K_UU + np.eye(self.n_u) * 1E-8, lower=True)
-        #
-        # self.Q_ff = self.K_fU @ scipy.linalg.cho_solve((self.L_UU, True), self.K_fU.T)
-        #
-        # self.big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(self.n_f) + np.diag(self.K_ff - self.Q_ff) * np.eye(self.n_f)
-        # # Modify this to only compute this diagonal
-        #
-        # self.K_tilde_Uf = self.K_fU.T * np.reciprocal(np.sqrt(np.diag(self.big_lambda)[None,:]))
-        #
-        # QR = np.transpose(np.concatenate((self.L_UU,self.K_tilde_Uf), axis=1))
-        # debug_T = np.transpose(np.concatenate((self.L_UU,self.K_tilde_Uf), axis=1))
-        # debug_U = np.vstack([self.L_UU.T, (np.diag(self.big_lambda)[:, None] ** -0.5) * self.K_fU])
-        #
-        # assert np.isclose(debug_T, debug_U).all()
-        # self.R = np.linalg.qr(QR, mode='r')
-        #
-        #
-        #
-        # self.big_lambda_reciprocal = np.reciprocal(np.diag(self.big_lambda))
-        #
-        # self.y_hat_adj = self.big_lambda_reciprocal * self.y_adj
-        #
-        #
-        #
-        # self.K_y_hat_U_T = self.y_hat_adj.T @ self.K_fU
-        #
-        # debug_v = self.y_hat_adj.T @ self.K_fU
-        # debug_w = np.transpose(self.y_hat_adj) @ self.K_fU
-        #
-        # assert np.allclose(debug_v, debug_w)
-        #
-        # self.R_inv = self._inverse_upper_triangular(self.R)
 
-        # debug_x = self._inverse_upper_triangular(self.R)
-        # debug_y = np.linalg.inv(self.R)
-        # difference = debug_x- debug_y
-        #
-        # assert np.allclose(debug_x, debug_y)
-
-        # self.K_y_hat_U_R = self.K_y_hat_U_T @ self.R_inv
-        #
-        # a_debug = np.inner(self.y_adj.T, self.y_hat_adj)
-        # b_debug = self.y_adj.T @ self.y_hat_adj
-        #
-        # assert np.isclose(a_debug, b_debug)
-        #
-        # c_debug = (self.K_y_hat_U_R ** 2).sum()
-        # d_Debug = self.K_y_hat_U_R @ self.K_y_hat_U_R.T
-        #
-        # assert np.isclose(c_debug, d_Debug)
-
-        #supervisors maths
+        #code from supervisor example
 
         from scipy.linalg import solve_triangular
         from jax import numpy as jnp
@@ -127,7 +78,7 @@ class GP_NLL_FITC:
         term_3_f = (self.n_f / 2.0) * np.log(2.0 * np.pi)
 
 
-        #end of supervisors maths
+        #end of code from supervisor example
 
         nll = term_1_f + term_2_f + term_3_f
         nll = np.array(nll).item()
