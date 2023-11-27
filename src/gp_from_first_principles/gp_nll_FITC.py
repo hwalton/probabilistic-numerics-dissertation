@@ -66,23 +66,23 @@ class GP_NLL_FITC:
 
         assert np.isclose(debug_T, debug_U).all()
         self.R = np.linalg.qr(QR, mode='r')
-
-
-
-        self.big_lambda_reciprocal = np.reciprocal(np.diag(self.big_lambda))
-
-        self.y_hat_adj = self.big_lambda_reciprocal * self.y_adj
-
-
-
-        self.K_y_hat_U_T = self.y_hat_adj.T @ self.K_fU
-
-        debug_v = self.y_hat_adj.T @ self.K_fU
-        debug_w = np.transpose(self.y_hat_adj) @ self.K_fU
-
-        assert np.allclose(debug_v, debug_w)
-
-        self.R_inv = self._inverse_upper_triangular(self.R)
+        #
+        #
+        #
+        # self.big_lambda_reciprocal = np.reciprocal(np.diag(self.big_lambda))
+        #
+        # self.y_hat_adj = self.big_lambda_reciprocal * self.y_adj
+        #
+        #
+        #
+        # self.K_y_hat_U_T = self.y_hat_adj.T @ self.K_fU
+        #
+        # debug_v = self.y_hat_adj.T @ self.K_fU
+        # debug_w = np.transpose(self.y_hat_adj) @ self.K_fU
+        #
+        # assert np.allclose(debug_v, debug_w)
+        #
+        # self.R_inv = self._inverse_upper_triangular(self.R)
 
         # debug_x = self._inverse_upper_triangular(self.R)
         # debug_y = np.linalg.inv(self.R)
@@ -90,17 +90,17 @@ class GP_NLL_FITC:
         #
         # assert np.allclose(debug_x, debug_y)
 
-        self.K_y_hat_U_R = self.K_y_hat_U_T @ self.R_inv
-
-        a_debug = np.inner(self.y_adj.T, self.y_hat_adj)
-        b_debug = self.y_adj.T @ self.y_hat_adj
-
-        assert np.isclose(a_debug, b_debug)
-
-        c_debug = (self.K_y_hat_U_R ** 2).sum()
-        d_Debug = self.K_y_hat_U_R @ self.K_y_hat_U_R.T
-
-        assert np.isclose(c_debug, d_Debug)
+        # self.K_y_hat_U_R = self.K_y_hat_U_T @ self.R_inv
+        #
+        # a_debug = np.inner(self.y_adj.T, self.y_hat_adj)
+        # b_debug = self.y_adj.T @ self.y_hat_adj
+        #
+        # assert np.isclose(a_debug, b_debug)
+        #
+        # c_debug = (self.K_y_hat_U_R ** 2).sum()
+        # d_Debug = self.K_y_hat_U_R @ self.K_y_hat_U_R.T
+        #
+        # assert np.isclose(c_debug, d_Debug)
 
         #supervisors maths
 
@@ -118,13 +118,10 @@ class GP_NLL_FITC:
             jnp.vstack([self.L_UU.T, (self.lam[:, None] ** -0.5) * self.K_fU]), mode="r"
         )
 
-        self.Rhat = Rhat = solve_triangular(self.RSig, self.K_fU.T, trans="T", lower=False)
+        self.Rhat = solve_triangular(self.RSig, self.K_fU.T, trans="T", lower=False)
 
         term_1_f = 0.5 * (((self.y / self.lam**0.5) ** 2).sum()- ((self.Rhat.dot(self.y / self.lam)) ** 2).sum())
 
-        # term_2_f =  0.5 * np.sum(np.log((np.diag(self.big_lambda)))) \
-        #             - np.sum(np.log(np.diag(self.L_UU))) \
-        #             + np.sum(np.log(np.abs(np.diag(self.R))))
         term_2_f = 0.5 * jnp.log(self.lam).sum() - jnp.log(jnp.diag(self.L_UU)).sum() + jnp.log(jnp.abs(jnp.diag(self.R))).sum()
 
         term_3_f = (self.n_f / 2.0) * np.log(2.0 * np.pi)
