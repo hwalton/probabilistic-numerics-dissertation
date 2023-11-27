@@ -36,9 +36,9 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
     plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
                      alpha=0.2, label='Std Dev')
 
-    plt.xlabel('Time')
+    plt.xlabel('Time [s]')
     plt.ylabel('Force Input')
-    plt.title('Force Input over Time')
+    plt.title('Force Input Over Time')
     plt.legend()
     plt.grid(True)
 
@@ -54,9 +54,10 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
     plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
                      alpha=0.2, label='Std Dev')
 
-    plt.xlabel('Time')
+    plt.xlabel('Time [s]')
     plt.ylabel('Force Response')
-    plt.title('Force Response over Time')
+    plt.title('Force Response Over Time')
+
     plt.legend()
     plt.grid(True)
 
@@ -70,7 +71,7 @@ def format_data(X):
 
 
 def execute_gp_model():
-    sample_start_index = 7000
+    sample_start_index = 5000
     sample_length = 100
     num_predictions = sample_length * 4 // 5
     force_input_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][2]
