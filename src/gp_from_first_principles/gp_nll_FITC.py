@@ -6,6 +6,7 @@ from fast_det import compute_fast_det
 from woodbury_lemma import woodbury_lemma
 class GP_NLL_FITC:
     def __init__(self,X, y, y_mean, U, gp_kernel, hyperparameters_obj):
+        self.RSig = None
         self.big_lambda_reciprocal = None
         self.stdv = None
         self.K_y_hat_U_R = None
@@ -23,11 +24,20 @@ class GP_NLL_FITC:
         self.n_f = None
         self.y_adj = None
         self.hyperparameters_obj = hyperparameters_obj
-        self.X = X
+        self.X = np.squeeze(X)
         self.y = y
         self.U = U
         self.gp_kernel = gp_kernel
         self.y_mean = y_mean
+
+    def kernel_diag(self, X):
+        if X.ndim > 1:
+            np.squeeze(X)
+
+        list_ = []
+        for i in range(len(X)):
+            list_.append(np.squeeze(self.gp_kernel.compute_kernel(X[i], X[i])))
+        return np.array(list_)
 
     def compute_nll(self):
 
@@ -97,15 +107,25 @@ class GP_NLL_FITC:
         from scipy.linalg import solve_triangular
         from jax import numpy as jnp
 
-        self.Rhat = Rhat = solve_triangular(self.R, self.K_fU.T, trans="T", lower=False)
+        Lfu = solve_triangular(self.L_UU, self.K_fU.T, lower=True).T
+        self.Qff_diag = (Lfu ** 2).sum(-1)
 
-        term_1_f = 0.5 * (((self.y / jnp.diag(self.big_lambda)**0.5) ** 2).sum()- ((self.Rhat.dot(self.y / jnp.diag(self.big_lambda))) ** 2).sum())
+        self.kernel_diag_ = self.kernel_diag(self.X)
+
+        self.lam =  self.kernel_diag_ -  self.Qff_diag + self.hyperparameters_obj.dict()['noise_level'] ** 2
+
+        self.RSig = jnp.linalg.qr(
+            jnp.vstack([self.L_UU.T, (self.lam[:, None] ** -0.5) * self.K_fU]), mode="r"
+        )
+
+        self.Rhat = Rhat = solve_triangular(self.RSig, self.K_fU.T, trans="T", lower=False)
+
+        term_1_f = 0.5 * (((self.y / self.lam**0.5) ** 2).sum()- ((self.Rhat.dot(self.y / self.lam)) ** 2).sum())
 
         # term_2_f =  0.5 * np.sum(np.log((np.diag(self.big_lambda)))) \
         #             - np.sum(np.log(np.diag(self.L_UU))) \
         #             + np.sum(np.log(np.abs(np.diag(self.R))))
-        term_2_f = 0.5 * np.log(jnp.diag(self.big_lambda)).sum() - jnp.log(jnp.diag(self.L_UU)).sum() + jnp.log(
-            jnp.abs(jnp.diag(self.R))).sum()
+        term_2_f = 0.5 * jnp.log(self.lam).sum() - jnp.log(jnp.diag(self.L_UU)).sum() + jnp.log(jnp.abs(jnp.diag(self.R))).sum()
 
         term_3_f = (self.n_f / 2.0) * np.log(2.0 * np.pi)
 

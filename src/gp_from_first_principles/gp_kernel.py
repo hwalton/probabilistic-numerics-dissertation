@@ -67,13 +67,38 @@ class GaussianProcessKernel:
     def linear_kernel(self, X1, X2):
         return np.dot(X1, X2.T)
 
+    import numpy as np
+
     def periodic_kernel(self, X1, X2, **params):
+        if np.isscalar(X1):
+            X1 = np.array([X1])
+        if np.isscalar(X2):
+            X2 = np.array([X2])
+
+        if X1.ndim == 1:
+            X1 = X1[:, None]
+        if X2.ndim == 1:
+            X2 = X2[:, None]
+
         delta_X = X1[:, None, :] - X2[None, :, :]
-        out = params['sigma'] ** 2 * np.exp(-2 * np.sin(np.pi * np.abs(delta_X) / params['p']) ** 2 / params['l'] ** 2)
+
+        out = params['sigma'] ** 2 * np.exp(
+            -2 * np.sin(np.pi * np.abs(delta_X) / params['p']) ** 2 / params['l'] ** 2)
         out = np.clip(out, 1E-6, 1E6) + 1E-6
+
         return out
 
     def squared_exponential_kernel(self, X1, X2, **params):
+        if np.isscalar(X1):
+            X1 = np.array([X1])
+        if np.isscalar(X2):
+            X2 = np.array([X2])
+
+        if X1.ndim == 1:
+            X1 = X1[:, None]
+        if X2.ndim == 1:
+            X2 = X2[:, None]
+
         delta_X = X1[:, None, :] - X2[None, :, :]
         out = params['sigma'] ** 2 * np.exp(
             -0.5 * (delta_X ** 2) / params['l'] ** 2)
@@ -110,6 +135,16 @@ class GaussianProcessKernel:
         return cosine_sum
 
     def white_noise_kernel(self, X1, X2, **params):
+        if np.isscalar(X1):
+            X1 = np.array([X1])
+        if np.isscalar(X2):
+            X2 = np.array([X2])
+
+        if X1.ndim == 1:
+            X1 = X1[:, None]
+        if X2.ndim == 1:
+            X2 = X2[:, None]
+
         delta_X = X1[:, None, :] - X2[None, :, :]
         return params['sigma'] ** 2 * np.where(delta_X == 0, 1, 0)
 
