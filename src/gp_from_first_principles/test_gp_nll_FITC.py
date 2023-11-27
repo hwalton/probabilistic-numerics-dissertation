@@ -14,7 +14,7 @@ from typing import NamedTuple
 class Hyperparameters(NamedTuple):
     sf2: float
     ll: float
-    sn2: float
+    sn: float
 
 class TestGP_NLL_FITC(unittest.TestCase):
     def test__inverse_lower_triangular(self):
@@ -166,7 +166,7 @@ class TestGP_NLL_FITC(unittest.TestCase):
         x = np.linspace(0, 10, 100)[:, None]
         u = x[::45, :]
         u = x.copy()
-        y = 2 * np.sin(3 * x + 0.2) + hyps.sn2 * normal(key, shape=x.shape)
+        y = 2 * np.sin(3 * x + 0.2) + hyps.sn **2 * normal(key, shape=x.shape)
 
         force_response_kernel_type = 'squared_exponential'
         time = x

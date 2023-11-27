@@ -95,13 +95,17 @@ class GP_NLL_FITC:
         #supervisors maths
 
         from scipy.linalg import solve_triangular
+        from jax import numpy as jnp
+
         self.Rhat = Rhat = solve_triangular(self.R, self.K_fU.T, trans="T", lower=False)
 
-        term_1_f = 0.5 * (((self.y_adj / np.diag(self.big_lambda)**0.5) ** 2).sum()- ((self.Rhat.dot(self.y_adj / np.diag(self.big_lambda))) ** 2).sum())
+        term_1_f = 0.5 * (((self.y / jnp.diag(self.big_lambda)**0.5) ** 2).sum()- ((self.Rhat.dot(self.y / jnp.diag(self.big_lambda))) ** 2).sum())
 
-        term_2_f =  0.5 * np.sum(np.log((np.diag(self.big_lambda)))) \
-                    - np.sum(np.log(np.diag(self.L_UU))) \
-                    + np.sum(np.log(np.abs(np.diag(self.R))))
+        # term_2_f =  0.5 * np.sum(np.log((np.diag(self.big_lambda)))) \
+        #             - np.sum(np.log(np.diag(self.L_UU))) \
+        #             + np.sum(np.log(np.abs(np.diag(self.R))))
+        term_2_f = 0.5 * np.log(jnp.diag(self.big_lambda)).sum() - jnp.log(jnp.diag(self.L_UU)).sum() + jnp.log(
+            jnp.abs(jnp.diag(self.R))).sum()
 
         term_3_f = (self.n_f / 2.0) * np.log(2.0 * np.pi)
 
