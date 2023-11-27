@@ -54,18 +54,18 @@ class GP_NLL_FITC:
         self.L_UU = scipy.linalg.cholesky(self.K_UU + np.eye(self.n_u) * 1E-8, lower=True)
 
         self.Q_ff = self.K_fU @ scipy.linalg.cho_solve((self.L_UU, True), self.K_fU.T)
-
-        self.big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(self.n_f) + np.diag(self.K_ff - self.Q_ff) * np.eye(self.n_f)
-        # Modify this to only compute this diagonal
-
-        self.K_tilde_Uf = self.K_fU.T * np.reciprocal(np.sqrt(np.diag(self.big_lambda)[None,:]))
-
-        QR = np.transpose(np.concatenate((self.L_UU,self.K_tilde_Uf), axis=1))
-        debug_T = np.transpose(np.concatenate((self.L_UU,self.K_tilde_Uf), axis=1))
-        debug_U = np.vstack([self.L_UU.T, (np.diag(self.big_lambda)[:, None] ** -0.5) * self.K_fU])
-
-        assert np.isclose(debug_T, debug_U).all()
-        self.R = np.linalg.qr(QR, mode='r')
+        #
+        # self.big_lambda = self.hyperparameters_obj.dict()['noise_level'] ** 2 * np.eye(self.n_f) + np.diag(self.K_ff - self.Q_ff) * np.eye(self.n_f)
+        # # Modify this to only compute this diagonal
+        #
+        # self.K_tilde_Uf = self.K_fU.T * np.reciprocal(np.sqrt(np.diag(self.big_lambda)[None,:]))
+        #
+        # QR = np.transpose(np.concatenate((self.L_UU,self.K_tilde_Uf), axis=1))
+        # debug_T = np.transpose(np.concatenate((self.L_UU,self.K_tilde_Uf), axis=1))
+        # debug_U = np.vstack([self.L_UU.T, (np.diag(self.big_lambda)[:, None] ** -0.5) * self.K_fU])
+        #
+        # assert np.isclose(debug_T, debug_U).all()
+        # self.R = np.linalg.qr(QR, mode='r')
         #
         #
         #
@@ -122,7 +122,7 @@ class GP_NLL_FITC:
 
         term_1_f = 0.5 * (((self.y / self.lam**0.5) ** 2).sum()- ((self.Rhat.dot(self.y / self.lam)) ** 2).sum())
 
-        term_2_f = 0.5 * jnp.log(self.lam).sum() - jnp.log(jnp.diag(self.L_UU)).sum() + jnp.log(jnp.abs(jnp.diag(self.R))).sum()
+        term_2_f = 0.5 * jnp.log(self.lam).sum() - jnp.log(jnp.diag(self.L_UU)).sum() + jnp.log(jnp.abs(jnp.diag(self.RSig))).sum()
 
         term_3_f = (self.n_f / 2.0) * np.log(2.0 * np.pi)
 
