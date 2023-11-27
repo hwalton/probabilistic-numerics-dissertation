@@ -35,7 +35,7 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
     # plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
     #                  alpha=0.2, label='Std Dev')
 
-    plt.xlabel('Time')
+    plt.xlabel('Time [s]')
     plt.ylabel('Force Input')
     plt.title('Force Input Over Time')
     plt.legend()
@@ -52,7 +52,7 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
     # plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
     #                  alpha=0.2, label='Std Dev')
 
-    plt.xlabel('Time')
+    plt.xlabel('Time [s]')
     plt.ylabel('Force Response')
     plt.title('Force Response Over Time')
     plt.legend()
