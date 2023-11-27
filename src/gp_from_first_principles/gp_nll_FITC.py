@@ -74,11 +74,11 @@ class GP_NLL_FITC:
 
         self.R_inv = self._inverse_upper_triangular(self.R)
 
-        debug_x = self._inverse_upper_triangular(self.R)
-        debug_y = np.linalg.inv(self.R)
-        difference = debug_x- debug_y
-
-        assert np.allclose(debug_x, debug_y)
+        # debug_x = self._inverse_upper_triangular(self.R)
+        # debug_y = np.linalg.inv(self.R)
+        # difference = debug_x- debug_y
+        #
+        # assert np.allclose(debug_x, debug_y)
 
         self.K_y_hat_U_R = self.K_y_hat_U_T @ self.R_inv
 
