@@ -72,23 +72,23 @@ def format_data(X):
 
 def execute_gp_model():
     sample_start_index = 5000
-    sample_length = 100
+    sample_length = 10
     num_predictions = sample_length * 4 // 5
     force_input_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][2]
     force_input_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
     force_input_predict_type = ['cholesky', 'FITC'][1]
-    force_input_nll_method = ['cholesky', 'FITC_18_134'][1]
+    force_input_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_input_U_induced_method = ['k_means', 'even'][1]
     force_input_n_iter = 0
 
     force_response_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][4]
     force_response_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
     force_response_predict_type = ['cholesky', 'FITC'][1]
-    force_response_nll_method = ['cholesky', 'FITC_18_134'][1]
+    force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_response_U_induced_method = ['k_means', 'even'][1]
     force_response_n_iter = 0
 
-    M_one_in = 10
+    M_one_in = 1
 
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
