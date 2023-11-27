@@ -26,7 +26,7 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
     plt.rcParams.update({'font.size': 14})
 
     plt.subplot(2, 1, 1)  # 2 rows, 1 column, plot 1
-    plt.scatter(time, force_input, label='Force input', color='green')
+    plt.scatter(time, force_input, label='Force Input', color='green')
     # plt.scatter(time_test, force_input_prediction[0], label='Predicted Mean', color='red')
 
     # upper_bound = force_input_prediction[0] + force_input_prediction[1]
@@ -54,7 +54,7 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
 
     plt.xlabel('Time')
     plt.ylabel('Force Response')
-    plt.title('Force Response over Time')
+    plt.title('Force Response Over Time')
     plt.legend()
     plt.grid(True)
 
