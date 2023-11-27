@@ -23,16 +23,17 @@ def load_data(start = 0, length = 65536):
 
 def plot_data(force_input, force_response, force_input_prediction, force_response_prediction, time, time_test):
     plt.figure(figsize=(12, 6))
+    plt.rcParams.update({'font.size': 14})
 
     plt.subplot(2, 1, 1)  # 2 rows, 1 column, plot 1
     plt.scatter(time, force_input, label='Force input', color='green')
-    plt.scatter(time_test, force_input_prediction[0], label='Predicted Mean', color='red')
+    # plt.scatter(time_test, force_input_prediction[0], label='Predicted Mean', color='red')
 
-    upper_bound = force_input_prediction[0] + force_input_prediction[1]
-    lower_bound = force_input_prediction[0] - force_input_prediction[1]
-
-    plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
-                     alpha=0.2, label='Std Dev')
+    # upper_bound = force_input_prediction[0] + force_input_prediction[1]
+    # lower_bound = force_input_prediction[0] - force_input_prediction[1]
+    #
+    # plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
+    #                  alpha=0.2, label='Std Dev')
 
     plt.xlabel('Time')
     plt.ylabel('Force Input')
@@ -42,14 +43,14 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
 
     plt.subplot(2, 1, 2)  # 2 rows, 1 column, plot 2
     plt.scatter(time, force_response, label='Force Response', color='green')
-    plt.scatter(time_test, force_response_prediction[0], label='Predicted Mean', color='red')
+    # plt.scatter(time_test, force_response_prediction[0], label='Predicted Mean', color='red')
 
-    # Assuming prediction[1] is the standard deviation
-    upper_bound = force_response_prediction[0] + force_response_prediction[1]
-    lower_bound = force_response_prediction[0] - force_response_prediction[1]
-
-    plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
-                     alpha=0.2, label='Std Dev')
+    # # Assuming prediction[1] is the standard deviation
+    # upper_bound = force_response_prediction[0] + force_response_prediction[1]
+    # lower_bound = force_response_prediction[0] - force_response_prediction[1]
+    #
+    # plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
+    #                  alpha=0.2, label='Std Dev')
 
     plt.xlabel('Time')
     plt.ylabel('Force Response')
@@ -166,7 +167,7 @@ def execute_gp_model():
     force_input_solver_type = 'metropolis_hastings'            #'iterative_search', 'metropolis_hastings', 'adam', or 'free_lunch'
     force_response_kernel_type = 'periodic'                    #'squared_exponential', 'periodic', 'p_se_composite', 'white_noise', or 'wn_se_composite
     force_response_solver_type = 'metropolis_hastings'         #'iterative_search' or 'metropolis_hastings
-    n_iter = 100
+    n_iter = 1
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)
     lower = time[0] - 0 * (time[-1] - time[0])
