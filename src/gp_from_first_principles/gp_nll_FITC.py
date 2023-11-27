@@ -112,7 +112,7 @@ class GP_NLL_FITC:
 
         self.kernel_diag_XX = self.kernel_diag(self.X)
 
-        self.lam =  self.kernel_diag_ -  self.Qff_diag + self.hyperparameters_obj.dict()['noise_level'] ** 2
+        self.lam =  self.kernel_diag_XX -  self.Qff_diag + self.hyperparameters_obj.dict()['noise_level'] ** 2
 
         self.RSig = jnp.linalg.qr(
             jnp.vstack([self.L_UU.T, (self.lam[:, None] ** -0.5) * self.K_fU]), mode="r"
