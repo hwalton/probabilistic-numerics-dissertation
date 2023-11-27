@@ -92,13 +92,21 @@ class GP_NLL_FITC:
 
         assert np.isclose(c_debug, d_Debug)
 
-        term_1_f = 0.5*(np.inner(self.y_adj.T, self.y_hat_adj) - (self.K_y_hat_U_R ** 2).sum())
+        #supervisors maths
+
+        from scipy.linalg import solve_triangular
+        self.Rhat = Rhat = solve_triangular(self.R, self.K_fU.T, trans="T", lower=False)
+
+        term_1_f = 0.5 * (((self.y_adj / np.diag(self.big_lambda)**0.5) ** 2).sum()- ((self.Rhat.dot(self.y_adj / np.diag(self.big_lambda))) ** 2).sum())
 
         term_2_f =  0.5 * np.sum(np.log((np.diag(self.big_lambda)))) \
                     - np.sum(np.log(np.diag(self.L_UU))) \
                     + np.sum(np.log(np.abs(np.diag(self.R))))
 
         term_3_f = (self.n_f / 2.0) * np.log(2.0 * np.pi)
+
+
+        #end of supervisors maths
 
         nll = term_1_f + term_2_f + term_3_f
         nll = np.array(nll).item()
