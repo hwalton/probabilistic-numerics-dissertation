@@ -110,7 +110,7 @@ class GP_NLL_FITC:
         Lfu = solve_triangular(self.L_UU, self.K_fU.T, lower=True).T
         self.Qff_diag = (Lfu ** 2).sum(-1)
 
-        self.kernel_diag_ = self.kernel_diag(self.X)
+        self.kernel_diag_XX = self.kernel_diag(self.X)
 
         self.lam =  self.kernel_diag_ -  self.Qff_diag + self.hyperparameters_obj.dict()['noise_level'] ** 2
 
