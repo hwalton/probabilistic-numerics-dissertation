@@ -22,7 +22,7 @@ def load_data(start = 0, length = 65536):
     return input, output, time
 
 def plot_data(force_input, force_response, force_input_prediction, force_response_prediction, time, time_test):
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(12, 9))
     plt.rcParams.update({'font.size': 14})
 
     plt.subplot(2, 1, 1)  # 2 rows, 1 column, plot 1
