@@ -14,15 +14,15 @@ class Hyperparameters:
         if self.kernel_type == 'squared_exponential':
             self._initial_hyperparameters = {
                 'kernel_type': 'squared_exponential',
-                'sigma': 1.,
-                'l': 1.,
+                'sigma': 100.,
+                'l': 0.0038,
                 'noise_level': 0.1
             }
 
             self._hyperparameter_bounds = {
                 'kernel_type': 'squared_exponential',
-                'sigma': (0.001,10),
-                'l': (0.01,10),
+                'sigma': (0.001,100),
+                'l': (0.0001,10),
                 'noise_level': (0.1,1)
             }
         elif self.kernel_type == 'periodic':
