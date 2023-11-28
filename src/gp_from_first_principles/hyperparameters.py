@@ -14,7 +14,7 @@ class Hyperparameters:
         if self.kernel_type == 'squared_exponential':
             self._initial_hyperparameters = {
                 'kernel_type': 'squared_exponential',
-                'sigma': 100.,
+                'sigma': 10.,
                 'l': 0.0038,
                 'noise_level': 0.1
             }
@@ -36,10 +36,10 @@ class Hyperparameters:
 
             self._hyperparameter_bounds = {
                 'kernel_type': 'periodic',
-                'sigma': (0.001, 20.),
-                'l': (0.04, 100),
-                'p': (0.001, 100),
-                'noise_level': (0.1, 10.0)
+                'sigma': (0.001, 100.),
+                'l': (0.0001, 100),
+                'p': (0.0001, 100),
+                'noise_level': (0.1, 1.0)
             }
         elif self.kernel_type == 'p_se_composite':
             self._initial_hyperparameters = {
