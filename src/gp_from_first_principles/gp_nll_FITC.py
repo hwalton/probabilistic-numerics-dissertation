@@ -95,9 +95,7 @@ class GP_NLL_FITC:
         from scipy.linalg import solve_triangular
         from jax import numpy as jnp
 
-        if any(getattr(self, attr) is None for attr in [
-            'K_y_hat_U_R', 'K_y_hat_U_T', 'y_hat_adj', 'R', 'K_tilde_Uf',
-            'big_lambda', 'Q_ff', 'L_UU', 'K_UU', 'K_fU', 'K_ff', 'n_u', 'n_f', 'y_adj']):
+        if self.L_UU is None:
             self.compute_nll()
 
         K_star_U = np.squeeze(self.gp_kernel.compute_kernel(X_test, self.U))
