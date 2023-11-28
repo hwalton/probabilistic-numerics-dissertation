@@ -25,13 +25,19 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
     plt.figure(figsize=(12, 9))
     plt.rcParams.update({'font.size': 14})
 
+    if force_input_prediction[1].ndim > 1:
+        force_input_prediction_diag = np.diag(force_input_prediction[1])
+
+    if force_response_prediction[1].ndim > 1:
+        force_response_prediction_diag = np.diag(force_response_prediction[1])
+
     plt.subplot(2, 1, 1)  # 2 rows, 1 column, plot 1
     plt.scatter(time, force_input, label='Force Input', color='green')
     plt.scatter(time_test, force_input_prediction[0], label='Predicted Mean', color='red')
     plt.scatter(force_input_model.U_X, force_input_model.U_y, label='Inducing Points', color='purple')
 
-    upper_bound = force_input_prediction[0] + force_input_prediction[1]
-    lower_bound = force_input_prediction[0] - force_input_prediction[1]
+    upper_bound = force_input_prediction[0] + force_input_prediction_diag
+    lower_bound = force_input_prediction[0] - force_input_prediction_diag
 
     plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
                      alpha=0.2, label='Std Dev')
@@ -48,8 +54,8 @@ def plot_data(force_input, force_response, force_input_prediction, force_respons
     plt.scatter(force_response_model.U_X, force_response_model.U_y, label='Inducing Points', color='purple')
 
     # Assuming prediction[1] is the standard deviation
-    upper_bound = force_response_prediction[0] + force_response_prediction[1]
-    lower_bound = force_response_prediction[0] - force_response_prediction[1]
+    upper_bound = force_response_prediction[0] + force_response_prediction_diag
+    lower_bound = force_response_prediction[0] - force_response_prediction_diag
 
     plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
                      alpha=0.2, label='Std Dev')
@@ -71,24 +77,24 @@ def format_data(X):
 
 
 def execute_gp_model():
-    sample_start_index = 0
+    sample_start_index = 5000
     sample_length = 100
     num_predictions = sample_length * 4 // 5
     force_input_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][4]
     force_input_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
     force_input_predict_type = ['cholesky', 'FITC'][1]
-    force_input_nll_method = ['cholesky', 'FITC_18_134'][0]
+    force_input_nll_method = ['cholesky', 'FITC_18_134'][1]
     force_input_U_induced_method = ['k_means', 'even'][1]
-    force_input_n_iter = 25
+    force_input_n_iter = 0
 
     force_response_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][4]
     force_response_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
     force_response_predict_type = ['cholesky', 'FITC'][1]
     force_response_nll_method = ['cholesky', 'FITC_18_134'][1]
     force_response_U_induced_method = ['k_means', 'even'][1]
-    force_response_n_iter = 25
+    force_response_n_iter = 0
 
-    M_one_in = 3
+    M_one_in = 1
 
     force_input, force_response, time = load_data(sample_start_index,
                                                   sample_length)

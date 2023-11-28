@@ -92,28 +92,23 @@ class GP_NLL_FITC:
         return out_f
 
     def predict(self, X_test):
+        from scipy.linalg import solve_triangular
+        from jax import numpy as jnp
+
         if any(getattr(self, attr) is None for attr in [
             'K_y_hat_U_R', 'K_y_hat_U_T', 'y_hat_adj', 'R', 'K_tilde_Uf',
             'big_lambda', 'Q_ff', 'L_UU', 'K_UU', 'K_fU', 'K_ff', 'n_u', 'n_f', 'y_adj']):
             self.compute_nll()
 
         K_star_U = np.squeeze(self.gp_kernel.compute_kernel(X_test, self.U))
-
-        big_sigma = self.R_inv @ self.R_inv.T
-
-        y_hat = self.big_lambda_reciprocal * np.squeeze(self.y)
-
-        self.mu = K_star_U @ big_sigma @ self.K_fU.T @ y_hat # from quinonero-candela eq. 24b
+        Lsu = solve_triangular(self.RSig, K_star_U.T, trans="T", lower=False).T
+        self.mu = Lsu.dot(self.Rhat).dot(self.y[:, 0] / self.lam)
 
         K_star_star = np.squeeze(self.gp_kernel.compute_kernel(X_test, X_test))
-
-        K_tilde_star_U = K_star_U @ self.R_inv
-
-        Q_star_star = K_star_U @ scipy.linalg.cho_solve((self.L_UU, True), K_star_U.T)
-
-        s2 = K_star_star - Q_star_star + K_tilde_star_U @ K_tilde_star_U.T # from quinonero-candela eq. 24b
-
-        self.stdv = np.sqrt(np.diag(s2))
+        Lsu = solve_triangular(self.RSig, K_star_U.T, trans="T", lower=False).T
+        Lss = solve_triangular(self.L_UU, K_star_U.T, lower=True).T
+        self.stdv = self.kernel_diag(X_test) - (Lss**2).sum(-1) + (Lsu**2).sum(-1)
+        self.stdv = K_star_star - Lss.dot(Lss.T) + Lsu.dot(Lsu.T)
 
         return self.mu, self.stdv
 

@@ -186,4 +186,6 @@ class TestGP_NLL_FITC(unittest.TestCase):
                                        U_induced_method=force_response_U_induced_method,
                                        M_one_in=M_one_in)
 
+        force_response_model.hyperparameters_obj.update(np.array([1,1, 1e-1]))
+
         print(f"Test NLL: {force_response_model.compute_nll(force_response_model.hyperparameters_obj)}")
