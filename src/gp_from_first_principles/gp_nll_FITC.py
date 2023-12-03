@@ -105,7 +105,7 @@ class GP_NLL_FITC:
         K_star_star = np.squeeze(self.gp_kernel.compute_kernel(X_test, X_test))
         Lsu = solve_triangular(self.RSig, K_star_U.T, trans="T", lower=False).T
         Lss = solve_triangular(self.L_UU, K_star_U.T, lower=True).T
-        self.stdv = self.kernel_diag(X_test) - (Lss**2).sum(-1) + (Lsu**2).sum(-1)
+        #self.stdv = self.kernel_diag(X_test) - (Lss**2).sum(-1) + (Lsu**2).sum(-1)
         self.stdv = K_star_star - Lss.dot(Lss.T) + Lsu.dot(Lsu.T)
 
         return self.mu, self.stdv
