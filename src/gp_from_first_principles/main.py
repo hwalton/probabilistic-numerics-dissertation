@@ -18,7 +18,7 @@ def load_data(start = 0, length = 65536):
     time = time[start:start+length]
 
     #Add Gaussian noise to output
-    output = output + np.random.normal(0, 5, output.shape)
+    #output = output + np.random.normal(0, 5, output.shape)
 
     return output, time
 
@@ -32,7 +32,7 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
 
     plt.subplot(1, 1, 1)  # 2 rows, 1 column, plot 2
     plt.scatter(time, force_response, label='Force Response', color='green')
-    plt.scatter(time_test, force_response_prediction[0], label='Predicted Mean', color='red')
+    plt.scatter(time_test, force_response_prediction[0], label='Prediction Mean', color='red')
     plt.scatter(force_response_model.U_X, force_response_model.U_y, label='Inducing Points', color='purple')
 
     # Assuming prediction[1] is the standard deviation
@@ -40,7 +40,7 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
     lower_bound = force_response_prediction[0] - force_response_prediction_diag
 
     plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
-                     alpha=0.2, label='Std Dev')
+                     alpha=0.2, label='Prediction Std Dev')
 
     plt.xlabel('Time [s]')
     plt.ylabel('Force Response')

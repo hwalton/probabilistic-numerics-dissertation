@@ -17,13 +17,7 @@ class TestGPModel(unittest.TestCase):
         sample_start_index = 1000
         sample_length = 100
         num_predictions = 40
-        force_input_kernel_type = \
-            ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][force_input_kernel_index]
-        force_input_solver_type = \
-            ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][
-                0]
-        force_input_predict_type = ['cholesky', 'FITC'][0]
-        force_input_n_iter = 0
+
         force_response_kernel_type = \
             ['squared_exponential', 'p_se_composite', 'white_noise',
              'wn_se_composite', 'periodic'][4]
@@ -32,24 +26,15 @@ class TestGPModel(unittest.TestCase):
                 0]
         force_response_predict_type = ['cholesky', 'FITC'][0]
         force_response_n_iter = 0
-        force_input, force_response, time = load_data(sample_start_index,
+        force_response, time = load_data(sample_start_index,
                                                       sample_length)
         lower = time[0] - 0 * (time[-1] - time[0])
         upper = time[-1] + 0 * (time[-1] - time[0])
         time_test = np.linspace(lower, upper, num=num_predictions,
                                 endpoint=True)
-        force_input = format_data(force_input)
         time = format_data(time)
         force_response = format_data(force_response)
         time_test = format_data(time_test)
-        force_input_model = GPModel(force_input_kernel_type,
-                                    time,
-                                    force_input,
-                                    solver_type=force_input_solver_type,
-                                    n_iter=force_input_n_iter,
-                                    gp_algo= gp_algo,
-                                    U_induced_method = U_induced_method,
-                                    M_one_in=M_one_in)
 
         force_response_model = GPModel(force_response_kernel_type,
                                        time,
@@ -60,8 +45,6 @@ class TestGPModel(unittest.TestCase):
                                        U_induced_method = U_induced_method,
                                        M_one_in=M_one_in)
 
-        if return_model == 'input':
-            return force_input_model
         if return_model == 'response':
             return force_response_model
     # def test_fast_det(self):
