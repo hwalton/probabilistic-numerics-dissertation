@@ -43,7 +43,7 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
                      alpha=0.2, label='Prediction Std Dev')
 
     plt.xlabel('Time [s]')
-    plt.ylabel('Force Response')
+    plt.ylabel('Acceleration [ms$^2$]')
     plt.title('Force Response Over Time')
 
     plt.legend()
