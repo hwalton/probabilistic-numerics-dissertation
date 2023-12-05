@@ -33,7 +33,7 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
     plt.subplot(1, 1, 1)  # 2 rows, 1 column, plot 2
     plt.scatter(time, force_response, label='Force Response', color='green')
     plt.scatter(time_test, force_response_prediction[0], label='Prediction Mean', color='red')
-    plt.scatter(force_response_model.U_X, force_response_model.U_y, label='Inducing Points', color='purple')
+    #plt.scatter(force_response_model.U_X, force_response_model.U_y, label='Inducing Points', color='purple')
 
     # Assuming prediction[1] is the standard deviation
     upper_bound = force_response_prediction[0] + force_response_prediction_diag
@@ -43,7 +43,7 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
                      alpha=0.2, label='Prediction Std Dev')
 
     plt.xlabel('Time [s]')
-    plt.ylabel('Acceleration [ms$^2$]')
+    plt.ylabel('Acceleration [ms$^{-2}$]')
     plt.title('Force Response Over Time')
 
     plt.legend()
