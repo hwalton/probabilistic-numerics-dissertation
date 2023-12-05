@@ -22,8 +22,8 @@ class Hyperparameters:
             self._hyperparameter_bounds = {
                 'kernel_type': 'squared_exponential',
                 'sigma': (0.001,500),
-                'l': (0.0001,10),
-                'noise_level': (0.1,1)
+                'l': (0.001,10),
+                'noise_level': (0.01,10)
             }
         elif self.kernel_type == 'periodic':
             self._initial_hyperparameters = {

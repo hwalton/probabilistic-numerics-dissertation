@@ -11,44 +11,26 @@ def load_data(start = 0, length = 65536):
     assert length <= 65536, "Length must be less than or equal to 65536"
 
     #data collected during MEC326
-    input = np.loadtxt('../../datasets/input.csv', delimiter=',')
     output = np.loadtxt('../../datasets/output.csv', delimiter=',')
     time = np.loadtxt('../../datasets/time.csv', delimiter=',')
 
-    input= input[start:start+length] + 0.
     output = output[start:start+length] + 0.
     time = time[start:start+length]
 
-    return input, output, time
+    #Add Gaussian noise to output
+    output = output + np.random.normal(0, 5, output.shape)
 
-def plot_data(force_input, force_response, force_input_prediction, force_response_prediction, time, time_test, force_input_model, force_response_model):
-    plt.figure(figsize=(12, 9))
-    plt.rcParams.update({'font.size': 14})
+    return output, time
 
-    if force_input_prediction[1].ndim > 1:
-        force_input_prediction_diag = np.diag(force_input_prediction[1])
+def plot_data(force_response, force_response_prediction, time, time_test, force_response_model):
+    plt.figure(figsize=(12, 4.5))
+    plt.rcParams.update({'font.size': 16})
 
     if force_response_prediction[1].ndim > 1:
         force_response_prediction_diag = np.diag(force_response_prediction[1])
 
-    plt.subplot(2, 1, 1)  # 2 rows, 1 column, plot 1
-    plt.scatter(time, force_input, label='Force Input', color='green')
-    plt.scatter(time_test, force_input_prediction[0], label='Predicted Mean', color='red')
-    plt.scatter(force_input_model.U_X, force_input_model.U_y, label='Inducing Points', color='purple')
 
-    upper_bound = force_input_prediction[0] + force_input_prediction_diag
-    lower_bound = force_input_prediction[0] - force_input_prediction_diag
-
-    plt.fill_between(np.squeeze(time_test), np.squeeze(lower_bound), np.squeeze(upper_bound), color='blue',
-                     alpha=0.2, label='Std Dev')
-
-    plt.xlabel('Time [s]')
-    plt.ylabel('Force Input')
-    plt.title('Force Input Over Time')
-    plt.legend()
-    plt.grid(True)
-
-    plt.subplot(2, 1, 2)  # 2 rows, 1 column, plot 2
+    plt.subplot(1, 1, 1)  # 2 rows, 1 column, plot 2
     plt.scatter(time, force_response, label='Force Response', color='green')
     plt.scatter(time_test, force_response_prediction[0], label='Predicted Mean', color='red')
     plt.scatter(force_response_model.U_X, force_response_model.U_y, label='Inducing Points', color='purple')
@@ -75,47 +57,27 @@ def format_data(X):
     return X
 
 
-
 def execute_gp_model():
     sample_start_index = 5000
-    sample_length = 50
+    sample_length = 100
     num_predictions = sample_length * 4 // 5
-    force_input_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][4]
-    force_input_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
-    force_input_predict_type = ['cholesky', 'FITC'][1]
-    force_input_nll_method = ['cholesky', 'FITC_18_134'][1]
-    force_input_U_induced_method = ['k_means', 'even'][1]
-    force_input_n_iter = 0
 
-    force_response_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][4]
+    force_response_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][0]
     force_response_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
-    force_response_predict_type = ['cholesky', 'FITC'][1]
-    force_response_nll_method = ['cholesky', 'FITC_18_134'][1]
+    force_response_predict_type = ['cholesky', 'FITC'][0]
+    force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_response_U_induced_method = ['k_means', 'even'][1]
-    force_response_n_iter = 0
+    force_response_n_iter = 50
 
     M_one_in = 1
 
-    force_input, force_response, time = load_data(sample_start_index,
-                                                  sample_length)
+    force_response, time = load_data(sample_start_index,sample_length)
     lower = time[0] - 0 * (time[-1] - time[0])
     upper = time[-1] + 0 * (time[-1] - time[0])
     time_test = np.linspace(lower, upper, num=num_predictions, endpoint=True)
-    force_input = format_data(force_input)
     time = format_data(time)
     force_response = format_data(force_response)
     time_test = format_data(time_test)
-
-
-
-
-    force_input_model = GPModel(force_input_kernel_type,
-                                time,
-                                force_input,
-                                solver_type=force_input_solver_type,
-                                n_iter=force_input_n_iter, gp_algo= force_input_nll_method, U_induced_method = force_input_U_induced_method, M_one_in=M_one_in)
-    model_1_nll = force_input_model.fit_model()
-    force_input_prediction = force_input_model.predict(time_test, method = force_input_predict_type)
 
     force_response_model = GPModel(force_response_kernel_type,
                                    time,
@@ -128,16 +90,15 @@ def execute_gp_model():
     force_response_prediction = force_response_model.predict(time_test,
                                                              method=force_response_predict_type)
 
-    plot_data(force_input, force_response, force_input_prediction,
-              force_response_prediction, time, time_test, force_input_model, force_response_model)
+    plot_data(force_response,
+              force_response_prediction, time, time_test, force_response_model)
 
-    return model_1_nll, model_2_nll
+    return model_2_nll
 def main():
     start_time = timer.time()
 
-    model_1_nll, model_2_nll = execute_gp_model()
+    model_2_nll = execute_gp_model()
 
-    print(f"Force input final NLL: {model_1_nll}")
     print(f"Force Response final NLL: {model_2_nll}")
 
     end_time = timer.time()
