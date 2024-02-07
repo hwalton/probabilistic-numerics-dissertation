@@ -5,7 +5,8 @@ import time as timer
 from gp_model import GPModel
 import unittest
 from utils import debug_print
-from main import format_data, load_data
+from main import format_data
+from src.gp_from_first_principles.load_data import load_data
 import numpy as np
 from hyperparameters import Hyperparameters
 from gp_kernel import GaussianProcessKernel
