@@ -236,7 +236,7 @@ class GP_NLL_FITC:
         self.Lam_vec = self.hyperparameters_obj.dict()['sigma'] - (self.L_ff ** 2).sum(1) + self.hyperparameters_obj.dict()['noise_level']
         self.LL = np.hstack([self.L_UU, self.K_fU.T * np.sqrt(1 / self.Lam_vec[None, :])])
         self.R = np.linalg.qr(self.LL.T, mode='r')
-        self.RI = scipy.linalg.solve_triangular(self.R, np.eye(self.R.shape[0]))
+        self.RI = self._inverse_upper_triangular(self.R)
         self.alpha = (self.RI @ self.RI.T) @ self.K_fU.T @ (1 / self.Lam_vec * np.squeeze(self.y_adj))
         self.yh = (self.y_adj.T * self.Lam_vec[None] ** 0.5).T
 
