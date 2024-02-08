@@ -33,7 +33,7 @@ def save_data(dataset = 1):
             sn2 = 1E-2
 
             time_truncated = np.linspace(0, 10, 100)[:, None]
-            force_response = 2 * np.sin(3 * time_truncated + 0.2) + sn2 * normal(key, shape=time_truncated.shape)
+            force_response = 2 * np.sin(2 * time_truncated + 0.2) + sn2 * normal(key, shape=time_truncated.shape)
 
 
         # Save to CSV files
