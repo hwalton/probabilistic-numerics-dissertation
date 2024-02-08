@@ -8,7 +8,7 @@ x = x.reshape(-1, 1)
 y = y.reshape(-1, 1)
 
 # Define the number of inducing points and select them randomly from x (or use a more sophisticated method)
-Z = x # 20 inducing points
+Z = x
 
 # Define the kernel with specified hyperparameters
 kernel = GPy.kern.RBF(input_dim=1, variance=1, lengthscale=1)

@@ -188,7 +188,7 @@ class GPModel:
             K_X_X = self.gp_kernel.compute_kernel(self.X,
                                                   self.X) + np.array(
                 self.hyperparameters_obj.dict()[
-                    'noise_level'] ** 2 * np.eye(len(self.X)))[:, :, None]
+                    'noise_level'] * np.eye(len(self.X)))[:, :, None]
             K_star_X = self.gp_kernel.compute_kernel(self.X, X_star)
             K_star_star = self.gp_kernel.compute_kernel(X_star, X_star)
             L = np.zeros_like(K_X_X)
