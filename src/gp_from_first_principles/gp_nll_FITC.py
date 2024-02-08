@@ -227,13 +227,19 @@ class GP_NLL_FITC:
 
         jitter = 1E-6
 
-        # self.K_ff = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.X))
         self.K_UU = np.squeeze(self.gp_kernel.compute_kernel(self.U, self.U))
         self.K_fU = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.U))
 
-        self.L_UU = np.linalg.cholesky(self.K_UU + np.eye(self.n_u) * jitter)
-        self.L_ff = scipy.linalg.solve_triangular(self.L_UU, self.K_fU.T, lower=True).T
-        self.Lam_vec = self.hyperparameters_obj.dict()['sigma'] - (self.L_ff ** 2).sum(1) + self.hyperparameters_obj.dict()['noise_level']
+
+        self.L_UU = np.linalg.cholesky(self.K_UU + np.eye(self.n_u) * jitter) + np.eye(self.n_u) * jitter
+        self.L_ff = scipy.linalg.solve_triangular(self.L_UU, self.K_fU.T, lower=True).T + np.eye(self.n_u) * jitter
+        #self.Lam_vec = self.hyperparameters_obj.dict()['sigma'] - (self.L_ff ** 2).sum(1) + self.hyperparameters_obj.dict()['noise_level']
+
+        # modification calc lam_vec as per sparse_gp_1_code
+        self.K_ff = np.squeeze(self.gp_kernel.compute_kernel(self.X, self.X))
+        self.Q_ff = self.K_fU @ scipy.linalg.cho_solve((self.L_UU, True), self.K_fU.T)
+        self.Lam_vec = np.diag(self.K_ff - self.Q_ff + self.hyperparameters_obj.dict()['noise_level'])
+
         self.LL = np.hstack([self.L_UU, self.K_fU.T * np.sqrt(1 / self.Lam_vec[None, :])])
         self.R = np.linalg.qr(self.LL.T, mode='r')
         self.RI = self._inverse_upper_triangular(self.R)
