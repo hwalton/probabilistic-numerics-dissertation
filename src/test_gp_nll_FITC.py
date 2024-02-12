@@ -1,16 +1,8 @@
-import scipy
 # test_my_module.py
-import math
-import time as timer
 from gp_model import GPModel
 import unittest
-from utils import debug_print
-from main import format_data
-from src.gp_from_first_principles.load_data import load_data
 import numpy as np
 from hyperparameters import Hyperparameters
-from gp_kernel import GaussianProcessKernel
-from gp_nll_FITC import GP_NLL_FITC
 from typing import NamedTuple
 class Hyperparameters(NamedTuple):
     sf2: float
@@ -152,13 +144,7 @@ class TestGP_NLL_FITC(unittest.TestCase):
 
         config.update("jax_enable_x64", True)
 
-        from jax import numpy as jnp
-        from jax.scipy.linalg import solve_triangular
-        from jax.random import PRNGKey, split, normal
-
-        from matplotlib import pyplot as plt
-
-        from typing import Tuple, Callable, Self
+        from jax.random import PRNGKey, normal
 
         key = PRNGKey(0)
 

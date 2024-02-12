@@ -1,6 +1,5 @@
 import GPy
-import numpy as np
-from src.gp_from_first_principles.load_data import load_data
+from src.load_data import load_data
 
 # Load your data
 y, x = load_data()

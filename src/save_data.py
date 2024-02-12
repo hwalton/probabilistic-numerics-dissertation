@@ -37,8 +37,8 @@ def save_data(dataset = 1):
 
 
         # Save to CSV files
-        np.savetxt('../../datasets/force_response.csv', force_response, delimiter=',')
-        np.savetxt('../../datasets/time_truncated.csv', time_truncated, delimiter=',')
+        np.savetxt('../datasets/force_response.csv', force_response, delimiter=',')
+        np.savetxt('../datasets/time_truncated.csv', time_truncated, delimiter=',')
 
         print("Files saved successfully.")
 
