@@ -153,45 +153,46 @@ class GPModel:
             self.xi = 2 * np.pi * self.xi # convert from Hz to rad/s
 
             self.K_xi = np.squeeze(self.gp_kernel.compute_kernel(self.xi, np.array([0])))
-            debug_11 = self.K_X_X
-            debug_112 = self.hyperparameters_obj.dict()['noise_level']
-            debug_12 = self.hyperparameters_obj.dict()['noise_level'] * np.eye(N)
-            debug_13 = np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(np.shape(self.K_X_X)[0])
-            debug_14 = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(np.shape(self.K_X_X)[0]))
-            A = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(np.shape(self.K_X_X)[0]))
-            w = A @ np.squeeze(self.y)
+            # debug_11 = self.K_X_X
+            # debug_112 = self.hyperparameters_obj.dict()['noise_level']
+            # debug_12 = self.hyperparameters_obj.dict()['noise_level'] * np.eye(N)
+            # debug_13 = np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(np.shape(self.K_X_X)[0])
+            # debug_14 = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(np.shape(self.K_X_X)[0]))
+            # A = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(np.shape(self.K_X_X)[0]))
+            # w = A @ np.squeeze(self.y)
 
-            # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ numerical stability ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # # Ensure the matrix is symmetric
-            # #self.K_X_X = (self.K_X_X + self.K_X_X.T) / 2
-            #
-            # # Add more jitter if necessary
-            # jitter = 1e-6  # Increase if needed
-            # noise_level = self.hyperparameters_obj.dict()['noise_level']
-            # debug = np.squeeze(self.K_X_X) + (jitter + noise_level) * np.eye(N)
-            # L = np.linalg.cholesky(np.squeeze(self.K_X_X) + (jitter + noise_level) * np.eye(N))
-            #
-            # # Solve Lz = y for z
-            # z = np.linalg.solve(L, self.y)
-            #
-            # # Solve L* x = z for x
-            # x = np.linalg.solve(L.T, z)
-            #
-            # # Now x is equivalent to what previously was A
-            # w = x.T @ self.y
-            #
-            # # end ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ numerical stability ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ numerical stability ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # Extract the noise level and ensure it is a positive value
+            noise_level = self.hyperparameters_obj.dict()['noise_level']
+            assert noise_level > 0, "Noise level must be positive for Cholesky decomposition."
+
+            # Add the noise level to the diagonal of K_X_X
+            K = np.squeeze(self.K_X_X) + noise_level * np.eye(np.shape(self.K_X_X)[0])
+
+            # Perform Cholesky decomposition
+            L = np.linalg.cholesky(K)
+
+            # Solve Lz = y for z (intermediate variable)
+            y_squeezed = np.squeeze(self.y)
+            z = np.linalg.solve(L, y_squeezed)
+
+            # Solve L.T * w = z for w
+            w = np.linalg.solve(L.T, z)
+
+            # w now contains the weights calculated in a numerically stable way
+
+            # end ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ numerical stability ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
             self.mu_fourier = np.zeros(len(self.xi), dtype=complex)
 
             for i in range(len(self.xi)):
                 exp = np.squeeze(np.exp(-1j * self.xi[i] * self.X))
-                debug_1 = self.K_xi
-                debug_2 = self.K_xi[i]
-                debug_3 = w
-                debug_4 = exp
-                debug_5 = w.dot(exp)
-                debug_6 = self.K_xi[i] * w.dot(exp)
+                # debug_1 = self.K_xi
+                # debug_2 = self.K_xi[i]
+                # debug_3 = w
+                # debug_4 = exp
+                # debug_5 = w.dot(exp)
+                # debug_6 = self.K_xi[i] * w.dot(exp)
                 self.mu_fourier[i] = self.K_xi[i] * (w.dot(exp))
             return self.mu_fourier
 
