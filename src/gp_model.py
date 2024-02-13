@@ -133,8 +133,66 @@ class GPModel:
                 self.stdv = np.sqrt(self.s2)
         return self.mu, self.stdv
 
-    def predict_fourier(self, X_star, method = 'cholesky'):
-        if method == 'cholesky':
+    def predict_fourier(self, X_star, method = 'GP'):
+        if method == 'GP':
+            X_star = np.asarray(X_star)
+            N = len(X_star)
+
+            delta_t = (X_star[-1] - X_star[0]) / (N - 1)
+            fs = 1 / delta_t
+
+            delta_f = fs / N
+
+            if N % 2 == 0:
+                # Even number of samples: include Nyquist frequency
+                self.xi = np.squeeze(np.linspace(0, fs / 2, N // 2 + 1))
+            else:
+                # Odd number of samples: exclude Nyquist frequency
+                self.xi = np.squeeze(np.linspace(0, fs / 2, (N - 1) // 2 + 1))
+
+            self.xi = 2 * np.pi * self.xi # convert from Hz to rad/s
+
+            self.K_xi = np.squeeze(self.gp_kernel.compute_kernel(self.xi, np.array([0])))
+
+            A = np.squeeze(np.linalg.inv(self.K_X_X + self.hyperparameters_obj.dict()['noise_level'] * np.eye(N)) @ self.y)
+            w = A @ np.squeeze(self.y)
+
+            # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ numerical stability ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # # Ensure the matrix is symmetric
+            # #self.K_X_X = (self.K_X_X + self.K_X_X.T) / 2
+            #
+            # # Add more jitter if necessary
+            # jitter = 1e-6  # Increase if needed
+            # noise_level = self.hyperparameters_obj.dict()['noise_level']
+            # debug = np.squeeze(self.K_X_X) + (jitter + noise_level) * np.eye(N)
+            # L = np.linalg.cholesky(np.squeeze(self.K_X_X) + (jitter + noise_level) * np.eye(N))
+            #
+            # # Solve Lz = y for z
+            # z = np.linalg.solve(L, self.y)
+            #
+            # # Solve L* x = z for x
+            # x = np.linalg.solve(L.T, z)
+            #
+            # # Now x is equivalent to what previously was A
+            # w = x.T @ self.y
+            #
+            # # end ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ numerical stability ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+            self.mu_fourier = np.zeros(len(self.xi), dtype=complex)
+
+            for i in range(len(self.xi)):
+                exp = np.squeeze(np.exp(-1j * self.xi[i] * self.X))
+                debug_1 = self.K_xi
+                debug_2 = self.K_xi[i]
+                debug_3 = w
+                debug_4 = exp
+                debug_5 = w.T.dot(exp)
+                debug_6 = self.K_xi[i] * w.T.dot(exp)
+                self.mu_fourier[i] = self.K_xi[i] * (w.T.dot(exp))
+            return self.mu_fourier
+
+
+        if method == 'DFT':
             self.X = np.asarray(self.X)
             N = len(self.X)
 
@@ -142,29 +200,24 @@ class GPModel:
             fs = 1 / delta_t
 
             delta_f = fs / N
+            self.xi = np.linspace(0, fs / 2, N)
 
-            if N % 2 == 0:
-                # Even number of samples: include Nyquist frequency
-                self.xi = np.linspace(0, fs / 2, N // 2 + 1)
-            else:
-                # Odd number of samples: exclude Nyquist frequency
-                self.xi = np.linspace(0, fs / 2, (N - 1) // 2 + 1)
+            # if N % 2 == 0:
+            #     # Even number of samples: include Nyquist frequency
+            #     self.xi = np.linspace(0, fs / 2, N // 2 + 1)
+            # else:
+            #     # Odd number of samples: exclude Nyquist frequency
+            #     self.xi = np.linspace(0, fs / 2, (N - 1) // 2 + 1)
 
             self.xi = 2 * np.pi * self.xi # convert from Hz to rad/s
 
-            self.K_xi = self.gp_kernel.compute_kernel(self.xi, np.array([0]))
-            A = np.squeeze(np.linalg.inv(self.K_X_X + self.hyperparameters_obj.dict()['noise_level'] * np.eye(N)) @ self.y)
-            w_k = A @ self.y
-
-            self.mu_fourier = np.zeros(len(self.xi), dtype=complex)
-
-            for i in range(len(self.xi)):
-                exp = np.exp(-1j * self.xi[i] * self.X)
-                self.mu_fourier[i] = self.K_xi[i].dot(w_k.T.dot(exp))
+            self.mu_fourier = np.fft.fft(np.squeeze(self.y))
             return self.mu_fourier
-
         else:
             assert 0, "Not yet implemented"
+
+
+
 
 
 

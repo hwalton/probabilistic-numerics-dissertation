@@ -61,12 +61,13 @@ def execute_gp_model():
     force_response_predict_type = ['cholesky', 'FITC'][0]
     force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_response_U_induced_method = ['k_means', 'even'][1]
-    force_response_n_iter = 50
+    force_response_fourier_type = ['GP', 'DFT'][0]
+    force_response_n_iter = 10
     M_one_in = 1
 
     force_response, time = load_data()
 
-    num_predictions = time.size * 4 // 5
+    num_predictions = time.size # * 4 // 5
     lower = time[0] - 0 * (time[-1] - time[0])
     upper = time[-1] + 0 * (time[-1] - time[0])
     time_test = np.linspace(lower, upper, num=num_predictions, endpoint=True)
@@ -84,8 +85,7 @@ def execute_gp_model():
     model_2_nll = force_response_model.fit_model()
     force_response_prediction = force_response_model.predict(time_test,
                                                              method=force_response_predict_type)
-    force_response_fourier_prediction = force_response_model.predict_fourier(time_test, method=force_response_predict_type)
-    A = force_response_fourier_prediction + 1
+    force_response_fourier_prediction = force_response_model.predict_fourier(time_test, method=force_response_fourier_type)
 
     plot_data(force_response,
               force_response_prediction, time, time_test, force_response_model)
