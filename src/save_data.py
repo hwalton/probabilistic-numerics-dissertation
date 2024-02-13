@@ -29,13 +29,13 @@ def save_data(length = 256, dataset = 3):
             force_response = 2 * np.sin(10 * time_truncated) + sn2 * normal(key, shape=time_truncated.shape)
         elif dataset == 2:
             key = PRNGKey(0)
-            sn2 = 1E-2
+            sn2 = 0
 
             time_truncated = np.linspace(0, 10, length)[:, None]
             force_response = 3 * np.sin(5 * time_truncated + 0.2) + sn2 * normal(key, shape=time_truncated.shape)
         elif dataset == 3:
             key = PRNGKey(0)
-            sn2 = 0
+            sn2 = 0.5
 
             time_truncated = np.linspace(0, 10, length)[:, None]
             force_response = 1 * np.sin(3 * time_truncated + 0.2) + sn2 * normal(key, shape=time_truncated.shape) + \
