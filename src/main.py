@@ -7,7 +7,7 @@ from gp_model import GPModel
 
 
 def plot_data(force_response, force_response_prediction, time, time_test, force_response_model):
-    plt.figure(figsize=(12, 4.5))
+    plt.figure(figsize=(12, 10.5))
     plt.rcParams.update({'font.size': 16})
 
     if force_response_prediction[1].ndim > 1:
@@ -16,7 +16,7 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
         force_response_prediction_diag = force_response_prediction[1]
 
 
-    plt.subplot(1, 1, 1)  # 2 rows, 1 column, plot 2
+    plt.subplot(3, 1, 1)  # a rows, b columns, plot c
     plt.scatter(time, force_response, label='Force Response', color='green')
     plt.scatter(time_test, force_response_prediction[0], label='Prediction Mean', color='red')
     plt.scatter(force_response_model.U_X, force_response_model.U_y, label='Inducing Points', color='purple')
@@ -36,6 +36,17 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
     plt.grid(True)
 
     plt.tight_layout()
+
+    plt.subplot(3, 1, 2)  # a rows, b columns, plot c
+    plt.scatter(force_response_model.xi, np.abs(force_response_model.mu_fourier))
+    plt.xlabel('Freq [Rad/s]')
+    plt.ylabel('Magnitude of Fourier Transform')
+
+    plt.subplot(3, 1, 3)  # a rows, b columns, plot c
+    plt.scatter(force_response_model.xi, np.angle(force_response_model.mu_fourier))
+    plt.xlabel('Freq [Rad/s]')
+    plt.ylabel('Phase of Fourier Transform')
+
     plt.show()
 
 def format_data(X):
@@ -50,7 +61,7 @@ def execute_gp_model():
     force_response_predict_type = ['cholesky', 'FITC'][0]
     force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_response_U_induced_method = ['k_means', 'even'][1]
-    force_response_n_iter = 0
+    force_response_n_iter = 50
     M_one_in = 1
 
     force_response, time = load_data()
@@ -73,6 +84,8 @@ def execute_gp_model():
     model_2_nll = force_response_model.fit_model()
     force_response_prediction = force_response_model.predict(time_test,
                                                              method=force_response_predict_type)
+    force_response_fourier_prediction = force_response_model.predict_fourier(time_test, method=force_response_predict_type)
+    A = force_response_fourier_prediction + 1
 
     plot_data(force_response,
               force_response_prediction, time, time_test, force_response_model)

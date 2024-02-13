@@ -115,26 +115,58 @@ class GPModel:
         if method == 'FITC':
             self.mu, self.stdv = self.gp_nll_algo_obj.predict(X_star)
         elif method == 'cholesky':
-            K_X_X = self.gp_kernel.compute_kernel(self.X,
+            self.K_X_X = self.gp_kernel.compute_kernel(self.X,
                                                   self.X) + np.array(
                 self.hyperparameters_obj.dict()[
                     'noise_level'] * np.eye(len(self.X)))[:, :, None]
             K_star_X = self.gp_kernel.compute_kernel(self.X, X_star)
             K_star_star = self.gp_kernel.compute_kernel(X_star, X_star)
-            L = np.zeros_like(K_X_X)
-            self.mu = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
-            self.s2 = np.zeros((K_star_X.shape[1], K_X_X.shape[2]))
-            for i in range(K_X_X.shape[2]):
-                L[:, :, i] = npla.cholesky( K_X_X[:, :, i] + 1e-10 * np.eye(K_X_X.shape[0]))
+            L = np.zeros_like(self.K_X_X)
+            self.mu = np.zeros((K_star_X.shape[1], self.K_X_X.shape[2]))
+            self.s2 = np.zeros((K_star_X.shape[1], self.K_X_X.shape[2]))
+            for i in range(self.K_X_X.shape[2]):
+                L[:, :, i] = npla.cholesky( self.K_X_X[:, :, i] + 1e-10 * np.eye(self.K_X_X.shape[0]))
                 Lk = np.squeeze(npla.solve(L[:, :, i], K_star_X[:, :, i]))
-                self.mu[:, i] = self.y_mean + np.dot(Lk.T,npla.solve(
-                                                                L[:, :, i],
-                                                                self.y -
-                                                                self.y_mean).flatten())
+                self.mu[:, i] = self.y_mean + np.dot(Lk.T,npla.solve(L[:, :, i],self.y - self.y_mean).flatten())
                 self.s2[:, i] = np.diag(K_star_star[:, :, i]) - np.sum(
                     Lk ** 2, axis=0)
                 self.stdv = np.sqrt(self.s2)
         return self.mu, self.stdv
+
+    def predict_fourier(self, X_star, method = 'cholesky'):
+        if method == 'cholesky':
+            self.X = np.asarray(self.X)
+            N = len(self.X)
+
+            delta_t = (self.X[-1] - self.X[0]) / (N - 1)
+            fs = 1 / delta_t
+
+            delta_f = fs / N
+
+            if N % 2 == 0:
+                # Even number of samples: include Nyquist frequency
+                self.xi = np.linspace(0, fs / 2, N // 2 + 1)
+            else:
+                # Odd number of samples: exclude Nyquist frequency
+                self.xi = np.linspace(0, fs / 2, (N - 1) // 2 + 1)
+
+            self.xi = 2 * np.pi * self.xi # convert from Hz to rad/s
+
+            self.K_xi = self.gp_kernel.compute_kernel(self.xi, np.array([0]))
+            A = np.squeeze(np.linalg.inv(self.K_X_X + self.hyperparameters_obj.dict()['noise_level'] * np.eye(N)) @ self.y)
+            w_k = A @ self.y
+
+            self.mu_fourier = np.zeros(len(self.xi), dtype=complex)
+
+            for i in range(len(self.xi)):
+                exp = np.exp(-1j * self.xi[i] * self.X)
+                self.mu_fourier[i] = self.K_xi[i].dot(w_k.T.dot(exp))
+            return self.mu_fourier
+
+        else:
+            assert 0, "Not yet implemented"
+
+
 
     def is_positive_definite(self, K):
         if K.ndim > 3:
