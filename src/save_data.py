@@ -2,11 +2,10 @@ import numpy as np
 import os
 from jax.random import PRNGKey, split, normal
 
-def save_data(dataset = 3):
+def save_data(length = 250, dataset = 3):
     try:
         if dataset == 0:
             start = 5000
-            length = 1000
             assert length <= 65536, "Length must be less than or equal to 65536"
 
             # Check current working directory
@@ -26,21 +25,21 @@ def save_data(dataset = 3):
             key = PRNGKey(0)
             sn2 = 1E-2
 
-            time_truncated = np.linspace(0, 10, 100)[:, None]
+            time_truncated = np.linspace(0, 10, length)[:, None]
             force_response = 2 * np.sin(3 * time_truncated + 0.2) + sn2 * normal(key, shape=time_truncated.shape)
         elif dataset == 2:
             key = PRNGKey(0)
             sn2 = 1E-2
 
-            time_truncated = np.linspace(0, 10, 100)[:, None]
+            time_truncated = np.linspace(0, 10, length)[:, None]
             force_response = 3 * np.sin(5 * time_truncated + 0.2) + sn2 * normal(key, shape=time_truncated.shape)
         elif dataset == 3:
             key = PRNGKey(0)
-            sn2 = 1E-2
+            sn2 = 0
 
-            time_truncated = np.linspace(0, 10, 100)[:, None]
-            force_response = 1 * np.sin(10 * time_truncated + 0.2) + sn2 * normal(key, shape=time_truncated.shape) + \
-                             2 * np.sin(15 * time_truncated + 2) + sn2 * normal(key, shape=time_truncated.shape) +  \
+            time_truncated = np.linspace(0, 10, length)[:, None]
+            force_response = 1 * np.sin(3 * time_truncated + 0.2) + sn2 * normal(key, shape=time_truncated.shape) + \
+                             2 * np.sin(10 * time_truncated + 2) + sn2 * normal(key, shape=time_truncated.shape) +  \
                              3 * np.sin(5 * time_truncated + 3) + sn2 * normal(key, shape=time_truncated.shape)
 
 
