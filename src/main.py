@@ -38,12 +38,12 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
     plt.tight_layout()
 
     plt.subplot(3, 1, 2)  # a rows, b columns, plot c
-    plt.scatter(force_response_model.xi, np.abs(force_response_model.mu_fourier))
+    (plt.plot(force_response_model.xi, np.abs(force_response_model.mu_fourier)))
     plt.xlabel('Freq [Rad/s]')
     plt.ylabel('Magnitude of Fourier Transform')
 
     plt.subplot(3, 1, 3)  # a rows, b columns, plot c
-    plt.scatter(force_response_model.xi, np.angle(force_response_model.mu_fourier))
+    plt.plot(force_response_model.xi, np.angle(force_response_model.mu_fourier))
     plt.xlabel('Freq [Rad/s]')
     plt.ylabel('Phase of Fourier Transform')
 
@@ -62,12 +62,12 @@ def execute_gp_model():
     force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_response_U_induced_method = ['k_means', 'even'][1]
     force_response_fourier_type = ['GP', 'DFT'][0]
-    force_response_n_iter = 25
+    force_response_n_iter = 50
     M_one_in = 1
 
     force_response, time = load_data()
 
-    num_predictions = time.size * 2
+    num_predictions = time.size * 4 // 5
     lower = time[0] - 0 * (time[-1] - time[0])
     upper = time[-1] + 0 * (time[-1] - time[0])
     time_test = np.linspace(lower, upper, num=num_predictions, endpoint=True)

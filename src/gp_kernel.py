@@ -16,7 +16,7 @@ class GaussianProcessKernel:
             self.hyperparameters_obj = Hyperparameters(hyperparameters['kernel_type'])
 
     def compute_kernel_SE_fourier(self, xi):
-        return self.hyperparameters_obj.dict()['sigma'] ** 2 * np.sqrt((2 * np.pi * self.hyperparameters_obj.dict()['l'] ** 2)) * np.exp(-2 * np.pi ** 2 * self.hyperparameters_obj.dict()['l'] ** 2 * xi ** 2)
+        return self.hyperparameters_obj.dict()['sigma'] ** 2 * np.exp( - 0.5 * self.hyperparameters_obj.dict()['l'] ** 2 * xi ** 2) / np.sqrt((self.hyperparameters_obj.dict()['l'] ** - 2))
 
 
     def compute_kernel(self, X1, X2):
