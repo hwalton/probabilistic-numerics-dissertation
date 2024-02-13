@@ -153,8 +153,12 @@ class GPModel:
             self.xi = 2 * np.pi * self.xi # convert from Hz to rad/s
 
             self.K_xi = np.squeeze(self.gp_kernel.compute_kernel(self.xi, np.array([0])))
-
-            A = np.squeeze(np.linalg.inv(self.K_X_X + self.hyperparameters_obj.dict()['noise_level'] * np.eye(N)) @ self.y)
+            debug_11 = self.K_X_X
+            debug_112 = self.hyperparameters_obj.dict()['noise_level']
+            debug_12 = self.hyperparameters_obj.dict()['noise_level'] * np.eye(N)
+            debug_13 = np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(np.shape(self.K_X_X)[0])
+            debug_14 = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(np.shape(self.K_X_X)[0]))
+            A = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(np.shape(self.K_X_X)[0]))
             w = A @ np.squeeze(self.y)
 
             # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ numerical stability ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -186,9 +190,9 @@ class GPModel:
                 debug_2 = self.K_xi[i]
                 debug_3 = w
                 debug_4 = exp
-                debug_5 = w.T.dot(exp)
-                debug_6 = self.K_xi[i] * w.T.dot(exp)
-                self.mu_fourier[i] = self.K_xi[i] * (w.T.dot(exp))
+                debug_5 = w.dot(exp)
+                debug_6 = self.K_xi[i] * w.dot(exp)
+                self.mu_fourier[i] = self.K_xi[i] * (w.dot(exp))
             return self.mu_fourier
 
 

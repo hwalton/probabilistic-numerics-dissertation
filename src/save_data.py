@@ -26,7 +26,7 @@ def save_data(length = 250, dataset = 1):
             sn2 = 1E-1
 
             time_truncated = np.linspace(0, 6 * np.pi, length)[:, None]
-            force_response = 2 * np.sin(10 * time_truncated + np.pi / 2) + sn2 * normal(key, shape=time_truncated.shape)
+            force_response = 2 * np.sin(10 * time_truncated) + sn2 * normal(key, shape=time_truncated.shape)
         elif dataset == 2:
             key = PRNGKey(0)
             sn2 = 1E-2
