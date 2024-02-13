@@ -145,14 +145,14 @@ class GPModel:
 
             if N % 2 == 0:
                 # Even number of samples: include Nyquist frequency
-                self.xi = np.squeeze(np.linspace(0, fs / 2, N // 2 + 1))
+                self.xi = np.squeeze(np.linspace(0, fs / 2, N // 2 ))
             else:
                 # Odd number of samples: exclude Nyquist frequency
                 self.xi = np.squeeze(np.linspace(0, fs / 2, (N - 1) // 2 + 1))
 
             self.xi = 2 * np.pi * self.xi # convert from Hz to rad/s
 
-            self.K_xi = np.squeeze(self.gp_kernel.compute_kernel(self.xi, np.array([0])))
+            self.K_xi = np.squeeze(self.gp_kernel.compute_kernel_SE_fourier(self.xi))
             # debug_11 = self.K_X_X
             # debug_112 = self.hyperparameters_obj.dict()['noise_level']
             # debug_12 = self.hyperparameters_obj.dict()['noise_level'] * np.eye(N)
@@ -186,14 +186,24 @@ class GPModel:
             self.mu_fourier = np.zeros(len(self.xi), dtype=complex)
 
             for i in range(len(self.xi)):
-                exp = np.squeeze(np.exp(-1j * self.xi[i] * self.X))
-                # debug_1 = self.K_xi
-                # debug_2 = self.K_xi[i]
-                # debug_3 = w
-                # debug_4 = exp
-                # debug_5 = w.dot(exp)
-                # debug_6 = self.K_xi[i] * w.dot(exp)
+                exp = np.squeeze(np.exp(-1j * self.xi[i] * np.squeeze(self.X)))
+                debug_1 = self.K_xi
+                debug_2 = self.K_xi[i]
+                debug_3 = w
+                debug_4 = exp
+                debug_5 = w.dot(exp)
+                debug_6 = self.K_xi[i] * w.dot(exp)
                 self.mu_fourier[i] = self.K_xi[i] * (w.dot(exp))
+
+            # for k, tk in enumerate(self.X):
+            #     for freq in self.xi:
+            #         integral = np.exp(-1j * freq * tk) * np.squeeze(self.gp_kernel.compute_kernel(freq, tk))
+            #         self.mu_fourier += integral * w[k]
+            # return self.mu_fourier
+
+
+
+
             return self.mu_fourier
 
 

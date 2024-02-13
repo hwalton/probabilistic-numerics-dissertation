@@ -62,7 +62,7 @@ def execute_gp_model():
     force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_response_U_induced_method = ['k_means', 'even'][1]
     force_response_fourier_type = ['GP', 'DFT'][0]
-    force_response_n_iter = 0
+    force_response_n_iter = 25
     M_one_in = 1
 
     force_response, time = load_data()
