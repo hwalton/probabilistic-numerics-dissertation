@@ -143,7 +143,7 @@ class GPModel:
             fs = 1 / delta_t
 
             delta_f = fs / N
-            self.xi = np.linspace(0, fs, N)
+            self.xi = np.linspace(-fs, fs, N)
 
             # if N % 2 == 0:
             #     # Even number of samples: include Nyquist frequency
