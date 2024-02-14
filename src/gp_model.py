@@ -135,6 +135,7 @@ class GPModel:
 
     def predict_fourier(self, X_star, method = 'GP'):
         if method == 'GP':
+            sigma = self.hyperparameters_obj.dict()['sigma']
             X_star = np.asarray(X_star)
             N = len(X_star)
 
@@ -142,13 +143,14 @@ class GPModel:
             fs = 1 / delta_t
 
             delta_f = fs / N
+            self.xi = np.linspace(0, fs, N)
 
-            if N % 2 == 0:
-                # Even number of samples: include Nyquist frequency
-                self.xi = np.squeeze(np.linspace(0, fs / 2, N // 2 ))
-            else:
-                # Odd number of samples: exclude Nyquist frequency
-                self.xi = np.squeeze(np.linspace(0, fs / 2, (N - 1) // 2 + 1))
+            # if N % 2 == 0:
+            #     # Even number of samples: include Nyquist frequency
+            #     self.xi = np.squeeze(np.linspace(0, fs / 2, N // 2 ))
+            # else:
+            #     # Odd number of samples: exclude Nyquist frequency
+            #     self.xi = np.squeeze(np.linspace(0, fs / 2, (N - 1) // 2 + 1))
 
             self.xi = 2 * np.pi * self.xi # convert from Hz to rad/s
 
@@ -201,10 +203,13 @@ class GPModel:
             #         self.mu_fourier += integral * w[k]
             # return self.mu_fourier
 
+            # h =
+            # tau =
+            # exp_cov = np.exp(h - 0.5 * sigma ** 2 * )
+            # self.stdv_fourier = sigma * exp_cov.sum
 
 
-
-            return self.mu_fourier
+            return self.mu_fourier#, self.stdv_fourier
 
 
         if method == 'DFT':
