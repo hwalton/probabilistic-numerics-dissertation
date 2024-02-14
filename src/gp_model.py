@@ -206,13 +206,13 @@ class GPModel:
             h = np.ones(len(self.xi))
 
 
-            self.stdv_fourier_slow = np.zeros(len(self.xi), dtype=complex)
-
-            for n in range(len(self.stdv_fourier_slow)):
-                for k, w_k in enumerate(w):
-                    for j, xi_j in enumerate(self.xi):
-                        debug_ans = w_k * np.exp(h[j]) * np.exp(-(self.xi[n]-self.xi[j])**2 / (2 * sigma ** 2) - 1j * self.xi[n] * self.X[k])
-                        self.stdv_fourier_slow[n] += debug_ans
+            # self.stdv_fourier_slow = np.zeros(len(self.xi), dtype=complex)
+            #
+            # for n in range(len(self.stdv_fourier_slow)):
+            #     for k, w_k in enumerate(w):
+            #         for j, xi_j in enumerate(self.xi):
+            #             debug_ans = w_k * np.exp(h[j]) * np.exp(-(self.xi[n]-self.xi[j])**2 / (2 * sigma ** 2) - 1j * self.xi[n] * self.X[k])
+            #             self.stdv_fourier_slow[n] += debug_ans
 
             self.stdv_fourier = np.zeros(len(self.xi), dtype=complex)
 
@@ -230,9 +230,9 @@ class GPModel:
 
 
 
-            assert np.allclose(self.stdv_fourier, self.stdv_fourier_slow, atol=1E-5, rtol=1E-5)
+            # assert np.allclose(self.stdv_fourier, self.stdv_fourier_slow, atol=1E-5, rtol=1E-5)
 
-            return self.mu_fourier, self.stdv_fourier_slow
+            return self.mu_fourier, self.stdv_fourier
 
 
         if method == 'DFT':

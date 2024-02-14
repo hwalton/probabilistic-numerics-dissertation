@@ -47,14 +47,14 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
 
     plt.subplot(3, 1, 2)  # a rows, b columns, plot c
     (plt.plot(force_response_model.xi, np.abs(force_response_model.mu_fourier)))
-    plt.fill_between(force_response_model.xi, np.abs(np.squeeze(lower_bound)), np.abs(np.squeeze(upper_bound)), color='blue',
+    plt.fill_between(np.squeeze(force_response_model.xi), np.abs(np.squeeze(lower_bound)), np.abs(np.squeeze(upper_bound)), color='blue',
                      alpha=0.2, label='Std Dev')
     plt.xlabel('Freq [Rad/s]')
     plt.ylabel('Magnitude of Fourier Transform')
 
     plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     plt.plot(force_response_model.xi, np.angle(force_response_model.mu_fourier))
-    plt.fill_between(force_response_model.xi, np.angle(np.squeeze(lower_bound)), np.angle(np.squeeze(upper_bound)), color='blue',
+    plt.fill_between(np.squeeze(force_response_model.xi), np.angle(np.squeeze(lower_bound)), np.angle(np.squeeze(upper_bound)), color='blue',
                      alpha=0.2, label='Std Dev')
     plt.xlabel('Freq [Rad/s]')
     plt.ylabel('Phase of Fourier Transform')
