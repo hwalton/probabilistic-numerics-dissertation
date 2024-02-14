@@ -203,13 +203,36 @@ class GPModel:
             #         self.mu_fourier += integral * w[k]
             # return self.mu_fourier
 
-            # h =
-            # tau =
-            # exp_cov = np.exp(h - 0.5 * sigma ** 2 * )
-            # self.stdv_fourier = sigma * exp_cov.sum
+            h = np.ones(len(self.xi))
 
 
-            return self.mu_fourier#, self.stdv_fourier
+            self.stdv_fourier_slow = np.zeros(len(self.xi), dtype=complex)
+
+            for n in range(len(self.stdv_fourier_slow)):
+                for k, w_k in enumerate(w):
+                    for j, xi_j in enumerate(self.xi):
+                        debug_ans = w_k * np.exp(h[j]) * np.exp(-(self.xi[n]-self.xi[j])**2 / (2 * sigma ** 2) - 1j * self.xi[n] * self.X[k])
+                        self.stdv_fourier_slow[n] += debug_ans
+
+            self.stdv_fourier = np.zeros(len(self.xi), dtype=complex)
+
+            for n in range(len(self.stdv_fourier)):
+                for k, w_k in enumerate(w):
+                    debug_21 = np.exp(h - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * sigma ** 2))
+                    debug_22 =  np.exp(-1j * self.xi[n] * np.squeeze(self.X)[k])
+                    self.stdv_fourier[n] += np.sum(w_k * debug_21 * debug_22)
+
+            # for n in range(len(self.stdv_fourier)):
+            #     debug = self.xi[n]
+            #     exp_j = np.exp(h - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * sigma ** 2))
+            #     exp_k = np.squeeze(np.exp(-1j * self.xi[n] * np.squeeze(self.X)))
+            #     self.stdv_fourier[n] = (w * exp_k).dot(exp_j)
+
+
+
+            assert np.allclose(self.stdv_fourier, self.stdv_fourier_slow, atol=1E-5, rtol=1E-5)
+
+            return self.mu_fourier, self.stdv_fourier_slow
 
 
         if method == 'DFT':

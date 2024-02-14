@@ -37,13 +37,25 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
 
     plt.tight_layout()
 
+    if force_response_model.mu_fourier[1].ndim > 1:
+        mu_fourier_diag = np.diag(force_response_model.mu_fourier[1])
+    else:
+        mu_fourier_diag = force_response_prediction[1]
+
+    upper_bound = force_response_model.mu_fourier[0] + mu_fourier_diag
+    lower_bound = force_response_model.mu_fourier[0] - mu_fourier_diag
+
     plt.subplot(3, 1, 2)  # a rows, b columns, plot c
     (plt.plot(force_response_model.xi, np.abs(force_response_model.mu_fourier)))
+    plt.fill_between(force_response_model.xi, np.abs(np.squeeze(lower_bound)), np.abs(np.squeeze(upper_bound)), color='blue',
+                     alpha=0.2, label='Std Dev')
     plt.xlabel('Freq [Rad/s]')
     plt.ylabel('Magnitude of Fourier Transform')
 
     plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     plt.plot(force_response_model.xi, np.angle(force_response_model.mu_fourier))
+    plt.fill_between(force_response_model.xi, np.angle(np.squeeze(lower_bound)), np.angle(np.squeeze(upper_bound)), color='blue',
+                     alpha=0.2, label='Std Dev')
     plt.xlabel('Freq [Rad/s]')
     plt.ylabel('Phase of Fourier Transform')
 
@@ -62,7 +74,7 @@ def execute_gp_model():
     force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_response_U_induced_method = ['k_means', 'even'][1]
     force_response_fourier_type = ['GP', 'DFT'][0]
-    force_response_n_iter = 50
+    force_response_n_iter = 10
     M_one_in = 1
 
     force_response, time = load_data()

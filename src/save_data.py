@@ -2,7 +2,7 @@ import numpy as np
 import os
 from jax.random import PRNGKey, split, normal
 
-def save_data(length = 256, dataset = 3):
+def save_data(length = 64, dataset = 3):
     try:
         if dataset == 0:
             start = 5000
@@ -35,7 +35,7 @@ def save_data(length = 256, dataset = 3):
             force_response = 3 * np.sin(5 * time_truncated + 0.2) + sn2 * normal(key, shape=time_truncated.shape)
         elif dataset == 3:
             key = PRNGKey(0)
-            sn2 = 0.5
+            sn2 = 0.1
 
             time_truncated = np.linspace(0, 10, length)[:, None]
             force_response = 1 * np.sin(3 * time_truncated + 0.2) + sn2 * normal(key, shape=time_truncated.shape) + \
