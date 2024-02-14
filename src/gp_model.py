@@ -10,6 +10,7 @@ from metropolis_hastings import metropolis_hastings_solve
 from adam import adam_optimize
 from utils import debug_print
 from sklearn.cluster import KMeans
+from scipy.optimize import minimize
 
 
 class GPModel:
@@ -133,6 +134,18 @@ class GPModel:
                 self.stdv = np.sqrt(self.s2)
         return self.mu, self.stdv
 
+    def K_SE_xi(self, xi, xi_prime):
+        return np.exp(-0.5 * (xi - xi_prime) ** 2 / (self.hyperparameters_obj.dict()['sigma'] ** 2))
+
+    def map_wrapper(self, n):
+        def neg_map(h):
+            debug_31 = np.exp(h)
+            debug_32 = self.K_SE_xi(np.squeeze(self.xi[n]), np.squeeze(self.xi))
+            out = np.exp(h).dot(self.K_SE_xi(np.squeeze(self.xi[n]), np.squeeze(self.xi)))
+            return out
+
+        return neg_map
+
     def predict_fourier(self, X_star, method = 'GP'):
         if method == 'GP':
             sigma = self.hyperparameters_obj.dict()['sigma']
@@ -203,22 +216,18 @@ class GPModel:
             #         self.mu_fourier += integral * w[k]
             # return self.mu_fourier
 
-            h = np.ones(len(self.xi))
 
-
-            # self.stdv_fourier_slow = np.zeros(len(self.xi), dtype=complex)
-            #
-            # for n in range(len(self.stdv_fourier_slow)):
-            #     for k, w_k in enumerate(w):
-            #         for j, xi_j in enumerate(self.xi):
-            #             debug_ans = w_k * np.exp(h[j]) * np.exp(-(self.xi[n]-self.xi[j])**2 / (2 * sigma ** 2) - 1j * self.xi[n] * self.X[k])
-            #             self.stdv_fourier_slow[n] += debug_ans
 
             self.stdv_fourier = np.zeros(len(self.xi), dtype=complex)
 
             for n in range(len(self.stdv_fourier)):
+                h = np.ones(len(self.xi))
+                neg_map = self.map_wrapper(n)
+                result = minimize(neg_map, h)
+                debug = result.x
+
                 for k, w_k in enumerate(w):
-                    debug_21 = np.exp(h - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * sigma ** 2))
+                    debug_21 = np.exp(result.x - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * sigma ** 2))
                     debug_22 =  np.exp(-1j * self.xi[n] * np.squeeze(self.X)[k])
                     self.stdv_fourier[n] += np.sum(w_k * debug_21 * debug_22)
 
