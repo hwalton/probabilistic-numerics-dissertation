@@ -37,16 +37,14 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
 
     plt.tight_layout()
 
-    if force_response_model.mu_fourier[1].ndim > 1:
-        mu_fourier_diag = np.diag(force_response_model.mu_fourier[1])
-    else:
-        mu_fourier_diag = force_response_prediction[1]
 
-    upper_bound = force_response_model.mu_fourier[0] + mu_fourier_diag
-    lower_bound = force_response_model.mu_fourier[0] - mu_fourier_diag
+    upper_bound = force_response_model.mu_fourier + force_response_model.stdv_fourier
+    lower_bound = force_response_model.mu_fourier - force_response_model.stdv_fourier
 
     plt.subplot(3, 1, 2)  # a rows, b columns, plot c
     (plt.plot(force_response_model.xi, np.abs(force_response_model.mu_fourier)))
+    debug_ub = np.abs(np.squeeze(upper_bound))
+    debug_lb= np.abs(np.squeeze(lower_bound))
     plt.fill_between(np.squeeze(force_response_model.xi), np.abs(np.squeeze(lower_bound)), np.abs(np.squeeze(upper_bound)), color='blue',
                      alpha=0.2, label='Std Dev')
     plt.xlabel('Freq [Rad/s]')

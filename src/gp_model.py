@@ -223,6 +223,7 @@ class GPModel:
             for n in range(len(self.stdv_fourier)):
                 h = np.ones(len(self.xi))
                 neg_map = self.map_wrapper(n)
+                debug = neg_map(h)
                 result = minimize(neg_map, h)
                 debug = result.x
 
