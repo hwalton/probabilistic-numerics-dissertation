@@ -23,7 +23,7 @@ def save_data(length = 64, dataset = 3):
             # output = output + np.random.normal(0, 5, output.shape)
         elif dataset == 1:
             key = PRNGKey(0)
-            sn2 = 1E-1
+            sn2 = 1
 
             time_truncated = np.linspace(0, 6 * np.pi, length)[:, None]
             force_response = 2 * np.sin(10 * time_truncated) + sn2 * normal(key, shape=time_truncated.shape)
@@ -35,7 +35,7 @@ def save_data(length = 64, dataset = 3):
             force_response = 3 * np.sin(5 * time_truncated + 0.2) + sn2 * normal(key, shape=time_truncated.shape)
         elif dataset == 3:
             key = PRNGKey(0)
-            sn2 = 0.1
+            sn2 = 0.75
 
             time_truncated = np.linspace(0, 10, length)[:, None]
             force_response = 1 * np.sin(3 * time_truncated + 0.2) + sn2 * normal(key, shape=time_truncated.shape) + \

@@ -210,6 +210,9 @@ class GPModel:
                 debug_6 = self.K_xi[i] * w.dot(exp)
                 self.mu_fourier[i] = self.K_xi[i] * (w.dot(exp))
 
+
+            debug_print("mu_fourier calculated")
+
             # for k, tk in enumerate(self.X):
             #     for freq in self.xi:
             #         integral = np.exp(-1j * freq * tk) * np.squeeze(self.gp_kernel.compute_kernel(freq, tk))
@@ -227,10 +230,14 @@ class GPModel:
                 result = minimize(neg_map, h)
                 debug = result.x
 
+                debug_print(f"n = {n}")
+
                 for k, w_k in enumerate(w):
                     debug_21 = np.exp(result.x - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * sigma ** 2))
                     debug_22 =  np.exp(-1j * self.xi[n] * np.squeeze(self.X)[k])
                     self.stdv_fourier[n] += np.sum(w_k * debug_21 * debug_22)
+
+            debug_print("stdv_fourier calculated")
 
             # for n in range(len(self.stdv_fourier)):
             #     debug = self.xi[n]
