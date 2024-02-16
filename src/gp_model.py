@@ -135,17 +135,43 @@ class GPModel:
         return self.mu, self.stdv
 
     def K_SE_xi(self, xi, xi_prime):
-        return np.exp(-0.5 * (xi - xi_prime) ** 2 / (self.hyperparameters_obj.dict()['l'] ** 2))
+        if xi.ndim == 1:
+            xi = xi[:, None]
+        if xi_prime.ndim == 1:
+            xi_prime = xi_prime[:, None]
 
+        delta_X = xi[:, None, :] - xi_prime[None, :, :]
+        out =  np.exp(-0.5 * (delta_X) ** 2 / (self.hyperparameters_obj.dict()['l'] ** 2))
+        out = np.squeeze(out)
+        return out
 
-    def map_wrapper(self, n):
+    def spectrum_xi(self, xi_input, h):
+        return np.exp(h).dot(self.K_SE_xi(xi_input, self.xi))
+
+    def map_wrapper(self, n, xi_n):
         def neg_map(h):
-            debug_31 = np.exp(h)
-            debug_32 = self.K_SE_xi(np.squeeze(self.xi[n]), np.squeeze(self.xi))
-            out = np.exp(h).dot(self.K_SE_xi(np.squeeze(self.xi[n]), np.squeeze(self.xi)))
-            return out
+            eq_15 = -np.abs(self.y_xi[n]) ** 2 / (self.spectrum_xi(xi_n, h) + self.hyperparameters_obj.dict()['noise_level']) + \
+                    - np.log(np.pi * (self.spectrum_xi(xi_n, h) + self.hyperparameters_obj.dict()['noise_level']))
+            debug = np.squeeze(self.xi)
+            det_eq_13 = np.linalg.det(self.K_SE_xi(self.xi,self.xi))
+            out = eq_15 + det_eq_13
+            return -out
 
         return neg_map
+
+    def doJ_doa(self, a):
+        dol_doa = np.exp(a) * ((np.abs(self.y_xi)**2 - self.spectrum_xi(self.xi, a) + self.hyperparameters_obj.dict()['noise_level']) / (self.spectrum_xi(self.xi, a) + self.hyperparameters_obj.dict()['noise_level'])**2) @ self.K_SE_xi(self.xi, self.xi)
+        dop_doa = -np.exp(a) * self.K_SE_xi(self.xi, self.xi) @ np.exp(a)
+        out = dol_doa + dop_doa
+        debug_size = np.linalg.norm(out)
+        return out
+    def grad_descent_se_fourier(self, a):
+        debug_s = self.doJ_doa(a)
+        debug_norm = np.linalg.norm(self.doJ_doa(a))
+        while np.linalg.norm(self.doJ_doa(a)) > 3E-1:
+            a +=  10E-1 * self.doJ_doa(a)
+            debug_print(f"norm = {np.linalg.norm(self.doJ_doa(a))}")
+        return a
 
     def predict_fourier(self, X_star, method = 'GP'):
         if method == 'GP':
@@ -219,22 +245,22 @@ class GPModel:
             #         integral = np.exp(-1j * freq * tk) * np.squeeze(self.gp_kernel.compute_kernel(freq, tk))
             #         self.mu_fourier += integral * w[k]
             # return self.mu_fourier
-
-
+            window = np.hanning(len(self.xi))
+            self.y_xi = np.fft.fft(np.squeeze(self.y) * window)
 
             self.stdv_fourier = np.zeros(len(self.xi), dtype=complex)
 
-            for n in range(len(self.stdv_fourier)):
-                h = np.ones(len(self.xi))
-                neg_map = self.map_wrapper(n)
-                debug = neg_map(h)
-                result = minimize(neg_map, h)
-                debug = result.x
+            for n, xi_n in enumerate(self.xi):
+                a = np.ones(len(self.xi))
+                neg_map = self.map_wrapper(n, xi_n)
+                debug = neg_map(a)
+                #result = minimize(neg_map, h)
+                h = self.grad_descent_se_fourier(a)
 
                 debug_print(f"n = {n}")
 
                 for k, w_k in enumerate(w):
-                    debug_21 = np.exp(result.x - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * hyp_l ** 2))
+                    debug_21 = np.exp(h - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * hyp_l ** 2))
                     debug_22 =  np.exp(-1j * self.xi[n] * np.squeeze(self.X)[k])
                     self.stdv_fourier[n] += np.sum(w_k * debug_21 * debug_22)
 
@@ -242,7 +268,7 @@ class GPModel:
 
             # for n in range(len(self.stdv_fourier)):
             #     debug = self.xi[n]
-            #     exp_j = np.exp(h - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * hyp_l ** 2))
+            #     exp_j = np.exp(a - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * hyp_l ** 2))
             #     exp_k = np.squeeze(np.exp(-1j * self.xi[n] * np.squeeze(self.X)))
             #     self.stdv_fourier[n] = (w * exp_k).dot(exp_j)
 
@@ -272,7 +298,7 @@ class GPModel:
 
             self.xi = 2 * np.pi * self.xi # convert from Hz to rad/s
 
-            self.mu_fourier = np.fft.fft(np.squeeze(self.y))
+            self.mu_fourier = np.fft.fft(np.squeeze(self.y) * np.hanning(len(np.squeeze(self.y))))
             self.stdv_fourier = np.zeros_like(self.mu_fourier)
             return self.mu_fourier, self.stdv_fourier
         else:
