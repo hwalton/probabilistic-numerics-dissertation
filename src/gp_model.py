@@ -137,6 +137,7 @@ class GPModel:
     def K_SE_xi(self, xi, xi_prime):
         return np.exp(-0.5 * (xi - xi_prime) ** 2 / (self.hyperparameters_obj.dict()['sigma'] ** 2))
 
+
     def map_wrapper(self, n):
         def neg_map(h):
             debug_31 = np.exp(h)
