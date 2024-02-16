@@ -78,7 +78,7 @@ def execute_gp_model():
 
     force_response, time = load_data()
 
-    num_predictions = time.size * 3//2
+    num_predictions = time.size * 2//3
     lower = time[0] - 0 * (time[-1] - time[0])
     upper = time[-1] + 0 * (time[-1] - time[0])
     time_test = np.linspace(lower, upper, num=num_predictions, endpoint=True)
