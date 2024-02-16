@@ -135,7 +135,7 @@ class GPModel:
         return self.mu, self.stdv
 
     def K_SE_xi(self, xi, xi_prime):
-        return np.exp(-0.5 * (xi - xi_prime) ** 2 / (self.hyperparameters_obj.dict()['sigma'] ** 2))
+        return np.exp(-0.5 * (xi - xi_prime) ** 2 / (self.hyperparameters_obj.dict()['l'] ** 2))
 
 
     def map_wrapper(self, n):
@@ -149,7 +149,7 @@ class GPModel:
 
     def predict_fourier(self, X_star, method = 'GP'):
         if method == 'GP':
-            sigma = self.hyperparameters_obj.dict()['sigma']
+            hyp_l = self.hyperparameters_obj.dict()['l']
             X_star = np.asarray(X_star)
             N = len(X_star)
 
@@ -234,7 +234,7 @@ class GPModel:
                 debug_print(f"n = {n}")
 
                 for k, w_k in enumerate(w):
-                    debug_21 = np.exp(result.x - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * sigma ** 2))
+                    debug_21 = np.exp(result.x - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * hyp_l ** 2))
                     debug_22 =  np.exp(-1j * self.xi[n] * np.squeeze(self.X)[k])
                     self.stdv_fourier[n] += np.sum(w_k * debug_21 * debug_22)
 
@@ -242,7 +242,7 @@ class GPModel:
 
             # for n in range(len(self.stdv_fourier)):
             #     debug = self.xi[n]
-            #     exp_j = np.exp(h - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * sigma ** 2))
+            #     exp_j = np.exp(h - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * hyp_l ** 2))
             #     exp_k = np.squeeze(np.exp(-1j * self.xi[n] * np.squeeze(self.X)))
             #     self.stdv_fourier[n] = (w * exp_k).dot(exp_j)
 
@@ -273,7 +273,8 @@ class GPModel:
             self.xi = 2 * np.pi * self.xi # convert from Hz to rad/s
 
             self.mu_fourier = np.fft.fft(np.squeeze(self.y))
-            return self.mu_fourier
+            self.stdv_fourier = np.zeros_like(self.mu_fourier)
+            return self.mu_fourier, self.stdv_fourier
         else:
             assert 0, "Not yet implemented"
 
