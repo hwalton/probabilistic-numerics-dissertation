@@ -187,6 +187,13 @@ class GPModel:
 
             return self.mu_fourier, self.stdv_fourier
 
+        elif method == 'GP_3':
+            hyp_l, w = self.GP_Mu(X_star)
+
+            self.GP_STDV_3(X_star)
+
+            return self.mu_fourier, self.stdv_fourier
+
         elif method == 'DFT':
             self.X = np.asarray(self.X)
             N = len(self.X)
@@ -241,6 +248,38 @@ class GPModel:
                     self.stdv_fourier[n] -= innn
             self.stdv_fourier[n] *= self.gp_kernel.compute_kernel_fourier_SE_squared(xi_n)
             #self.stdv_fourier[0] = 0.0
+
+    import numpy as np
+
+    def GP_STDV_3(self, X_star):
+        X_star = np.asarray(X_star)
+        xi = np.squeeze(np.asarray(self.xi))
+
+        # Assuming self.X is a 2D array for the input locations
+        X = np.squeeze(self.X)  # Ensure X is a 1D array for simplicity
+
+        # Compute the window function outside the loop
+        window = np.hanning(len(xi))
+
+        # Cholesky decomposition for solving Ax = b efficiently
+        noise_level = self.hyperparameters_obj.dict()['noise_level']
+        L = np.linalg.cholesky(np.squeeze(self.K_X_X) + 1 * np.eye(len(X)) + noise_level * np.eye(len(X)))
+
+        # Prepare A matrix using Cholesky factor L
+        # Solve for y in Ly = b (forward substitution)
+        # Then solve L.T x = y (backward substitution) for x = A^-1 b
+        # Where b is the identity matrix to find A^-1 directly
+        A_inv = np.linalg.solve(L, np.linalg.solve(L.T, np.eye(len(X))))
+
+        # Precompute the exponential factor outside the loops for efficiency
+        X_mesh1, X_mesh2 = np.meshgrid(X, X)
+        exp_factor = np.exp(-1j * xi[:, None, None] * (X_mesh1 + X_mesh2))
+
+        # Compute standard deviation in Fourier space
+        stdv_fourier = -np.sum(A_inv[None, :, :] * exp_factor, axis=(1, 2))
+        stdv_fourier *= self.gp_kernel.compute_kernel_fourier_SE_squared(xi)
+
+        self.stdv_fourier = stdv_fourier
 
     def GP_Mu(self, X_star):
         hyp_l = self.hyperparameters_obj.dict()['l']

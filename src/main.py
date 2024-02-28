@@ -51,7 +51,7 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
     upper_bound_angle = np.angle(force_response_model.mu_fourier) + np.angle(force_response_model.stdv_fourier)
     lower_bound_angle = np.angle(force_response_model.mu_fourier) - np.angle(force_response_model.stdv_fourier)
 
-    plt.ylim(-10, np.max(np.abs(force_response_model.mu_fourier)))
+    plt.ylim(-10, 1.25 * np.max(np.abs(force_response_model.mu_fourier)))
 
     plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     plt.plot(force_response_model.xi, np.angle(force_response_model.mu_fourier))
@@ -74,7 +74,7 @@ def execute_gp_model():
     force_response_predict_type = ['cholesky', 'FITC'][0]
     force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_response_U_induced_method = ['k_means', 'even'][1]
-    force_response_fourier_type = ['GP', 'GP_2', 'DFT'][1]
+    force_response_fourier_type = ['GP', 'GP_2', 'GP_3', 'DFT'][2]
     force_response_n_iter = 0
     M_one_in = 1
 
