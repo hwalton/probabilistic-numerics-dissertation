@@ -263,7 +263,7 @@ class GPModel:
 
         # Cholesky decomposition for solving Ax = b efficiently
         noise_level = self.hyperparameters_obj.dict()['noise_level']
-        L = np.linalg.cholesky(np.squeeze(self.K_X_X) + 1 * np.eye(len(X)) + noise_level * np.eye(len(X)))
+        L = np.linalg.cholesky(np.squeeze(self.K_X_X) + 1E-10 * np.eye(len(X)) + noise_level * np.eye(len(X)))
 
         # Prepare A matrix using Cholesky factor L
         # Solve for y in Ly = b (forward substitution)
