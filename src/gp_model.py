@@ -247,7 +247,7 @@ class GPModel:
                     innn = A[j][k] * np.exp(-1j * xi_n * (np.squeeze(self.X)[j] + np.squeeze(self.X)[k]))
                     self.stdv_fourier[n] -= innn
             self.stdv_fourier[n] *= self.gp_kernel.compute_kernel_fourier_SE_squared(xi_n)
-            self.stdv_fourier[n] += np.exp(-1j * xi_n * X_star[n]) * self.gp_kernel.compute_kernel_SE_fourier(xi_n)
+            self.stdv_fourier[n] += self.gp_kernel.compute_kernel_SE_fourier(xi_n)
 
             #self.stdv_fourier[0] = 0.0
 
@@ -280,7 +280,7 @@ class GPModel:
             # Element-wise multiplication with A_inv and sum
             stdv_contribution = A_inv * exp_factor
             stdv_fourier[i] = -np.sum(stdv_contribution) * self.gp_kernel.compute_kernel_fourier_SE_squared(freq)
-            stdv_fourier[i] += np.exp(-1j * freq * X_star[i]) * self.gp_kernel.compute_kernel_SE_fourier(freq)
+            stdv_fourier[i] += self.gp_kernel.compute_kernel_SE_fourier(freq)
         self.stdv_fourier = np.squeeze(stdv_fourier)
 
     def GP_Mu(self, X_star):
