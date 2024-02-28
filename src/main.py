@@ -51,7 +51,7 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
     upper_bound_angle = np.angle(force_response_model.mu_fourier) + np.angle(force_response_model.stdv_fourier)
     lower_bound_angle = np.angle(force_response_model.mu_fourier) - np.angle(force_response_model.stdv_fourier)
 
-    plt.ylim(-5, 1.5 * np.max(force_response_model.mu_fourier))
+    plt.ylim(-10, np.max(np.abs(force_response_model.mu_fourier)))
 
     plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     plt.plot(force_response_model.xi, np.angle(force_response_model.mu_fourier))
