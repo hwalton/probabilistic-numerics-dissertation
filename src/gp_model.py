@@ -253,33 +253,33 @@ class GPModel:
 
     def GP_STDV_3(self, X_star):
         X_star = np.asarray(X_star)
-        xi = np.squeeze(np.asarray(self.xi))
+        xi = np.asarray(self.xi)
 
-        # Assuming self.X is a 2D array for the input locations
-        X = np.squeeze(self.X)  # Ensure X is a 1D array for simplicity
-
-        # Compute the window function outside the loop
-        window = np.hanning(len(xi))
-
-        # Cholesky decomposition for solving Ax = b efficiently
+        # Extract relevant variables and parameters
         noise_level = self.hyperparameters_obj.dict()['noise_level']
-        L = np.linalg.cholesky(np.squeeze(self.K_X_X) + 1E-10 * np.eye(len(X)) + noise_level * np.eye(len(X)))
+        X = np.squeeze(self.X)  # Assuming self.X is 2D and we need a 1D array
 
-        # Prepare A matrix using Cholesky factor L
-        # Solve for y in Ly = b (forward substitution)
-        # Then solve L.T x = y (backward substitution) for x = A^-1 b
-        # Where b is the identity matrix to find A^-1 directly
+        # Cholesky decomposition for A matrix
+        L = np.linalg.cholesky(np.squeeze(self.K_X_X) + noise_level * np.eye(len(X)))
         A_inv = np.linalg.solve(L, np.linalg.solve(L.T, np.eye(len(X))))
 
-        # Precompute the exponential factor outside the loops for efficiency
-        X_mesh1, X_mesh2 = np.meshgrid(X, X)
-        exp_factor = np.exp(-1j * xi[:, None, None] * (X_mesh1 + X_mesh2))
+        # Initialize the Fourier standard deviation array
+        stdv_fourier = np.zeros_like(xi, dtype=np.complex128)
 
-        # Compute standard deviation in Fourier space
-        stdv_fourier = -np.sum(A_inv[None, :, :] * exp_factor, axis=(1, 2))
-        stdv_fourier *= self.gp_kernel.compute_kernel_fourier_SE_squared(xi)
+        # Use a 2D meshgrid for pairwise differences in X
+        X_mesh1, X_mesh2 = np.meshgrid(X, X, indexing='ij')
+        pairwise_sum = X_mesh1 + X_mesh2
 
-        self.stdv_fourier = stdv_fourier
+        # Iterate over frequencies to manage memory usage
+        for i, freq in enumerate(xi):
+            # Compute exponential factor for the current frequency using broadcasting
+            exp_factor = np.exp(-1j * freq * pairwise_sum)
+
+            # Element-wise multiplication with A_inv and sum
+            stdv_contribution = A_inv * exp_factor
+            stdv_fourier[i] = -np.sum(stdv_contribution) * self.gp_kernel.compute_kernel_fourier_SE_squared(freq)
+
+        self.stdv_fourier = np.squeeze(stdv_fourier)
 
     def GP_Mu(self, X_star):
         hyp_l = self.hyperparameters_obj.dict()['l']
