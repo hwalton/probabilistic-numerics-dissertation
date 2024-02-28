@@ -182,7 +182,8 @@ class GPModel:
         elif method == 'GP_2':
             hyp_l, w = self.GP_Mu(X_star)
 
-            self.GP_STDV_2(hyp_l, w)
+
+            self.GP_STDV_2(X_star)
 
             return self.mu_fourier, self.stdv_fourier
 
@@ -227,9 +228,19 @@ class GPModel:
                 self.stdv_fourier[n] += np.sum(w_k * debug_21 * debug_22)
         debug_print("stdv_fourier calculated")
 
-    def GP_STDV_2(self, hyp_l, w):
-
-        return 1
+    def GP_STDV_2(self, X_star):
+        X_star = np.asarray(X_star)
+        window = np.hanning(len(self.xi))
+        self.stdv_fourier = np.zeros(len(self.xi), dtype=complex)
+        A = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(len(self.X)))
+        for n, xi_n in enumerate(self.xi):
+            debug_print(f"n = {n}")
+            for j in range(len(self.X)):
+                for k in range(len(self.X)):
+                    innn = A[j][k] * np.exp(-1j * xi_n * (np.squeeze(self.X)[j] + np.squeeze(self.X)[k]))
+                    self.stdv_fourier[n] -= innn
+            self.stdv_fourier[n] *= self.gp_kernel.compute_kernel_fourier_SE_squared(xi_n)
+            #self.stdv_fourier[0] = 0.0
 
     def GP_Mu(self, X_star):
         hyp_l = self.hyperparameters_obj.dict()['l']
