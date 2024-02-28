@@ -163,123 +163,30 @@ class GPModel:
         dol_doa = np.exp(a) * ((np.abs(self.y_xi)**2 - self.spectrum_xi(self.xi, a) + self.hyperparameters_obj.dict()['noise_level']) / (self.spectrum_xi(self.xi, a) + self.hyperparameters_obj.dict()['noise_level'])**2) @ self.K_SE_xi(self.xi, self.xi)
         dop_doa = -np.exp(a) * self.K_SE_xi(self.xi, self.xi) @ np.exp(a)
         out = dol_doa + dop_doa
-        debug_size = np.linalg.norm(out)
         return out
     def grad_descent_se_fourier(self, a):
-        debug_s = self.doJ_doa(a)
-        debug_norm = np.linalg.norm(self.doJ_doa(a))
         while np.linalg.norm(self.doJ_doa(a)) > 3E-1:
             a +=  10E-1 * self.doJ_doa(a)
-            debug_print(f"norm = {np.linalg.norm(self.doJ_doa(a))}")
+            #debug_print(f"norm = {np.linalg.norm(self.doJ_doa(a))}")
         return a
 
     def predict_fourier(self, X_star, method = 'GP'):
         if method == 'GP':
-            hyp_l = self.hyperparameters_obj.dict()['l']
-            X_star = np.asarray(X_star)
-            N = len(X_star)
+            hyp_l, w = self.GP_Mu(X_star)
 
-            delta_t = (X_star[-1] - X_star[0]) / (N - 1)
-            fs = 1 / delta_t
-
-            delta_f = fs / N
-            self.xi = np.linspace(0, fs/3, N)
-
-            # if N % 2 == 0:
-            #     # Even number of samples: include Nyquist frequency
-            #     self.xi = np.squeeze(np.linspace(0, fs / 2, N // 2 ))
-            # else:
-            #     # Odd number of samples: exclude Nyquist frequency
-            #     self.xi = np.squeeze(np.linspace(0, fs / 2, (N - 1) // 2 + 1))
-
-            self.xi = 2 * np.pi * self.xi # convert from Hz to rad/s
-
-            self.K_xi = np.squeeze(self.gp_kernel.compute_kernel_SE_fourier(self.xi))
-            # debug_11 = self.K_X_X
-            # debug_112 = self.hyperparameters_obj.dict()['noise_level']
-            # debug_12 = self.hyperparameters_obj.dict()['noise_level'] * np.eye(N)
-            # debug_13 = np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(np.shape(self.K_X_X)[0])
-            # debug_14 = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(np.shape(self.K_X_X)[0]))
-            # A = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(np.shape(self.K_X_X)[0]))
-            # w = A @ np.squeeze(self.y)
-
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ numerical stability ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # Extract the noise level and ensure it is a positive value
-            noise_level = self.hyperparameters_obj.dict()['noise_level']
-            assert noise_level > 0, "Noise level must be positive for Cholesky decomposition."
-
-            # Add the noise level to the diagonal of K_X_X
-            K = np.squeeze(self.K_X_X) + noise_level * np.eye(np.shape(self.K_X_X)[0])
-
-            # Perform Cholesky decomposition
-            L = np.linalg.cholesky(K)
-
-            # Solve Lz = y for z (intermediate variable)
-            y_squeezed = np.squeeze(self.y)
-            z = np.linalg.solve(L, y_squeezed)
-
-            # Solve L.T * w = z for w
-            w = np.linalg.solve(L.T, z)
-
-            # w now contains the weights calculated in a numerically stable way
-
-            # end ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ numerical stability ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-            self.mu_fourier = np.zeros(len(self.xi), dtype=complex)
-
-            for i in range(len(self.xi)):
-                exp = np.squeeze(np.exp(-1j * self.xi[i] * np.squeeze(self.X)))
-                debug_1 = self.K_xi
-                debug_2 = self.K_xi[i]
-                debug_3 = w
-                debug_4 = exp
-                debug_5 = w.dot(exp)
-                debug_6 = self.K_xi[i] * w.dot(exp)
-                self.mu_fourier[i] = self.K_xi[i] * (w.dot(exp))
-
-
-            debug_print("mu_fourier calculated")
-
-            # for k, tk in enumerate(self.X):
-            #     for freq in self.xi:
-            #         integral = np.exp(-1j * freq * tk) * np.squeeze(self.gp_kernel.compute_kernel(freq, tk))
-            #         self.mu_fourier += integral * w[k]
-            # return self.mu_fourier
-            window = np.hanning(len(self.xi))
-            self.y_xi = np.fft.fft(np.squeeze(self.y) * window)
-
-            self.stdv_fourier = np.zeros(len(self.xi), dtype=complex)
-
-            for n, xi_n in enumerate(self.xi):
-                a = np.ones(len(self.xi))
-                neg_map = self.map_wrapper(n, xi_n)
-                debug = neg_map(a)
-                #result = minimize(neg_map, h)
-                h = self.grad_descent_se_fourier(a)
-
-                debug_print(f"n = {n}")
-
-                for k, w_k in enumerate(w):
-                    debug_21 = np.exp(h - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * hyp_l ** 2))
-                    debug_22 =  np.exp(-1j * self.xi[n] * np.squeeze(self.X)[k])
-                    self.stdv_fourier[n] += np.sum(w_k * debug_21 * debug_22)
-
-            debug_print("stdv_fourier calculated")
-
-            # for n in range(len(self.stdv_fourier)):
-            #     debug = self.xi[n]
-            #     exp_j = np.exp(a - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * hyp_l ** 2))
-            #     exp_k = np.squeeze(np.exp(-1j * self.xi[n] * np.squeeze(self.X)))
-            #     self.stdv_fourier[n] = (w * exp_k).dot(exp_j)
-
-
-
-            # assert np.allclose(self.stdv_fourier, self.stdv_fourier_slow, atol=1E-5, rtol=1E-5)
+            self.GP_STDV(hyp_l, w)
 
             return self.mu_fourier, self.stdv_fourier
 
 
-        if method == 'DFT':
+        elif method == 'GP_2':
+            hyp_l, w = self.GP_Mu(X_star)
+
+            self.GP_STDV_2(hyp_l, w)
+
+            return self.mu_fourier, self.stdv_fourier
+
+        elif method == 'DFT':
             self.X = np.asarray(self.X)
             N = len(self.X)
 
@@ -304,10 +211,54 @@ class GPModel:
         else:
             assert 0, "Not yet implemented"
 
+    def GP_STDV(self, hyp_l, w):
+        window = np.hanning(len(self.xi))
+        self.y_xi = np.fft.fft(np.squeeze(self.y) * window)
+        self.stdv_fourier = np.zeros(len(self.xi), dtype=complex)
+        for n, xi_n in enumerate(self.xi):
+            a = np.ones(len(self.xi))
+            h = self.grad_descent_se_fourier(a)
 
+            debug_print(f"n = {n}")
 
+            for k, w_k in enumerate(w):
+                debug_21 = np.exp(h - (self.xi[n] - np.squeeze(self.xi)) ** 2 / (2 * hyp_l ** 2))
+                debug_22 = np.exp(-1j * self.xi[n] * np.squeeze(self.X)[k])
+                self.stdv_fourier[n] += np.sum(w_k * debug_21 * debug_22)
+        debug_print("stdv_fourier calculated")
 
+    def GP_STDV_2(self, hyp_l, w):
 
+        return 1
+
+    def GP_Mu(self, X_star):
+        hyp_l = self.hyperparameters_obj.dict()['l']
+        X_star = np.asarray(X_star)
+        N = len(X_star)
+        delta_t = (X_star[-1] - X_star[0]) / (N - 1)
+        fs = 1 / delta_t
+        delta_f = fs / N
+        self.xi = np.linspace(0, fs/3, N)
+        self.xi = 2 * np.pi * self.xi  # convert from Hz to rad/s
+        self.K_xi = np.squeeze(self.gp_kernel.compute_kernel_SE_fourier(self.xi))
+        # Extract the noise level and ensure it is a positive value
+        noise_level = self.hyperparameters_obj.dict()['noise_level']
+        assert noise_level > 0, "Noise level must be positive for Cholesky decomposition."
+        # Add the noise level to the diagonal of K_X_X
+        K = np.squeeze(self.K_X_X) + noise_level * np.eye(np.shape(self.K_X_X)[0])
+        # Perform Cholesky decomposition
+        L = np.linalg.cholesky(K)
+        # Solve Lz = y for z (intermediate variable)
+        y_squeezed = np.squeeze(self.y)
+        z = np.linalg.solve(L, y_squeezed)
+        # Solve L.T * w = z for w
+        w = np.linalg.solve(L.T, z)
+        self.mu_fourier = np.zeros(len(self.xi), dtype=complex)
+        for i in range(len(self.xi)):
+            exp = np.squeeze(np.exp(-1j * self.xi[i] * np.squeeze(self.X)))
+            self.mu_fourier[i] = self.K_xi[i] * (w.dot(exp))
+        debug_print("mu_fourier calculated")
+        return hyp_l, w
 
     def is_positive_definite(self, K):
         if K.ndim > 3:
