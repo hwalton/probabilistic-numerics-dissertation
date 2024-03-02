@@ -194,6 +194,20 @@ class GPModel:
 
             return self.mu_fourier, self.stdv_fourier
 
+        elif method == 'GP_4':
+            hyp_l, w = self.GP_Mu(X_star)
+
+            self.GP_STDV_4(X_star)
+
+            return self.mu_fourier, self.stdv_fourier
+
+        elif method == 'GP_5':
+            hyp_l, w = self.GP_Mu(X_star)
+
+            self.GP_STDV_5(X_star)
+
+            return self.mu_fourier, self.stdv_fourier
+
         elif method == 'DFT':
             self.X = np.asarray(self.X)
             N = len(self.X)
@@ -282,6 +296,36 @@ class GPModel:
             stdv_fourier[i] = -np.sum(stdv_contribution) * self.gp_kernel.compute_kernel_fourier_SE_squared(freq)
             stdv_fourier[i] += self.gp_kernel.compute_kernel_SE_fourier(freq)
         self.stdv_fourier = np.squeeze(stdv_fourier)
+
+    def GP_STDV_4(self, X_star):
+        self.stdv_fourier = np.zeros(len(self.xi), dtype=complex)
+        A = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(len(self.X)))
+        for n, xi_n in enumerate(self.xi):
+            debug_print(f"n = {n}")
+            for j in range(len(self.X)):
+                for k in range(len(self.X)):
+                    innn = A[j][k] * np.exp(-1j * xi_n * (np.squeeze(self.X)[j] + np.squeeze(self.X)[k]))
+                    self.stdv_fourier[n] -= innn
+            self.stdv_fourier[n] *= self.gp_kernel.compute_kernel_SE_fourier(xi_n) ** 2
+            self.stdv_fourier[n] += self.gp_kernel.compute_kernel_SE_fourier(-xi_n) / 2 * np.pi
+
+
+    def GP_STDV_5(self, X_star):
+        A = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(len(self.X)))
+        X_squeezed = np.squeeze(self.X)
+        self.stdv_fourier = np.zeros(len(self.xi), dtype=complex)
+
+        for n, xi_n in enumerate(self.xi):
+            debug = (X_squeezed[:, None] + X_squeezed)
+            exponent_matrix = -1j * xi_n * debug
+            contributions = A * np.exp(exponent_matrix)
+            self.stdv_fourier[n] = -np.sum(contributions)
+
+            kernel_fourier_sq = self.gp_kernel.compute_kernel_SE_fourier(xi_n) ** 2
+            kernel_fourier_neg = self.gp_kernel.compute_kernel(-xi_n, 0) / 2 * np.pi
+
+            self.stdv_fourier[n] *= kernel_fourier_sq
+            self.stdv_fourier[n] += kernel_fourier_neg
 
     def GP_Mu(self, X_star):
         hyp_l = self.hyperparameters_obj.dict()['l']

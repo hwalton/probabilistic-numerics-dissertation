@@ -16,16 +16,23 @@ class GaussianProcessKernel:
             self.hyperparameters_obj = Hyperparameters(hyperparameters['kernel_type'])
 
     def compute_kernel_SE_fourier(self, xi):
-        return self.hyperparameters_obj.dict()['sigma'] ** 2 * np.exp( - 0.5 * self.hyperparameters_obj.dict()['l'] ** 2 * xi ** 2) * self.hyperparameters_obj.dict()['l']
+        return self.hyperparameters_obj.dict()['sigma'] ** 2 * np.exp( - 0.5 * self.hyperparameters_obj.dict()['l'] ** 2 * xi ** 2) * self.hyperparameters_obj.dict()['l'] / np.sqrt(2 * np.pi)
 
     def compute_kernel_fourier_SE_squared(self, xi):
-        out = self.hyperparameters_obj.dict()['sigma'] ** 4 * np.exp(- 0.25 * self.hyperparameters_obj.dict()['l'] ** 2 * xi ** 2) * self.hyperparameters_obj.dict()['l'] / np.sqrt(2)
+        out = self.hyperparameters_obj.dict()['sigma'] ** 4 * np.exp(- 0.25 * self.hyperparameters_obj.dict()['l'] ** 2 * xi ** 2) * self.hyperparameters_obj.dict()['l'] / ( np.sqrt(2) * np.sqrt(2 * np.pi))
         return out
 
     def compute_kernel(self, X1, X2):
-        if X1.ndim == 1:
+        # Check if X1 is an integer and convert it to an ndarray of shape (-1, 1) if so
+        if isinstance(X1, int):
+            X1 = np.array([X1]).reshape(-1, 1)
+        elif X1.ndim == 1:
             X1 = X1.reshape(-1, 1)
-        if X2.ndim == 1:
+
+        # Check if X2 is an integer and convert it to an ndarray of shape (-1, 1) if so
+        if isinstance(X2, int):
+            X2 = np.array([X2]).reshape(-1, 1)
+        elif X2.ndim == 1:
             X2 = X2.reshape(-1, 1)
 
         kernel_methods = {
