@@ -160,6 +160,7 @@ cython_debug/
 .idea/
 example-code/sparse_gp_1_code.py
 example-code/Max_C_FITC.py
+example-code/sympy.py
 
 time_truncated.csv
 force_response.csv
