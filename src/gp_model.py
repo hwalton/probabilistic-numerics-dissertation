@@ -230,6 +230,34 @@ class GPModel:
             self.mu_fourier = np.fft.fft(np.squeeze(self.y) * np.hanning(len(np.squeeze(self.y))))
             self.stdv_fourier = np.zeros_like(self.mu_fourier)
             return self.mu_fourier, self.stdv_fourier
+        elif method == 'set':
+            self.X = np.asarray(self.X)
+            N = len(self.X)
+
+            delta_t = (self.X[-1] - self.X[0]) / (N - 1)
+            fs = 1 / delta_t
+
+            delta_f = fs / N
+            self.xi = np.linspace(0, fs , N)
+
+            # if N % 2 == 0:
+            #     # Even number of samples: include Nyquist frequency
+            #     self.xi = np.linspace(0, fs / 2, N // 2 + 1)
+            # else:
+            #     # Odd number of samples: exclude Nyquist frequency
+            #     self.xi = np.linspace(0, fs / 2, (N - 1) // 2 + 1)
+
+            self.xi = 2 * np.pi * self.xi # convert from Hz to rad/s
+
+
+            m = 1  # Mass
+            c = 0.2  # Damping coefficient
+            k = 100  # Stiffness
+
+
+            self.mu_fourier = np.squeeze(1 / ((k-m*self.xi**2) + 1j * c * self.xi))
+            self.stdv_fourier = np.zeros_like(self.mu_fourier)
+            return self.mu_fourier, self.stdv_fourier
         else:
             assert 0, "Not yet implemented"
 
