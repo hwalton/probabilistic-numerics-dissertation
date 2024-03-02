@@ -335,7 +335,7 @@ class GPModel:
                     innn = A[j][k] * np.exp(-1j * xi_n * (np.squeeze(self.X)[j] + np.squeeze(self.X)[k]))
                     self.stdv_fourier[n] -= innn
             self.stdv_fourier[n] *= self.gp_kernel.compute_kernel_SE_fourier(xi_n) ** 2
-            self.stdv_fourier[n] += self.gp_kernel.compute_kernel_SE_fourier(-xi_n) / 2 * np.pi
+            self.stdv_fourier[n] += self.gp_kernel.compute_kernel(-xi_n, 0) / 2 * np.pi
 
 
     def GP_STDV_5(self, X_star):
