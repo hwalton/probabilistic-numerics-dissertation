@@ -2,7 +2,7 @@ import numpy as np
 import os
 from jax.random import PRNGKey, split, normal
 
-def save_data(length = 512, dataset = 4):
+def save_data(length = 256, dataset = 4):
     try:
         if dataset == 0:
             start = 5000
@@ -44,7 +44,7 @@ def save_data(length = 512, dataset = 4):
 
         elif dataset == 4:
             key = PRNGKey(0)
-            sn2 = 0.5
+            sn2 = 0
             m = 1  # Mass
             c = 0.2  # Damping coefficient
             k = 100  # Stiffness

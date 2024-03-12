@@ -41,6 +41,7 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
     upper_bound_abs = np.abs(force_response_model.mu_fourier) + np.abs(force_response_model.stdv_fourier)
     lower_bound_abs = np.abs(force_response_model.mu_fourier) - np.abs(force_response_model.stdv_fourier)
 
+
     plt.subplot(3, 1, 2)  # a rows, b columns, plot c
     (plt.plot(force_response_model.xi, np.abs(force_response_model.mu_fourier)))
     plt.fill_between(np.squeeze(force_response_model.xi), lower_bound_abs, upper_bound_abs, color='blue',
@@ -53,6 +54,8 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
 
     plt.ylim(-0.5 * np.max(np.abs(force_response_model.mu_fourier)), 1.5 * np.max(np.abs(force_response_model.mu_fourier)))
     plt.xlim(-2, 40)
+
+
     plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     plt.plot(force_response_model.xi, np.angle(force_response_model.mu_fourier))
     plt.fill_between(np.squeeze(force_response_model.xi), lower_bound_angle, upper_bound_angle, color='blue',
@@ -75,7 +78,7 @@ def execute_gp_model():
     force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_response_U_induced_method = ['k_means', 'even'][1]
     force_response_fourier_type = ['GP', 'GP_2', 'GP_3', 'GP_4', 'GP_5', 'DFT', 'set'][4]
-    force_response_n_iter = 0
+    force_response_n_iter = 50
     M_one_in = 1
 
     force_response, time = load_data()
