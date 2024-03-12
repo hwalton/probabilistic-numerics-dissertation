@@ -14,9 +14,9 @@ class Hyperparameters:
         if self.kernel_type == 'squared_exponential':
             self._initial_hyperparameters = {
                 'kernel_type': 'squared_exponential',
-                'sigma': 2,
-                'l': 0.01,
-                'noise_level': 100
+                'sigma': 3.45,
+                'l': 0.3,
+                'noise_level': 0.069
             }
 
             self._hyperparameter_bounds = {

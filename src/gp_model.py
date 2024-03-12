@@ -326,16 +326,19 @@ class GPModel:
         self.stdv_fourier = np.squeeze(stdv_fourier)
 
     def GP_STDV_4(self, X_star):
-        self.stdv_fourier = np.zeros(len(self.xi), dtype=complex)
+        self.var_fourier = np.zeros(len(self.xi), dtype=complex)
         A = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(len(self.X)))
         for n, xi_n in enumerate(self.xi):
             debug_print(f"n = {n}")
             for j in range(len(self.X)):
                 for k in range(len(self.X)):
-                    innn = A[j][k] * np.exp(-1j * xi_n * (np.squeeze(self.X)[j] + np.squeeze(self.X)[k]))
-                    self.stdv_fourier[n] -= innn
-            self.stdv_fourier[n] *= self.gp_kernel.compute_kernel_SE_fourier(xi_n) ** 2
-            self.stdv_fourier[n] += self.gp_kernel.compute_kernel(-xi_n, 0) / 2 * np.pi
+                    innn = A[j][k] * np.exp(-1j * xi_n * (np.squeeze(self.X)[j] - np.squeeze(self.X)[k]))
+                    self.var_fourier[n] -= innn
+            self.var_fourier[n] *= self.gp_kernel.compute_kernel_SE_fourier(xi_n) * np.conj(self.gp_kernel.compute_kernel_SE_fourier(- xi_n))
+            debug_k = self.gp_kernel.compute_kernel(-xi_n, 0) / 2 * np.pi
+            self.var_fourier[n] += self.gp_kernel.compute_kernel(-xi_n, 0) / 2 * np.pi
+            self.stdv_fourier = self.var_fourier
+
 
 
     def GP_STDV_5(self, X_star):
