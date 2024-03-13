@@ -16,7 +16,7 @@ class Hyperparameters:
                 'kernel_type': 'squared_exponential',
                 'sigma': 3.45,
                 'l': 0.3,
-                'noise_level': 0.069
+                'noise_level': 0.01
             }
 
             self._hyperparameter_bounds = {
