@@ -337,7 +337,7 @@ class GPModel:
         delta_t = (self.X[-1] - self.X[0]) / (N - 1)
         fs = 1 / delta_t
         delta_f = fs / N
-        self.xi = np.linspace(-fs/2, fs/2, N)
+        self.xi = np.linspace(-(fs/2 - delta_f), fs/2, N)
         # if N % 2 == 0:
         #     # Even number of samples: include Nyquist frequency
         #     self.xi = np.linspace(0, fs / 2, N // 2 + 1)
@@ -346,9 +346,9 @@ class GPModel:
         #     self.xi = np.linspace(0, fs / 2, (N - 1) // 2 + 1)
         self.xi = 2 * np.pi * self.xi  # convert from Hz to rad/s
         m = 1  # Mass
-        c = 0.2  # Damping coefficient
+        c = 0.5  # Damping coefficient
         k = 100  # Stiffness
-        self.mu_fourier = np.squeeze(1 / ((k - m * self.xi ** 2) + 1j * c * self.xi))
+        self.mu_fourier = np.squeeze(np.exp(-1j * np.pi) / ((k - m * self.xi ** 2) + 1j * c * self.xi))
 
     def GP_Mu(self, X_star):
         hyp_l = self.hyperparameters_obj.dict()['l']
@@ -357,7 +357,7 @@ class GPModel:
         delta_t = (X_star[-1] - X_star[0]) / (N - 1)
         fs = 1 / delta_t
         delta_f = fs / N
-        self.xi = np.linspace(-fs/2, fs/2, N)
+        self.xi = np.linspace(-(fs/2 - delta_f), fs/2, N)
         self.xi = 2 * np.pi * self.xi  # convert from Hz to rad/s
         self.K_xi = np.squeeze(self.gp_kernel.compute_kernel_SE_fourier(self.xi))
         # Extract the noise level and ensure it is a positive value
@@ -377,7 +377,7 @@ class GPModel:
             exp = np.squeeze(np.exp(-1j * self.xi[i] * np.squeeze(self.X)))
             self.mu_fourier[i] = self.K_xi[i] * (w.dot(exp))
 
-        self.mu_fourier *= np.exp(-1j * np.pi * np.angle(self.mu_fourier[-1]))
+        #self.mu_fourier *= np.exp(-1j * (-np.pi + np.angle(self.mu_fourier[-1])))
         debug_print("mu_fourier calculated")
         return hyp_l, w
 
@@ -387,7 +387,7 @@ class GPModel:
         delta_t = (self.X[-1] - self.X[0]) / (N - 1)
         fs = 1 / delta_t
         delta_f = fs / N
-        self.xi = np.linspace(0, fs, N)
+        self.xi = np.linspace(-(fs/2 - delta_f), fs/2, N)
         # if N % 2 == 0:
         #     # Even number of samples: include Nyquist frequency
         #     self.xi = np.linspace(0, fs / 2, N // 2 + 1)
@@ -396,7 +396,12 @@ class GPModel:
         #     self.xi = np.linspace(0, fs / 2, (N - 1) // 2 + 1)
         self.xi = 2 * np.pi * self.xi  # convert from Hz to rad/s
         self.mu_fourier = np.fft.fft(np.squeeze(self.y) * np.hanning(len(np.squeeze(self.y)))) / (len(np.squeeze(self.y)) / 2) * 2 * np.pi
-        self.mu_fourier *= np.exp(-1j * np.angle(self.mu_fourier[-1]))
+        #debug_a = self.mu_fourier
+        #debug_b = np.fft.fftshift(self.mu_fourier)
+        debug_c = np.concatenate((self.mu_fourier[(N//2+1):], self.mu_fourier[:(N//2+1)]))
+        #self.mu_fourier *= np.exp(-1j * np.angle(self.mu_fourier[-1]))
+        self.mu_fourier = debug_c
+
 
     def is_positive_definite(self, K):
         if K.ndim > 3:

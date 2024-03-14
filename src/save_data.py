@@ -2,7 +2,7 @@ import numpy as np
 import os
 from jax.random import PRNGKey, split, normal
 
-def save_data(length = 256, dataset = 4):
+def save_data(length = 512, dataset = 4):
     try:
         if dataset == 0:
             start = 5000
@@ -46,11 +46,12 @@ def save_data(length = 256, dataset = 4):
             key = PRNGKey(0)
             sn2 = 0
             m = 1  # Mass
-            c = 0.2  # Damping coefficient
+            c = 0.5  # Damping coefficient
             k = 100  # Stiffness
+            sample_rate = 32
 
             # Time array
-            time_truncated = np.linspace(0, length/25, length)[:, None]
+            time_truncated = np.linspace(0, (length-1)/sample_rate, length)[:, None]
 
             # Calculate natural frequency and damping ratio
             omega_n = np.sqrt(k / m)
@@ -61,7 +62,7 @@ def save_data(length = 256, dataset = 4):
 
             # Assume A=1 and phi=0 for simplicity, these should be determined based on initial conditions
             A = 1
-            phi = 0
+            phi = -np.pi/2
 
             # Calculate the force response (displacement response) of the system
             force_response = A * np.exp(-zeta * omega_n * time_truncated) * np.cos(omega_d * time_truncated + phi) + sn2 * normal(key, shape=time_truncated.shape)
