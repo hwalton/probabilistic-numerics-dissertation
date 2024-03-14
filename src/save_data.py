@@ -2,7 +2,7 @@ import numpy as np
 import os
 from jax.random import PRNGKey, split, normal
 
-def save_data(length = 750, dataset = 4):
+def save_data(length = 256, dataset = 4):
     try:
         if dataset == 0:
             start = 5000

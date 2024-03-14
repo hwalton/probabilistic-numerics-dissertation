@@ -43,7 +43,7 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
 
 
     plt.subplot(3, 1, 2)  # a rows, b columns, plot c
-    (plt.plot(force_response_model.xi, np.abs(force_response_model.mu_fourier)))
+    (plt.scatter(force_response_model.xi, np.abs(force_response_model.mu_fourier)))
     plt.fill_between(np.squeeze(force_response_model.xi), lower_bound_abs, upper_bound_abs, color='blue',
                      alpha=0.2, label='Std Dev')
     plt.xlabel('Freq [Rad/s]')
@@ -55,16 +55,14 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
     lower_bound_angle = np.angle(force_response_model.mu_fourier) - np.angle(force_response_model.stdv_fourier)
 
     plt.ylim(-0.5 * np.max(np.abs(force_response_model.mu_fourier)), 1.5 * np.max(np.abs(force_response_model.mu_fourier)))
-    plt.xlim(-2, 40)
 
 
     plt.subplot(3, 1, 3)  # a rows, b columns, plot c
-    plt.plot(force_response_model.xi, np.angle(force_response_model.mu_fourier))
+    plt.scatter(force_response_model.xi, np.angle(force_response_model.mu_fourier))
     plt.fill_between(np.squeeze(force_response_model.xi), lower_bound_angle, upper_bound_angle, color='blue',
                      alpha=0.2, label='Std Dev')
     plt.xlabel('Freq [Rad/s]')
     plt.ylabel('Phase of Fourier Transform')
-    plt.xlim(-2, 40)
     plt.show()
 
 def format_data(X):
