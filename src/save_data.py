@@ -1,8 +1,12 @@
 import numpy as np
 import os
+import dotenv
+dotenv.load_dotenv()
+
 from jax.random import PRNGKey, split, normal
 
-def save_data(length = 512, dataset = 4):
+
+def save_data(length = 256, dataset = 4):
     try:
         if dataset == 0:
             start = 5000
@@ -45,9 +49,9 @@ def save_data(length = 512, dataset = 4):
         elif dataset == 4:
             key = PRNGKey(0)
             sn2 = 0
-            m = 1  # Mass
-            c = 0.5  # Damping coefficient
-            k = 100  # Stiffness
+            m = int(os.getenv('M'))  # Mass
+            c = int(os.getenv('C'))  # Damping coefficient
+            k = int(os.getenv('K'))  # Stiffness
             sample_rate = 32
 
             # Time array

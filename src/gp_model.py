@@ -206,24 +206,18 @@ class GPModel:
 
             self.GP_STDV_5(X_star)
 
-            return self.mu_fourier, self.stdv_fourier
-
-        elif method == 'GP_6':
-            hyp_l, w = self.GP_Mu(X_star)
-
-            self.GP_STDV_6(X_star)
-
-            return self.mu_fourier, self.stdv_fourier
+            return self.xi, self.mu_fourier, self.stdv_fourier
 
 
         elif method == 'DFT':
             self.DFT_Mu()
             self.stdv_fourier = np.zeros_like(self.mu_fourier)
-            return self.mu_fourier, self.stdv_fourier
+            return self.xi, self.mu_fourier, self.stdv_fourier
+
         elif method == 'set':
             self.Set_Mu()
             self.stdv_fourier = np.zeros_like(self.mu_fourier)
-            return self.mu_fourier, self.stdv_fourier
+            return self.xi, self.mu_fourier, self.stdv_fourier
         else:
             assert 0, "Not yet implemented"
 
@@ -346,7 +340,7 @@ class GPModel:
         #     self.xi = np.linspace(0, fs / 2, (N - 1) // 2 + 1)
         self.xi = 2 * np.pi * self.xi  # convert from Hz to rad/s
         m = 1  # Mass
-        c = 0.5  # Damping coefficient
+        c = 0.05  # Damping coefficient
         k = 100  # Stiffness
         self.mu_fourier = np.squeeze(np.exp(-1j * np.pi) / ((k - m * self.xi ** 2) + 1j * c * self.xi))
 

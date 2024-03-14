@@ -6,7 +6,7 @@ from load_data import load_data
 from gp_model import GPModel
 
 
-def plot_data(force_response, force_response_prediction, time, time_test, force_response_model):
+def plot_data(force_response, force_response_prediction, time, time_test, xi, analytical_FT, DFT, GP_FT_mu, GP_FT_stdv):
     plt.figure(figsize=(12, 10.5))
     plt.rcParams.update({'font.size': 16})
 
@@ -18,8 +18,7 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
 
     plt.subplot(3, 1, 1)  # a rows, b columns, plot c
     plt.scatter(time, force_response, label='Force Response', color='green')
-    plt.scatter(time_test, force_response_prediction[0], label='Prediction Mean', color='red')
-    plt.scatter(force_response_model.U_X, force_response_model.U_y, label='Inducing Points', color='purple')
+    plt.plot(time_test, force_response_prediction[0], label='Prediction Mean', color='red')
 
     # Assuming prediction[1] is the standard deviation
     upper_bound = force_response_prediction[0] + force_response_prediction_diag
@@ -37,29 +36,29 @@ def plot_data(force_response, force_response_prediction, time, time_test, force_
 
     plt.tight_layout()
 
-    debug_abs = np.abs(force_response_model.stdv_fourier)
-    upper_bound_abs = np.abs(force_response_model.mu_fourier) + np.abs(force_response_model.stdv_fourier)
-    lower_bound_abs = np.abs(force_response_model.mu_fourier) - np.abs(force_response_model.stdv_fourier)
+    debug_abs = np.abs(GP_FT_stdv)
+    upper_bound_abs = np.abs(GP_FT_mu) + np.abs(GP_FT_stdv)
+    lower_bound_abs = np.abs(GP_FT_mu) - np.abs(GP_FT_stdv)
 
 
     plt.subplot(3, 1, 2)  # a rows, b columns, plot c
-    (plt.scatter(force_response_model.xi, np.abs(force_response_model.mu_fourier)))
-    plt.fill_between(np.squeeze(force_response_model.xi), lower_bound_abs, upper_bound_abs, color='blue',
+    (plt.scatter(xi, np.abs(GP_FT_mu)))
+    plt.fill_between(np.squeeze(xi), lower_bound_abs, upper_bound_abs, color='blue',
                      alpha=0.2, label='Std Dev')
     plt.xlabel('Freq [Rad/s]')
     plt.ylabel('Magnitude of Fourier Transform')
 
-    debug_angle = np.angle(force_response_model.stdv_fourier)
+    debug_angle = np.angle(GP_FT_stdv)
 
-    upper_bound_angle = np.angle(force_response_model.mu_fourier) + np.angle(force_response_model.stdv_fourier)
-    lower_bound_angle = np.angle(force_response_model.mu_fourier) - np.angle(force_response_model.stdv_fourier)
+    upper_bound_angle = np.angle(GP_FT_mu) + np.angle(GP_FT_stdv)
+    lower_bound_angle = np.angle(GP_FT_mu) - np.angle(GP_FT_stdv)
 
-    plt.ylim(-0.5 * np.max(np.abs(force_response_model.mu_fourier)), 1.5 * np.max(np.abs(force_response_model.mu_fourier)))
+    plt.ylim(-0.5 * np.max(np.abs(GP_FT_mu)), 1.5 * np.max(np.abs(GP_FT_mu)))
 
 
     plt.subplot(3, 1, 3)  # a rows, b columns, plot c
-    plt.scatter(force_response_model.xi, np.angle(force_response_model.mu_fourier))
-    plt.fill_between(np.squeeze(force_response_model.xi), lower_bound_angle, upper_bound_angle, color='blue',
+    plt.scatter(xi, np.angle(GP_FT_mu))
+    plt.fill_between(np.squeeze(xi), lower_bound_angle, upper_bound_angle, color='blue',
                      alpha=0.2, label='Std Dev')
     plt.xlabel('Freq [Rad/s]')
     plt.ylabel('Phase of Fourier Transform')
@@ -101,10 +100,14 @@ def execute_gp_model():
     model_2_nll = force_response_model.fit_model()
     force_response_prediction = force_response_model.predict(time_test,
                                                              method=force_response_predict_type)
-    force_response_fourier_prediction = force_response_model.predict_fourier(time_test, method=force_response_fourier_type)
+    xi, GP_FT_mu, GP_FT_stdv = force_response_model.predict_fourier(time_test, method=force_response_fourier_type)
+
+    _, DFT, _ = force_response_model.predict_fourier(time_test, method='DFT')
+
+    _, analytical_FT, _ = force_response_model.predict_fourier(time_test, method='set')
 
     plot_data(force_response,
-              force_response_prediction, time, time_test, force_response_model)
+              force_response_prediction, time, time_test, xi, analytical_FT, DFT, GP_FT_mu, GP_FT_stdv)
 
     return model_2_nll
 def main():
