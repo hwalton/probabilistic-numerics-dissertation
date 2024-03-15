@@ -211,12 +211,12 @@ class GPModel:
 
         elif method == 'DFT':
             self.DFT_Mu()
-            self.stdv_fourier = np.zeros_like(self.mu_fourier)
+            self.stdv_fourier = np.zeros(len(self.mu_fourier))
             return self.xi, self.mu_fourier, self.stdv_fourier
 
         elif method == 'set':
             self.Set_Mu()
-            self.stdv_fourier = np.zeros_like(self.mu_fourier)
+            self.stdv_fourier = np.zeros(len(self.mu_fourier))
             return self.xi, self.mu_fourier, self.stdv_fourier
         else:
             assert 0, "Not yet implemented"
