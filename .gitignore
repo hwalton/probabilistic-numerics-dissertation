@@ -166,3 +166,5 @@ src/fourier_kernel_test.py
 time_truncated.csv
 force_response.csv
 
+output_data
+

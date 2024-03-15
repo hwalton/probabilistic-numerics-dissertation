@@ -1,3 +1,4 @@
+from datetime import datetime
 import time as timer
 import numpy as np
 from load_data import load_data
@@ -23,6 +24,7 @@ def execute_gp_model():
     force_response_fourier_type = ['GP', 'GP_2', 'GP_3', 'GP_4', 'GP_5', 'DFT', 'set'][6]
     force_response_n_iter = 0
     M_one_in = 1
+    comment = '' # start with underscore
 
     force_response, time = load_data()
 
@@ -64,9 +66,15 @@ def execute_gp_model():
     })
 
 
+
+    date_time_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    plot_df.to_csv(f'../output_data/plot_df_{date_time_formatted}{comment}.csv', index=False)
+
+
     plot_data(plot_df)
 
     return model_2_nll
+
 def main():
     start_time = timer.time()
 
