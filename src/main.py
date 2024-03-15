@@ -20,7 +20,7 @@ def execute_gp_model():
     force_response_predict_type = ['cholesky', 'FITC'][0]
     force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_response_U_induced_method = ['k_means', 'even'][1]
-    force_response_fourier_type = ['GP', 'GP_2', 'GP_3', 'GP_4', 'GP_5', 'DFT', 'set'][4]
+    force_response_fourier_type = ['GP', 'GP_2', 'GP_3', 'GP_4', 'GP_5', 'DFT', 'set'][6]
     force_response_n_iter = 0
     M_one_in = 1
 
@@ -50,21 +50,21 @@ def execute_gp_model():
 
     _, analytical_FT, _ = force_response_model.predict_fourier(time_test, method='set')
 
-    # plot_df = pd.dataframe({
-    #     'time': time,
-    #     'force_response': force_response,
-    #     'time_test': time_test,
-    #     'force_response_prediction': force_response_prediction,
-    #     'xi': xi,
-    #     'analytical_FT': analytical_FT,
-    #     'DFT': DFT,
-    #     'GP_FT_mu': GP_FT_mu,
-    #     'GP_FT_stdv': GP_FT_stdv
-    # })
+    plot_df = pd.DataFrame({
+        'time': np.squeeze(time),
+        'force_response': np.squeeze(force_response),
+        'time_test': np.squeeze(time_test),
+        'force_response_prediction_t': np.squeeze(force_response_prediction[0]),
+        'force_response_prediction_f': np.squeeze(force_response_prediction[1]),
+        'xi': np.squeeze(xi),
+        'analytical_FT': np.squeeze(analytical_FT),
+        'DFT': np.squeeze(DFT),
+        'GP_FT_mu': np.squeeze(GP_FT_mu),
+        'GP_FT_stdv': np.squeeze(GP_FT_stdv)
+    })
 
 
-    plot_data(force_response,
-              force_response_prediction, time, time_test, xi, analytical_FT, DFT, GP_FT_mu, GP_FT_stdv)
+    plot_data(plot_df)
 
     return model_2_nll
 def main():
