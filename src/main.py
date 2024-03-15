@@ -1,7 +1,7 @@
 import time as timer
 import numpy as np
 from load_data import load_data
-
+import pandas as pd
 from gp_model import GPModel
 
 from plot_data import plot_data
@@ -49,6 +49,19 @@ def execute_gp_model():
     _, DFT, _ = force_response_model.predict_fourier(time_test, method='DFT')
 
     _, analytical_FT, _ = force_response_model.predict_fourier(time_test, method='set')
+
+    # plot_df = pd.dataframe({
+    #     'time': time,
+    #     'force_response': force_response,
+    #     'time_test': time_test,
+    #     'force_response_prediction': force_response_prediction,
+    #     'xi': xi,
+    #     'analytical_FT': analytical_FT,
+    #     'DFT': DFT,
+    #     'GP_FT_mu': GP_FT_mu,
+    #     'GP_FT_stdv': GP_FT_stdv
+    # })
+
 
     plot_data(force_response,
               force_response_prediction, time, time_test, xi, analytical_FT, DFT, GP_FT_mu, GP_FT_stdv)
