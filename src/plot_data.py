@@ -42,11 +42,11 @@ def print_wd(analytical_FT, DFT, GP_FT_mu, xi):
     zeta = c / (2 * np.sqrt(m * k))
     wd_analytical_FT =  wn * np.sqrt(1 - zeta**2)
 
-    i = np.argwhere(np.abs(DFT[(len(DFT)//2+1):]) == max(np.abs(DFT[(len(DFT)//2+1):]))) + len(DFT)//2 + 1
-    wd_DFT = xi[i]
+    i = np.squeeze(np.argwhere(np.abs(DFT) == max(np.abs(DFT)))[-1])
+    wd_DFT = np.squeeze(np.abs(xi[i]))
 
-    j = np.argwhere(np.abs(GP_FT_mu[(len(GP_FT_mu)//2+1):]) == max(np.abs(GP_FT_mu[(len(GP_FT_mu)//2+1):]))) + len(GP_FT_mu)//2 + 1
-    wd_GP_FT = xi[j]
+    j = np.squeeze(np.argwhere(np.abs(GP_FT_mu) == max(np.abs(GP_FT_mu)))[-1])
+    wd_GP_FT = np.squeeze(xi[j])
 
     print(f"\u03C9_d analytical FT: {wd_analytical_FT}")
     print(f"\u03C9_d DFT: {wd_DFT}")
