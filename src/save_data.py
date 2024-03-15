@@ -6,7 +6,7 @@ dotenv.load_dotenv()
 from jax.random import PRNGKey, split, normal
 
 
-def save_data(length = 256, dataset = 4):
+def save_data(length = 1024, dataset = 4):
     try:
         if dataset == 0:
             start = 5000
@@ -48,10 +48,10 @@ def save_data(length = 256, dataset = 4):
 
         elif dataset == 4:
             key = PRNGKey(0)
-            sn2 = 0
-            m = int(os.getenv('M'))  # Mass
-            c = int(os.getenv('C'))  # Damping coefficient
-            k = int(os.getenv('K'))  # Stiffness
+            sn2 = 0.15
+            m = float(os.getenv('M'))  # Mass
+            c = float(os.getenv('C'))  # Damping coefficient
+            k = float(os.getenv('K'))  # Stiffness
             sample_rate = 32
 
             # Time array
@@ -66,7 +66,7 @@ def save_data(length = 256, dataset = 4):
 
             # Assume A=1 and phi=0 for simplicity, these should be determined based on initial conditions
             A = 1
-            phi = -np.pi/2
+            phi = 0
 
             # Calculate the force response (displacement response) of the system
             force_response = A * np.exp(-zeta * omega_n * time_truncated) * np.cos(omega_d * time_truncated + phi) + sn2 * normal(key, shape=time_truncated.shape)

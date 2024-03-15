@@ -2,9 +2,58 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+def print_MSE(analytical_FT, DFT, GP_FT_mu):
+    mse_DFT_mag = np.mean((np.abs(analytical_FT) - np.abs(DFT)) ** 2)
+    mse_GP_FT_mag = np.mean((np.abs(analytical_FT) - np.abs(GP_FT_mu)) ** 2)
+
+    mse_DFT_phase = np.mean((np.angle(analytical_FT) - np.angle(DFT)) ** 2)
+    mse_GP_FT_phase = np.mean((np.angle(analytical_FT) - np.angle(GP_FT_mu)) ** 2)
+
+    mse_DFT_real = np.mean((np.real(analytical_FT) - np.real(DFT)) ** 2)
+    mse_GP_FT_real = np.mean((np.real(analytical_FT) - np.real(GP_FT_mu)) ** 2)
+
+    mse_DFT_imag = np.mean((np.imag(analytical_FT) - np.imag(DFT)) ** 2)
+    mse_GP_FT_imag = np.mean((np.imag(analytical_FT) - np.imag(GP_FT_mu)) ** 2)
+
+    print(f"MSE DFT Magnitude: {mse_DFT_mag}")
+    print(f"MSE GP FT Magnitude: {mse_GP_FT_mag}\n")
+
+    print(f"MSE DFT Phase: {mse_DFT_phase}")
+    print(f"MSE GP FT Phase: {mse_GP_FT_phase}\n")
+
+    print(f"MSE DFT Real: {mse_DFT_real}")
+    print(f"MSE GP FT Real: {mse_GP_FT_real}\n")
+
+    print(f"MSE DFT Imaginary: {mse_DFT_imag}")
+    print(f"MSE GP FT Imaginary: {mse_GP_FT_imag}\n")
+
+
+def print_wd(analytical_FT, DFT, GP_FT_mu, xi):
+
+    m = float(os.getenv('M'))
+    c = float(os.getenv('C'))
+    k = float(os.getenv('K'))
+
+    wn = np.sqrt(k/m)
+    zeta = c / (2 * np.sqrt(m * k))
+    wd_analytical_FT =  wn * np.sqrt(1 - zeta**2)
+
+    i = np.argwhere(np.abs(DFT[(len(DFT)//2+1):]) == max(np.abs(DFT[(len(DFT)//2+1):]))) + len(DFT)//2 + 1
+    wd_DFT = xi[i]
+
+    j = np.argwhere(np.abs(GP_FT_mu[(len(GP_FT_mu)//2+1):]) == max(np.abs(GP_FT_mu[(len(GP_FT_mu)//2+1):]))) + len(GP_FT_mu)//2 + 1
+    wd_GP_FT = xi[j]
+
+    print(f"\u03C9_d analytical FT: {wd_analytical_FT}")
+    print(f"\u03C9_d DFT: {wd_DFT}")
+    print(f"\u03C9_d GP FT: {wd_GP_FT}\n")
 
 def plot_data(plot_df):
-    plt.figure(figsize=(23.4, 16.5))
+    plt.figure(figsize=(33.1 , 23.4))
     plt.rcParams.update({'font.size': 16})
 
     arrays = {col: np.array(plot_df[col]) for col in plot_df.columns}
@@ -19,6 +68,8 @@ def plot_data(plot_df):
     GP_FT_stdv = arrays['GP_FT_stdv']
     analytical_FT = arrays['analytical_FT']
     DFT = arrays['DFT']
+
+
 
     def convert_to_complex(s):
         return complex(s)
@@ -78,34 +129,34 @@ def plot_data(plot_df):
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Magnitude [ms$^{-2}$]')
     ax.set_title('GP Fourier Transform')
-
-    debug_angle = np.angle(GP_FT_stdv)
-
     upper_bound_angle = np.angle(GP_FT_mu) + np.angle(GP_FT_stdv)
     lower_bound_angle = np.angle(GP_FT_mu) - np.angle(GP_FT_stdv)
+    max_mag = 1.1 * max(np.max(np.abs(analytical_FT)), np.max(np.abs(DFT)), np.max(np.abs(GP_FT_mu)))
+    ax.set_ylim(-0.5 * max_mag, 1.5 * max_mag)
 
-    ax.set_ylim(-0.5 * np.max(np.abs(GP_FT_mu)), 1.5 * np.max(np.abs(GP_FT_mu)))
 
-
-    # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (2, 2))
     ax.scatter(xi, np.angle(GP_FT_mu))
     ax.fill_between(np.squeeze(xi), lower_bound_angle, upper_bound_angle, color='blue',
                      alpha=0.2, label='Std Dev')
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Phase [Rad]')
+    max_phase = (1.1 * np.pi)
+    ax.set_ylim(-max_phase, max_phase)
 
-    # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (3, 2))
     ax.scatter(xi, np.real(GP_FT_mu))
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Real Part [ms$^{-2}$]')
+    max_re = 1.1 * max(np.max(np.abs(np.real(analytical_FT))), np.max(np.abs(np.real(DFT))), np.max(np.abs(np.real(GP_FT_mu))))
+    ax.set_ylim(-max_re, max_re)
 
-    # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (4, 2))
     ax.scatter(xi, np.imag(GP_FT_mu))
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Imaginary Part [ms$^{-2}$]')
+    max_imag = 1.1 * max(np.max(np.abs(np.imag(analytical_FT))), np.max(np.abs(np.imag(DFT))), np.max(np.abs(np.imag(GP_FT_mu))))
+    ax.set_ylim(-max_imag, max_imag)
 
 
     ax = plt.subplot2grid((5, 3), (1, 1))
@@ -113,26 +164,28 @@ def plot_data(plot_df):
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Magnitude [ms$^{-2}$]')
     ax.set_title('Discrete Fourier Transform')
-
-    ax.set_ylim(-0.5 * np.max(np.abs(GP_FT_mu)), 1.5 * np.max(np.abs(GP_FT_mu)))
+    ax.set_ylim(-0.5 * max_mag, 1.5 * max_mag)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (2, 1))
     ax.scatter(xi, np.angle(DFT))
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Phase [Rad]')
+    ax.set_ylim(-max_phase, max_phase)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (3, 1))
     ax.scatter(xi, np.real(DFT))
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Real Part [ms$^{-2}$]')
+    ax.set_ylim(-max_re, max_re)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (4, 1))
     ax.scatter(xi, np.imag(DFT))
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Imaginary Part [ms$^{-2}$]')
+    ax.set_ylim(-max_imag, max_imag)
 
 
     ax = plt.subplot2grid((5, 3), (1, 0))
@@ -140,26 +193,31 @@ def plot_data(plot_df):
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Magnitude [ms$^{-2}$]')
     ax.set_title('Analytical Fourier Transform')
-
-    ax.set_ylim(-0.5 * np.max(np.abs(GP_FT_mu)), 1.5 * np.max(np.abs(GP_FT_mu)))
+    ax.set_ylim(-0.5 * max_mag, 1.5 * max_mag)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (2, 0))
     ax.scatter(xi, np.angle(analytical_FT))
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Phase [Rad]')
+    ax.set_ylim(-max_phase, max_phase)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (3, 0))
     ax.scatter(xi, np.real(analytical_FT))
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Real Part [ms$^{-2}$]')
+    ax.set_ylim(-max_re, max_re)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (4, 0))
     ax.scatter(xi, np.imag(analytical_FT))
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Imaginary Part [ms$^{-2}$]')
+    ax.set_ylim(-max_imag, max_imag)
+
+    print_MSE(analytical_FT, DFT, GP_FT_mu)
+    print_wd(analytical_FT, DFT, GP_FT_mu, xi)
 
 
     plt.tight_layout()
@@ -167,9 +225,13 @@ def plot_data(plot_df):
 
 
 
+
+
 def main(csv_file):
     plot_df = pd.read_csv(f'../output_data/{csv_file}.csv')
     plot_data(plot_df)
 
+
+
 if __name__ == "__main__":
-    main("plot_df_2024-03-15_11-41-54")
+    main("plot_df_2024-03-15_14-58-18_noisy")

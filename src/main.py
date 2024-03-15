@@ -24,7 +24,7 @@ def execute_gp_model():
     force_response_fourier_type = ['GP', 'GP_2', 'GP_3', 'GP_4', 'GP_5', 'DFT', 'set'][4]
     force_response_n_iter = 0
     M_one_in = 1
-    comment = '' # start with underscore
+    comment = '_noisy' # start with underscore
 
     force_response, time = load_data()
 
@@ -46,11 +46,12 @@ def execute_gp_model():
     model_2_nll = force_response_model.fit_model()
     force_response_prediction = force_response_model.predict(time_test,
                                                              method=force_response_predict_type)
-    xi, GP_FT_mu, GP_FT_stdv = force_response_model.predict_fourier(time_test, method=force_response_fourier_type)
+    xi_GP, GP_FT_mu, GP_FT_stdv = force_response_model.predict_fourier(time_test, method=force_response_fourier_type)
 
-    _, DFT, _ = force_response_model.predict_fourier(time_test, method='DFT')
+    xi_DFT, DFT, _ = force_response_model.predict_fourier(time_test, method='DFT')
 
     _, analytical_FT, _ = force_response_model.predict_fourier(time_test, method='set')
+
 
     plot_df = pd.DataFrame({
         'time': np.squeeze(time),

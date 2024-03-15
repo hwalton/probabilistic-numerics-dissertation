@@ -12,6 +12,10 @@ from utils import debug_print
 from sklearn.cluster import KMeans
 from scipy.optimize import minimize
 
+import os
+import dotenv
+dotenv.load_dotenv()
+
 
 class GPModel:
     def __init__(self, kernel_type, X, y, solver_type = 'iterative_search', n_iter=10, gp_algo ='cholesky', U_induced_method = 'even', M_one_in = 1):
@@ -339,10 +343,10 @@ class GPModel:
         #     # Odd number of samples: exclude Nyquist frequency
         #     self.xi = np.linspace(0, fs / 2, (N - 1) // 2 + 1)
         self.xi = 2 * np.pi * self.xi  # convert from Hz to rad/s
-        m = 1  # Mass
-        c = 0.05  # Damping coefficient
-        k = 100  # Stiffness
-        self.mu_fourier = np.squeeze(np.exp(-1j * np.pi) / ((k - m * self.xi ** 2) + 1j * c * self.xi))
+        m = float(os.getenv('M'))  # Mass
+        c = float(os.getenv('C'))  # Damping coefficient
+        k = float(os.getenv('K'))  # Stiffness
+        self.mu_fourier = np.squeeze(1 / ((k - m * self.xi ** 2) + 1j * c * self.xi))
 
     def GP_Mu(self, X_star):
         hyp_l = self.hyperparameters_obj.dict()['l']
