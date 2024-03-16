@@ -49,7 +49,7 @@ def save_data(length = 512, dataset = 4):
 
         elif dataset == 4:
             key = PRNGKey(0)
-            sn2 = 0.15
+            sn2 = 0.25
             m = float(os.getenv('M'))  # Mass
             c = float(os.getenv('C'))  # Damping coefficient
             k = float(os.getenv('K'))  # Stiffness

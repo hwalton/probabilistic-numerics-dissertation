@@ -360,7 +360,7 @@ class GPModel:
         return hyp_l, w
 
     def DFT_Mu(self, xi):
-        self.mu_fourier = np.fft.fft(np.squeeze(self.y) * np.hanning(len(np.squeeze(self.y)))) / (len(np.squeeze(self.y)) / 2) * 2 * np.pi
+        self.mu_fourier = np.fft.fft(np.squeeze(self.y) * np.hanning(len(np.squeeze(self.y)))) / (len(np.squeeze(self.y)) / 2)
         N = len(self.mu_fourier)
         self.mu_fourier = np.concatenate((self.mu_fourier[(N//2+1):], self.mu_fourier[:(N//2+1)]))
 
