@@ -34,12 +34,13 @@ def print_MSE(analytical_FT, DFT, GP_FT_mu):
 
 def print_wd(analytical_FT, DFT, GP_FT_mu, xi_cont, xi_disc):
 
-    m = float(os.getenv('M'))
-    c = float(os.getenv('C'))
-    k = float(os.getenv('K'))
+    m = float(os.getenv('M')) #=1.0
+    c = float(os.getenv('C')) #=0.1
+    k = float(os.getenv('K')) #=100.0
 
     wn = np.sqrt(k/m)
     zeta = c / (2 * np.sqrt(m * k))
+    debug = np.sqrt(1 - zeta**2)
     wd_analytical_FT =  wn * np.sqrt(1 - zeta**2)
 
     i = np.squeeze(np.argwhere(np.abs(DFT) == max(np.abs(DFT)))[-1])
@@ -48,6 +49,8 @@ def print_wd(analytical_FT, DFT, GP_FT_mu, xi_cont, xi_disc):
     j = np.squeeze(np.argwhere(np.abs(GP_FT_mu) == max(np.abs(GP_FT_mu)))[-1])
     wd_GP_FT = np.squeeze(xi_cont[j])
 
+    peak_analytical_FT = np.abs(np.squeeze(1 / ((k - m * (wd_analytical_FT) ** 2) + 1j * c * (wd_analytical_FT))))
+
     print("~" * 100)
     print(f"\u03C9_d analytical FT: {wd_analytical_FT}")
     print(f"\u03C9_d DFT: {wd_DFT}")
@@ -55,18 +58,18 @@ def print_wd(analytical_FT, DFT, GP_FT_mu, xi_cont, xi_disc):
     print(f"Error DFT: {np.abs(wd_analytical_FT - wd_DFT)}")
     print(f"Error GP FT: {np.abs(wd_analytical_FT - wd_GP_FT)}")
     print("~" * 100)
-    print(f"Peak analytical FT: {max(np.abs(analytical_FT))}")
+    print(f"Peak analytical FT: {peak_analytical_FT}")
     print(f"Peak DFT: {max(np.abs(DFT))}")
     print(f"Peak GP FT: {max(np.abs(GP_FT_mu))}\n")
-    print(f"Error in peak DFT: {np.abs(max(np.abs(analytical_FT)) - max(np.abs(DFT)))}")
-    print(f"Error in peak GP FT: {np.abs(max(np.abs(analytical_FT)) - max(np.abs(GP_FT_mu)))}\n")
+    print(f"Error in peak DFT: {peak_analytical_FT - max(np.abs(DFT))}")
+    print(f"Error in peak GP FT: {peak_analytical_FT - max(np.abs(GP_FT_mu))}\n")
 
 
 def plot_data(data_dir):
     plot_df = pd.read_csv(data_dir)
 
 
-    plt.figure(figsize=(33.1 , 23.4))
+    plt.figure(figsize=(33.1, 23.4), dpi=150)
     plt.rcParams.update({'font.size': 16})
 
     arrays = {col: np.array(plot_df[col].dropna()) for col in plot_df.columns}
@@ -151,13 +154,13 @@ def plot_data(data_dir):
     upper_bound_angle = np.angle(GP_FT_mu) + np.angle(GP_FT_stdv)
     lower_bound_angle = np.angle(GP_FT_mu) - np.angle(GP_FT_stdv)
     max_mag = 1.1 * max(np.max(np.abs(analytical_FT)), np.max(np.abs(DFT)), np.max(np.abs(GP_FT_mu)))
-    ax.set_ylim(-0.5 * max_mag, 1.5 * max_mag)
+    min_mag = - 1.1 * max(np.abs(GP_FT_stdv))
+    ax.set_ylim(min_mag, max_mag)
 
 
     ax = plt.subplot2grid((5, 3), (2, 2))
     ax.scatter(xi_cont, np.angle(GP_FT_mu))
-    ax.fill_between(np.squeeze(xi_cont), lower_bound_angle, upper_bound_angle, color='blue',
-                     alpha=0.2, label='Std Dev')
+    #ax.fill_between(np.squeeze(xi_cont), lower_bound_angle, upper_bound_angle, color='blue', alpha=0.2, label='Std Dev')
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Phase [Rad]')
     max_phase = (1.1 * np.pi)
@@ -183,7 +186,7 @@ def plot_data(data_dir):
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Magnitude [ms$^{-2}$]')
     ax.set_title('Discrete Fourier Transform')
-    ax.set_ylim(-0.5 * max_mag, 1.5 * max_mag)
+    ax.set_ylim(min_mag, max_mag)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (2, 1))
@@ -212,7 +215,7 @@ def plot_data(data_dir):
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Magnitude [ms$^{-2}$]')
     ax.set_title('Analytical Fourier Transform')
-    ax.set_ylim(-0.5 * max_mag, 1.5 * max_mag)
+    ax.set_ylim(min_mag, max_mag)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (2, 0))
@@ -246,4 +249,4 @@ def plot_data(data_dir):
 
 
 if __name__ == "__main__":
-    plot_data(f"../output_data/plot_df_2024-03-16_14-18-51.csv")
+    plot_data(f"../output_data/plot_df_2024-03-16_14-51-43.csv")

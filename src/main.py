@@ -41,6 +41,7 @@ def execute_gp_model():
     force_response_n_iter = 0
     M_one_in = 1
     xi_mode = ['uniform', 'cluster_peak'][1]
+    peak = (10, 0.25, 100)
     comment = '' # start with underscore
 
     force_response, time = load_data()
@@ -64,7 +65,7 @@ def execute_gp_model():
     force_response_prediction = force_response_model.predict(time_test,
                                                              method=force_response_predict_type)
 
-    xi_cont = get_xi(time_test, mode=xi_mode, peak=(10, 2, 100))
+    xi_cont = get_xi(time_test, mode=xi_mode, peak=peak)
     GP_FT_mu, GP_FT_stdv = force_response_model.predict_fourier(xi_cont, method=force_response_fourier_type)
 
     xi_disc = get_xi(time_test, mode='uniform')
@@ -116,7 +117,7 @@ def main():
 
     model_2_nll = execute_gp_model()
 
-    print(f"Force Response final NLL: {model_2_nll}")
+    #print(f"Force Response final NLL: {model_2_nll}")
 
     end_time = timer.time()
     elapsed_time = end_time - start_time
