@@ -153,7 +153,7 @@ def plot_data(data_dir):
     ax.set_title('GP Fourier Transform')
     upper_bound_angle = np.angle(GP_FT_mu) + np.angle(GP_FT_stdv)
     lower_bound_angle = np.angle(GP_FT_mu) - np.angle(GP_FT_stdv)
-    max_mag = 1.1 * max(np.max(np.abs(analytical_FT)), np.max(np.abs(DFT)), np.max(np.abs(GP_FT_mu)))
+    max_mag = 1.1 * max(np.max(np.abs(analytical_FT)), np.max(np.abs(DFT)), np.max(np.abs(GP_FT_mu)), np.max(np.abs(GP_FT_stdv)))
     min_mag = - 1.1 * max(np.abs(GP_FT_stdv))
     ax.set_ylim(min_mag, max_mag)
 
@@ -249,4 +249,4 @@ def plot_data(data_dir):
 
 
 if __name__ == "__main__":
-    plot_data(f"../output_data/plot_df_2024-03-16_14-51-43.csv")
+    plot_data(f"../output_data/plot_df_2024-03-16_15-16-48.csv")
