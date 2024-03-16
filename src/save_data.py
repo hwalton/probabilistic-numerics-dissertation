@@ -6,7 +6,8 @@ dotenv.load_dotenv()
 from jax.random import PRNGKey, split, normal
 
 
-def save_data(length = 1024, dataset = 4):
+def save_data(length = 512, dataset = 4):
+    assert length % 2 == 0, "Length must be even"
     try:
         if dataset == 0:
             start = 5000

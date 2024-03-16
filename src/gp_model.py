@@ -174,7 +174,7 @@ class GPModel:
             #debug_print(f"norm = {np.linalg.norm(self.doJ_doa(a))}")
         return a
 
-    def predict_fourier(self, X_star, method = 'GP'):
+    def predict_fourier(self, xi, method = 'GP'):
         if method == 'GP':
             hyp_l, w = self.GP_Mu(X_star)
 
@@ -206,22 +206,22 @@ class GPModel:
             return self.mu_fourier, self.stdv_fourier
 
         elif method == 'GP_5':
-            hyp_l, w = self.GP_Mu(X_star)
+            hyp_l, w = self.GP_Mu(xi)
 
-            self.GP_STDV_5(X_star)
+            self.GP_STDV_5(xi)
 
-            return self.xi, self.mu_fourier, self.stdv_fourier
+            return self.mu_fourier, self.stdv_fourier
 
 
         elif method == 'DFT':
-            self.DFT_Mu()
+            self.DFT_Mu(xi)
             self.stdv_fourier = np.zeros_like(self.mu_fourier)
-            return self.xi, self.mu_fourier, self.stdv_fourier
+            return self.mu_fourier, self.stdv_fourier
 
         elif method == 'set':
-            self.Set_Mu()
+            self.Set_Mu(xi)
             self.stdv_fourier = np.zeros_like(self.mu_fourier)
-            return self.xi, self.mu_fourier, self.stdv_fourier
+            return self.mu_fourier, self.stdv_fourier
         else:
             assert 0, "Not yet implemented"
 
@@ -307,20 +307,20 @@ class GPModel:
 
 
 
-    def GP_STDV_5(self, X_star):
+    def GP_STDV_5(self, xi):
         '''
         This is a vectorised version of GP_STDV_4, but the += in the line
         self.var_fourier[n] += innn is replaced with -=. A mathematical reason for this has not been established, but it makes the output positive and real, as expected.
         '''
         A = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(len(self.X)))
         X_squeezed = np.squeeze(self.X)
-        self.stdv_fourier = np.zeros(len(self.xi), dtype=complex)
+        self.stdv_fourier = np.zeros(len(xi), dtype=complex)
 
-        for n, xi_n in enumerate(self.xi):
+        for n, xi_n in enumerate(xi):
             debug = (X_squeezed[:, None] - X_squeezed)
             exponent_matrix = -1j * xi_n * debug
             contributions = A * np.exp(exponent_matrix)
-            self.stdv_fourier[n] = np.sum(contributions) # CHECK!!!: SHOULD THIS BE -? Maths says -, but positive and real values are expected, which occur with +????
+            self.stdv_fourier[n] = +np.sum(contributions) # CHECK!!!: SHOULD THIS BE -? Maths says -, but positive and real values are expected, which occur with +????
 
             kernel_fourier_sq = self.gp_kernel.compute_kernel_SE_fourier(xi_n) ** 2
             kernel_fourier_neg = self.gp_kernel.compute_kernel(-xi_n, 0) / 2 * np.pi
@@ -329,35 +329,15 @@ class GPModel:
             self.stdv_fourier[n] += kernel_fourier_neg
 
 
-    def Set_Mu(self):
-        self.X = np.asarray(self.X)
-        N = len(self.X)
-        delta_t = (self.X[-1] - self.X[0]) / (N - 1)
-        fs = 1 / delta_t
-        delta_f = fs / N
-        self.xi = np.linspace(-(fs/2 - delta_f), fs/2, N)
-        # if N % 2 == 0:
-        #     # Even number of samples: include Nyquist frequency
-        #     self.xi = np.linspace(0, fs / 2, N // 2 + 1)
-        # else:
-        #     # Odd number of samples: exclude Nyquist frequency
-        #     self.xi = np.linspace(0, fs / 2, (N - 1) // 2 + 1)
-        self.xi = 2 * np.pi * self.xi  # convert from Hz to rad/s
+    def Set_Mu(self, xi):
         m = float(os.getenv('M'))  # Mass
         c = float(os.getenv('C'))  # Damping coefficient
         k = float(os.getenv('K'))  # Stiffness
-        self.mu_fourier = np.squeeze(1 / ((k - m * self.xi ** 2) + 1j * c * self.xi))
+        self.mu_fourier = np.squeeze(1 / ((k - m * xi ** 2) + 1j * c * xi))
 
-    def GP_Mu(self, X_star):
+    def GP_Mu(self, xi):
         hyp_l = self.hyperparameters_obj.dict()['l']
-        X_star = np.asarray(X_star)
-        N = len(X_star)
-        delta_t = (X_star[-1] - X_star[0]) / (N - 1)
-        fs = 1 / delta_t
-        delta_f = fs / N
-        self.xi = np.linspace(-(fs/2 - delta_f), fs/2, N)
-        self.xi = 2 * np.pi * self.xi  # convert from Hz to rad/s
-        self.K_xi = np.squeeze(self.gp_kernel.compute_kernel_SE_fourier(self.xi))
+        self.K_xi = np.squeeze(self.gp_kernel.compute_kernel_SE_fourier(xi))
         # Extract the noise level and ensure it is a positive value
         noise_level = self.hyperparameters_obj.dict()['noise_level']
         assert noise_level > 0, "Noise level must be positive for Cholesky decomposition."
@@ -370,35 +350,19 @@ class GPModel:
         z = np.linalg.solve(L, y_squeezed)
         # Solve L.T * w = z for w
         w = np.linalg.solve(L.T, z)
-        self.mu_fourier = np.zeros(len(self.xi), dtype=complex)
-        for i in range(len(self.xi)):
-            exp = np.squeeze(np.exp(-1j * self.xi[i] * np.squeeze(self.X)))
+        self.mu_fourier = np.zeros(len(xi), dtype=complex)
+        for i in range(len(xi)):
+            exp = np.squeeze(np.exp(-1j * xi[i] * np.squeeze(self.X)))
             self.mu_fourier[i] = self.K_xi[i] * (w.dot(exp))
 
         #self.mu_fourier *= np.exp(-1j * (-np.pi + np.angle(self.mu_fourier[-1])))
         debug_print("mu_fourier calculated")
         return hyp_l, w
 
-    def DFT_Mu(self):
-        self.X = np.asarray(self.X)
-        N = len(self.X)
-        delta_t = (self.X[-1] - self.X[0]) / (N - 1)
-        fs = 1 / delta_t
-        delta_f = fs / N
-        self.xi = np.linspace(-(fs/2 - delta_f), fs/2, N)
-        # if N % 2 == 0:
-        #     # Even number of samples: include Nyquist frequency
-        #     self.xi = np.linspace(0, fs / 2, N // 2 + 1)
-        # else:
-        #     # Odd number of samples: exclude Nyquist frequency
-        #     self.xi = np.linspace(0, fs / 2, (N - 1) // 2 + 1)
-        self.xi = 2 * np.pi * self.xi  # convert from Hz to rad/s
+    def DFT_Mu(self, xi):
         self.mu_fourier = np.fft.fft(np.squeeze(self.y) * np.hanning(len(np.squeeze(self.y)))) / (len(np.squeeze(self.y)) / 2) * 2 * np.pi
-        #debug_a = self.mu_fourier
-        #debug_b = np.fft.fftshift(self.mu_fourier)
-        debug_c = np.concatenate((self.mu_fourier[(N//2+1):], self.mu_fourier[:(N//2+1)]))
-        #self.mu_fourier *= np.exp(-1j * np.angle(self.mu_fourier[-1]))
-        self.mu_fourier = debug_c
+        N = len(self.mu_fourier)
+        self.mu_fourier = np.concatenate((self.mu_fourier[(N//2+1):], self.mu_fourier[:(N//2+1)]))
 
 
     def is_positive_definite(self, K):

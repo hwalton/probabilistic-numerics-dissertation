@@ -14,6 +14,22 @@ def format_data(X):
     return X
 
 
+def get_xi(X_star, mode='uniform', peak=(10, 2, 100)):
+    X_star = np.squeeze(np.asarray(X_star))
+    N = len(X_star)
+    delta_t = (X_star[-1] - X_star[0]) / (N - 1)
+    fs = 1 / delta_t
+    delta_f = fs / N
+    xi = np.linspace(-(fs / 2 - delta_f), fs / 2, N)
+    xi *= 2 * np.pi  # convert from Hz to rad/s
+    if mode == 'cluster_peak':
+        cluster = np.linspace(peak[0] - peak[1], peak[0] + peak[1], peak[2])
+        debug = np.concatenate((xi, cluster))
+        xi = np.concatenate((xi, cluster))
+        xi.sort()
+    return xi
+
+
 def execute_gp_model():
 
     force_response_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][0]
@@ -24,7 +40,8 @@ def execute_gp_model():
     force_response_fourier_type = ['GP', 'GP_2', 'GP_3', 'GP_4', 'GP_5', 'DFT', 'set'][4]
     force_response_n_iter = 0
     M_one_in = 1
-    comment = '_noisy' # start with underscore
+    xi_mode = ['uniform', 'cluster_peak'][1]
+    comment = '' # start with underscore
 
     force_response, time = load_data()
 
@@ -46,33 +63,51 @@ def execute_gp_model():
     model_2_nll = force_response_model.fit_model()
     force_response_prediction = force_response_model.predict(time_test,
                                                              method=force_response_predict_type)
-    xi_GP, GP_FT_mu, GP_FT_stdv = force_response_model.predict_fourier(time_test, method=force_response_fourier_type)
 
-    xi_DFT, DFT, _ = force_response_model.predict_fourier(time_test, method='DFT')
+    xi_cont = get_xi(time_test, mode=xi_mode, peak=(10, 2, 100))
+    GP_FT_mu, GP_FT_stdv = force_response_model.predict_fourier(xi_cont, method=force_response_fourier_type)
 
-    _, analytical_FT, _ = force_response_model.predict_fourier(time_test, method='set')
+    xi_disc = get_xi(time_test, mode='uniform')
+    DFT, _ = force_response_model.predict_fourier(xi_disc, method='DFT')
 
+    analytical_FT, _ = force_response_model.predict_fourier(xi_cont, method='set')
 
-    plot_df = pd.DataFrame({
+    plot_df_dict = {
         'time': np.squeeze(time),
         'force_response': np.squeeze(force_response),
         'time_test': np.squeeze(time_test),
         'force_response_prediction_t': np.squeeze(force_response_prediction[0]),
         'force_response_prediction_f': np.squeeze(force_response_prediction[1]),
-        'xi': np.squeeze(xi),
+        'xi_cont': np.squeeze(xi_cont),
+        'xi_disc': np.squeeze(xi_disc),
         'analytical_FT': np.squeeze(analytical_FT),
         'DFT': np.squeeze(DFT),
         'GP_FT_mu': np.squeeze(GP_FT_mu),
-        'GP_FT_stdv': np.squeeze(GP_FT_stdv)
-    })
+        'GP_FT_stdv': np.squeeze(GP_FT_stdv),
+        'xi_mode': xi_mode
+    }
+
+    # Find the maximum length among all columns
+    max_length = max(len(column) for column in plot_df_dict.values() if isinstance(column, np.ndarray))
+
+    # Iterate through each column, extending shorter ones with None
+    for key, column in plot_df_dict.items():
+        if isinstance(column, np.ndarray):  # Ensure it's an array we're working with
+            deficit = max_length - len(column)  # Calculate how much shorter this column is
+            if deficit > 0:  # If the column is shorter, extend it with None
+                plot_df_dict[key] = np.concatenate([column, [None] * deficit])
+
+    # Now, create the DataFrame with columns adjusted to the same length
+    plot_df = pd.DataFrame(plot_df_dict)
 
 
 
     date_time_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    plot_df.to_csv(f'../output_data/plot_df_{date_time_formatted}{comment}.csv', index=False)
+    data_dir = f'../output_data/plot_df_{date_time_formatted}{comment}.csv'
+    plot_df.to_csv(data_dir, index=False)
 
 
-    plot_data(plot_df)
+    plot_data(data_dir)
 
     return model_2_nll
 
