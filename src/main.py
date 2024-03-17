@@ -6,6 +6,11 @@ import pandas as pd
 from gp_model import GPModel
 
 from plot_data import plot_data
+from save_data import save_data
+
+import os
+import dotenv
+dotenv.load_dotenv()
 
 
 
@@ -29,6 +34,19 @@ def get_xi(X_star, mode='uniform', peak=(10, 2, 100)):
         xi.sort()
     return xi
 
+def DFT_hw(y):
+    DFT = np.fft.fft(np.squeeze(y) * np.hanning(len(np.squeeze(y)))) / (len(np.squeeze(y)) / 2)
+    N = len(DFT)
+    DFT = np.concatenate((DFT[(N // 2 + 1):], DFT[:(N // 2 + 1)]))
+    return DFT
+
+def get_analytical_FT(xi):
+    m = float(os.getenv('M'))  # Mass
+    c = float(os.getenv('C'))  # Damping coefficient
+    k = float(os.getenv('K'))  # Stiffness
+    ft = np.squeeze(1 / ((k - m * xi ** 2) + 1j * c * xi))
+    return ft
+
 
 def execute_gp_model():
 
@@ -40,22 +58,32 @@ def execute_gp_model():
     force_response_fourier_type = ['GP', 'GP_2', 'GP_3', 'GP_4', 'GP_5', 'DFT', 'set'][4]
     force_response_n_iter = 0
     M_one_in = 1
-    xi_mode = ['uniform', 'cluster_peak'][1]
+    xi_mode = ['uniform', 'cluster_peak'][0]
     peak = (10, 0.25, 100)
     comment = '' # start with underscore
 
-    force_response, time = load_data()
+    length = 512
+    sample_rate = 32
+    dataset = 4
+
+    time = np.linspace(0, (length-1)/sample_rate, length)[:, None]
+
+    save_data(time, dataset, 0.25, 0.1)
+    force_response, time_nonuniform_input = load_data()
+
 
     num_predictions = time.size
     lower = time[0] - 0 * (time[-1] - time[0])
     upper = time[-1] + 0 * (time[-1] - time[0])
     time_test = np.linspace(lower, upper, num=num_predictions, endpoint=True)
+
     time = format_data(time)
+    time_nonuniform_input = format_data(time_nonuniform_input)
     force_response = format_data(force_response)
     time_test = format_data(time_test)
 
     force_response_model = GPModel(force_response_kernel_type,
-                                   time,
+                                   time_nonuniform_input,
                                    force_response,
                                    solver_type=force_response_solver_type,
                                    n_iter=force_response_n_iter, gp_algo=force_response_nll_method,
@@ -69,9 +97,10 @@ def execute_gp_model():
     GP_FT_mu, GP_FT_stdv = force_response_model.predict_fourier(xi_cont, method=force_response_fourier_type)
 
     xi_disc = get_xi(time_test, mode='uniform')
-    DFT, _ = force_response_model.predict_fourier(xi_disc, method='DFT')
+    response_interp = np.interp(np.squeeze(time_test), np.squeeze(time_nonuniform_input), np.squeeze(force_response))
+    DFT = DFT_hw(response_interp)
 
-    analytical_FT, _ = force_response_model.predict_fourier(xi_cont, method='set')
+    analytical_FT = get_analytical_FT(xi_cont)
 
     plot_df_dict = {
         'time': np.squeeze(time),

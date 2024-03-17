@@ -212,16 +212,6 @@ class GPModel:
 
             return self.mu_fourier, self.stdv_fourier
 
-
-        elif method == 'DFT':
-            self.DFT_Mu(xi)
-            self.stdv_fourier = np.zeros_like(self.mu_fourier)
-            return self.mu_fourier, self.stdv_fourier
-
-        elif method == 'set':
-            self.Set_Mu(xi)
-            self.stdv_fourier = np.zeros_like(self.mu_fourier)
-            return self.mu_fourier, self.stdv_fourier
         else:
             assert 0, "Not yet implemented"
 
@@ -329,12 +319,6 @@ class GPModel:
             self.stdv_fourier[n] += kernel_fourier_neg
 
 
-    def Set_Mu(self, xi):
-        m = float(os.getenv('M'))  # Mass
-        c = float(os.getenv('C'))  # Damping coefficient
-        k = float(os.getenv('K'))  # Stiffness
-        self.mu_fourier = np.squeeze(1 / ((k - m * xi ** 2) + 1j * c * xi))
-
     def GP_Mu(self, xi):
         hyp_l = self.hyperparameters_obj.dict()['l']
         self.K_xi = np.squeeze(self.gp_kernel.compute_kernel_SE_fourier(xi))
@@ -358,11 +342,6 @@ class GPModel:
         #self.mu_fourier *= np.exp(-1j * (-np.pi + np.angle(self.mu_fourier[-1])))
         debug_print("mu_fourier calculated")
         return hyp_l, w
-
-    def DFT_Mu(self, xi):
-        self.mu_fourier = np.fft.fft(np.squeeze(self.y) * np.hanning(len(np.squeeze(self.y)))) / (len(np.squeeze(self.y)) / 2)
-        N = len(self.mu_fourier)
-        self.mu_fourier = np.concatenate((self.mu_fourier[(N//2+1):], self.mu_fourier[:(N//2+1)]))
 
 
     def is_positive_definite(self, K):
