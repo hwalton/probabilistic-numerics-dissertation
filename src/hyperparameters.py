@@ -23,7 +23,7 @@ class Hyperparameters:
                 'kernel_type': 'squared_exponential',
                 'sigma': (0.1,500),
                 'l': (0.001,10),
-                'noise_level': (0.01,10)
+                'noise_level': (0.005,10)
             }
         elif self.kernel_type == 'periodic':
             self._initial_hyperparameters = {

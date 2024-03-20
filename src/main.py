@@ -12,6 +12,8 @@ import os
 import dotenv
 dotenv.load_dotenv()
 
+import copy
+
 
 
 def format_data(X):
@@ -48,7 +50,20 @@ def get_analytical_FT(xi):
     return ft
 
 
-def execute_gp_model():
+def execute_gp_model(date_time_formatted,
+                     initial_hyps,
+                     force_response_n_iter,
+                     xi_mode,
+                     length,
+                     sample_rate,
+                     input_noise_stdv,
+                     response_noise_stdv,
+                     suptitle):
+
+    print("\n\n")
+    print("=" * 100)
+    print(f"Running {suptitle}...")
+    print("=" * 100)
 
     force_response_kernel_type = ['squared_exponential', 'p_se_composite', 'white_noise', 'wn_se_composite', 'periodic', 'cosine', 'cosine_composite'][0]
     force_response_solver_type = ['metropolis_hastings', 'iterative_search', 'adam', 'free_lunch'][0]
@@ -56,19 +71,19 @@ def execute_gp_model():
     force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_response_U_induced_method = ['k_means', 'even'][1]
     force_response_fourier_type = ['GP', 'GP_2', 'GP_3', 'GP_4', 'GP_5', 'DFT', 'set'][4]
-    force_response_n_iter = 0
+    # force_response_n_iter = 0
     M_one_in = 1
-    xi_mode = ['uniform', 'cluster_peak'][0]
+    # xi_mode = ['uniform', 'cluster_peak'][1]
     peak = (10, 0.25, 100)
-    comment = '' # start with underscore
+    # comment = '' # start with underscore
 
-    length = 512
-    sample_rate = 32
+    # length = 64
+    # sample_rate = 32
     dataset = 4
 
     time = np.linspace(0, (length-1)/sample_rate, length)[:, None]
 
-    save_data(time, dataset, 0.25, 0.1)
+    save_data(time, dataset, input_noise_stdv, response_noise_stdv)
     force_response, time_nonuniform_input = load_data()
 
 
@@ -89,6 +104,9 @@ def execute_gp_model():
                                    n_iter=force_response_n_iter, gp_algo=force_response_nll_method,
                                    U_induced_method=force_response_U_induced_method,
                                    M_one_in=M_one_in)
+
+    force_response_model.hyperparameters_obj.update(initial_hyps)
+
     model_2_nll = force_response_model.fit_model()
     force_response_prediction = force_response_model.predict(time_test,
                                                              method=force_response_predict_type)
@@ -114,7 +132,8 @@ def execute_gp_model():
         'DFT': np.squeeze(DFT),
         'GP_FT_mu': np.squeeze(GP_FT_mu),
         'GP_FT_stdv': np.squeeze(GP_FT_stdv),
-        'xi_mode': xi_mode
+        'xi_mode': xi_mode,
+        'suptitle': suptitle
     }
 
     # Find the maximum length among all columns
@@ -132,8 +151,8 @@ def execute_gp_model():
 
 
 
-    date_time_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    data_dir = f'../output_data/plot_df_{date_time_formatted}{comment}.csv'
+
+    data_dir = f'../output_data/plot_df_{date_time_formatted}_{suptitle}.csv'
     plot_df.to_csv(data_dir, index=False)
 
 
@@ -143,10 +162,53 @@ def execute_gp_model():
 
 def main():
     start_time = timer.time()
+    date_time_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    model_2_nll = execute_gp_model()
+    params_basic = {
+        'date_time_formatted': date_time_formatted,
+        'initial_hyps': {
+            'kernel_type': 'squared_exponential',
+            'sigma': 0.56,
+            'l': 0.015,
+            'noise_level': 0.01
+        },
+        'force_response_n_iter': 0,
+        'xi_mode': 'uniform',
+        'length': 512,
+        'sample_rate': 32,
+        'input_noise_stdv': 0.,
+        'response_noise_stdv': 0.,
+        'suptitle': 'Basic Setup'
+    }
 
-    #print(f"Force Response final NLL: {model_2_nll}")
+    params = copy.deepcopy(params_basic)
+    _ = execute_gp_model(**params)
+
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'With Response Noise'
+    # params['response_noise_stdv'] = 0.25
+    # # params['initial_hyps']['noise_level'] = 0.25
+    # _ = execute_gp_model(**params)
+    #
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'With Input Noise'
+    # params['input_noise_stdv'] = 0.25
+    # #params['response_noise_stdv'] = 0.25
+    # # params['initial_hyps']['noise_level'] = 0.25
+    # _ = execute_gp_model(**params)
+    #
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'With Cluster Peak'
+    # params['xi_mode'] = 'cluster_peak'
+    # _ = execute_gp_model(**params)
+    #
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'With Response Noise, Input Noise and Cluster Peak'
+    # params['response_noise_stdv'] = 0.25
+    # params['input_noise_stdv'] = 0.25
+    # # params['initial_hyps']['noise_level'] = 0.25
+    # params['xi_mode'] = 'cluster_peak'
+    # _ = execute_gp_model(**params)
 
     end_time = timer.time()
     elapsed_time = end_time - start_time

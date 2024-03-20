@@ -289,10 +289,10 @@ class GPModel:
             for j in range(len(self.X)):
                 for k in range(len(self.X)):
                     innn = A[j][k] * np.exp(-1j * xi_n * (np.squeeze(self.X)[j] - np.squeeze(self.X)[k]))
-                    self.var_fourier[n] += innn    # CHECK!!!: SHOULD THIS BE -= or +=? Maths says -=, but positive and real values are expected, which occur with +=????
+                    self.var_fourier[n] -= innn    # CHECK!!!: SHOULD THIS BE -= or +=? Maths says -=, but positive and real values are expected, which occur with +=????
             self.var_fourier[n] *= self.gp_kernel.compute_kernel_SE_fourier(xi_n) * np.conj(self.gp_kernel.compute_kernel_SE_fourier(- xi_n))
-            debug_k = self.gp_kernel.compute_kernel(-xi_n, 0) / 2 * np.pi
-            self.var_fourier[n] += self.gp_kernel.compute_kernel(-xi_n, 0) / 2 * np.pi
+            debug_k = self.gp_kernel.compute_kernel(-xi_n, 0)
+            self.var_fourier[n] += self.gp_kernel.compute_kernel(-xi_n, 0)
             self.stdv_fourier = self.var_fourier
 
 
@@ -310,13 +310,15 @@ class GPModel:
             debug = (X_squeezed[:, None] - X_squeezed)
             exponent_matrix = -1j * xi_n * debug
             contributions = A * np.exp(exponent_matrix)
-            self.stdv_fourier[n] = +np.sum(contributions) # CHECK!!!: SHOULD THIS BE -? Maths says -, but positive and real values are expected, which occur with +????
+            self.stdv_fourier[n] = -np.sum(contributions) # CHECK!!!: SHOULD THIS BE -? Maths says -, but positive and real values are expected, which occur with +????
 
             kernel_fourier_sq = self.gp_kernel.compute_kernel_SE_fourier(xi_n) ** 2
-            kernel_fourier_neg = self.gp_kernel.compute_kernel(-xi_n, 0) / 2 * np.pi
+            kernel_fourier_neg = self.gp_kernel.compute_kernel(-xi_n, 0)
 
             self.stdv_fourier[n] *= kernel_fourier_sq
             self.stdv_fourier[n] += kernel_fourier_neg
+
+            sakdjf=1
 
 
     def GP_Mu(self, xi):

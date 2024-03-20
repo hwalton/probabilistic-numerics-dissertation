@@ -81,4 +81,8 @@ def save_data(time, dataset = 4, input_noise_stdv= 0.4, response_noise_stdv= 0.2
         print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-    save_data()
+    length = 512
+    sample_rate = 32
+
+    time = np.linspace(0, (length - 1) / sample_rate, length)[:, None]
+    save_data(time)
