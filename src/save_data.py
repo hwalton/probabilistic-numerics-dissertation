@@ -6,9 +6,8 @@ dotenv.load_dotenv()
 from jax.random import PRNGKey, split, normal
 
 
-def save_data(sample_rate, length, dataset = 4, input_noise_stdv= 10, response_noise_stdv= 0.25):
-    time = np.linspace(0, (length - 1) / sample_rate, length)[:, None]
-    assert len(time) % 2 == 0, "Length must be even"
+def save_data(sample_rate=32, length=256, dataset=4, input_noise_stdv=10, response_noise_stdv=0.25):
+    assert length % 2 == 0, "Length must be even"
     try:
         if dataset == 0:
             start = 5000
@@ -49,6 +48,8 @@ def save_data(sample_rate, length, dataset = 4, input_noise_stdv= 10, response_n
                              3 * np.sin(5 * time + 3) + sn2 * normal(key, shape=time.shape)
 
         elif dataset == 4:
+            time = np.linspace(0, (length - 1) / sample_rate, length)[:, None]
+
             key = PRNGKey(0)
             m = float(os.getenv('M'))  # Mass
             c = float(os.getenv('C'))  # Damping coefficient
@@ -73,28 +74,33 @@ def save_data(sample_rate, length, dataset = 4, input_noise_stdv= 10, response_n
             force_response = A * np.exp(-zeta * omega_n * time) * np.cos(omega_d * time + phi) + response_noise_stdv * normal(key, shape=time.shape)
 
         elif dataset == 5:
+            # time = np.random.uniform(0, (length - 1) / sample_rate, size=length)
+            time = np.random.triangular(left=0, mode=0, right=(length - 1) / sample_rate, size=length)
+            time = np.sort(time)[:, None]
+
             key = PRNGKey(0)
-            m = float(os.getenv('M'))  # Mass
-            c = float(os.getenv('C'))  # Damping coefficient
-            k = float(os.getenv('K'))  # Stiffness
 
-            # Time array
+            phi = float(os.getenv('PHI'))
 
-            time += input_noise_stdv * normal(key, shape=time.shape)
+            m_2 = float(os.getenv('M_2'))
+            c_2 = float(os.getenv('C_2'))
+            k_2 = float(os.getenv('K_2'))
 
-            # Calculate natural frequency and damping ratio
-            omega_n = np.sqrt(k / m)
-            zeta = c / (2 * np.sqrt(m * k))
+            omega_n_2 = np.sqrt(k_2 / m_2)
+            zeta_2  = c_2 / (2 * np.sqrt(m_2 * k_2))
 
             # Calculate damped natural frequency
-            omega_d = omega_n * np.sqrt(1 - zeta ** 2)
+            omega_d_2 = omega_n_2 * np.sqrt(1 - zeta_2 ** 2)
 
-            # Assume A=1 and phi=0 for simplicity, these should be determined based on initial conditions
-            A = 1
-            phi = 0
+            A_2 = float(os.getenv('A_2'))
+
+            phi_2 = phi
 
             # Calculate the force response (displacement response) of the system
-            force_response = A * np.exp(-zeta * omega_n * time) * np.cos(omega_d * time + phi) + response_noise_stdv * normal(key, shape=time.shape)
+            force_response = A_2 * np.exp(-zeta_2 * omega_n_2 * time) * np.cos(omega_d_2 * time + phi_2) \
+                           + response_noise_stdv * normal(key, shape=time.shape)
+
+
 
         # Save to CSV files
         np.savetxt('../datasets/force_response.csv', force_response, delimiter=',')

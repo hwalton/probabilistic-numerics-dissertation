@@ -28,6 +28,10 @@ def get_xi(X_star, mode='uniform', peak=(10, 2, 100)):
     fs = 1 / delta_t
     delta_f = fs / N
     xi = np.linspace(-(fs / 2 - delta_f), fs / 2, N)
+
+    if mode == 'nyquist_limit':
+        N = 2 * len(X_star)
+        xi = np.linspace(-(fs - delta_f), fs, N)
     xi *= 2 * np.pi  # convert from Hz to rad/s
     if mode == 'cluster_peak':
         cluster = np.linspace(peak[0] - peak[1], peak[0] + peak[1], peak[2])
@@ -42,11 +46,20 @@ def DFT_hw(y):
     DFT = np.concatenate((DFT[(N // 2 + 1):], DFT[:(N // 2 + 1)]))
     return DFT
 
-def get_analytical_FT(xi):
+def get_analytical_FT(xi, xi_mode):
     m = float(os.getenv('M'))  # Mass
     c = float(os.getenv('C'))  # Damping coefficient
     k = float(os.getenv('K'))  # Stiffness
-    ft = np.squeeze(1 / ((k - m * xi ** 2) + 1j * c * xi))
+    A = float(os.getenv('A'))  # Amplitude
+    ft = np.squeeze(A / ((k - m * xi ** 2) + 1j * c * xi))
+
+    if xi_mode == 'nyquist_limit':
+        m_2 = float(os.getenv('M_2'))  # Mass
+        c_2 = float(os.getenv('C_2'))
+        k_2 = float(os.getenv('K_2'))
+        A_2 = float(os.getenv('A_2'))
+
+        ft += np.squeeze(A_2 / ((k_2 - m_2 * xi ** 2) + 1j * c_2 * xi))
     return ft
 
 
@@ -73,24 +86,13 @@ def execute_gp_model(date_time_formatted,
     force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_response_U_induced_method = ['k_means', 'even'][1]
     force_response_fourier_type = ['GP', 'GP_2', 'GP_3', 'GP_4', 'GP_5', 'DFT', 'set'][4]
-    # force_response_n_iter = 0
     M_one_in = 1
-    # xi_mode = ['uniform', 'cluster_peak'][1]
-    # comment = '' # start with underscore
 
-    # length = 64
-    # sample_rate = 32
-
-    time_nonuniform_input = np.linspace(0, (length-1)/sample_rate, length)[:, None]
 
     save_data(sample_rate, length, dataset, input_noise_stdv, response_noise_stdv)
     force_response, time_nonuniform_input = load_data()
 
-
-    num_predictions = time_nonuniform_input.size
-    lower = time_nonuniform_input[0] - 0 * (time_nonuniform_input[-1] - time_nonuniform_input[0])
-    upper = time_nonuniform_input[-1] + 0 * (time_nonuniform_input[-1] - time_nonuniform_input[0])
-    time_test = np.linspace(lower, upper, num=num_predictions, endpoint=True)
+    time_test = np.linspace(0, (length - 1) / sample_rate, length)[:, None]
 
     time_nonuniform_input = format_data(time_nonuniform_input)
     force_response = format_data(force_response)
@@ -114,7 +116,7 @@ def execute_gp_model(date_time_formatted,
     elapsed_time = end_time_gp_hyp_fit - start_time_gp
     print(f"The GP hyps were fit at {elapsed_time} seconds")
 
-    force_response_prediction = force_response_model.predict(time_test,
+    force_response_prediction = force_response_model.predict(time_nonuniform_input,
                                                              method=force_response_predict_type)
 
     end_time_gp_time_predict = timer.time()
@@ -139,7 +141,7 @@ def execute_gp_model(date_time_formatted,
     elapsed_time = end_time_dft - start_time_dft
     print(f"The DFT was calculated in {elapsed_time} seconds")
 
-    analytical_FT = get_analytical_FT(xi_cont)
+    analytical_FT = get_analytical_FT(xi_cont, xi_mode)
 
     plot_df_dict = {
         'time': np.squeeze(time_nonuniform_input),
@@ -195,11 +197,11 @@ def main():
         },
         'force_response_n_iter': 0,
         'xi_mode': 'uniform',
-        'length': 256,
+        'length': 512,
         'dataset': 4,
         'sample_rate': 32,
-        'input_noise_stdv': 0.5,
-        'response_noise_stdv': 0.,
+        'input_noise_stdv': 0.0,
+        'response_noise_stdv': 0.0,
         'suptitle': 'Basic Setup',
         'peak': (10, 0.5, 100)
     }
@@ -243,7 +245,8 @@ def main():
     # Nyquist Limit Test
     params = copy.deepcopy(params_basic)
     params['suptitle'] = 'Nyquist Limit Test'
-    params['dataset'] = 4
+    params['xi_mode'] = 'nyquist_limit'
+    params['dataset'] = 5
     _ = execute_gp_model(**params)
 
     end_time = timer.time()
