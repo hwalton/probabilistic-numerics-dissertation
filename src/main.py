@@ -55,6 +55,7 @@ def execute_gp_model(date_time_formatted,
                      force_response_n_iter,
                      xi_mode,
                      length,
+                     dataset,
                      sample_rate,
                      input_noise_stdv,
                      response_noise_stdv,
@@ -79,20 +80,18 @@ def execute_gp_model(date_time_formatted,
 
     # length = 64
     # sample_rate = 32
-    dataset = 4
 
-    time = np.linspace(0, (length-1)/sample_rate, length)[:, None]
+    time_nonuniform_input = np.linspace(0, (length-1)/sample_rate, length)[:, None]
 
-    save_data(time, dataset, input_noise_stdv, response_noise_stdv)
+    save_data(sample_rate, length, dataset, input_noise_stdv, response_noise_stdv)
     force_response, time_nonuniform_input = load_data()
 
 
-    num_predictions = time.size
-    lower = time[0] - 0 * (time[-1] - time[0])
-    upper = time[-1] + 0 * (time[-1] - time[0])
+    num_predictions = time_nonuniform_input.size
+    lower = time_nonuniform_input[0] - 0 * (time_nonuniform_input[-1] - time_nonuniform_input[0])
+    upper = time_nonuniform_input[-1] + 0 * (time_nonuniform_input[-1] - time_nonuniform_input[0])
     time_test = np.linspace(lower, upper, num=num_predictions, endpoint=True)
 
-    time = format_data(time)
     time_nonuniform_input = format_data(time_nonuniform_input)
     force_response = format_data(force_response)
     time_test = format_data(time_test)
@@ -143,7 +142,7 @@ def execute_gp_model(date_time_formatted,
     analytical_FT = get_analytical_FT(xi_cont)
 
     plot_df_dict = {
-        'time': np.squeeze(time),
+        'time': np.squeeze(time_nonuniform_input),
         'force_response': np.squeeze(force_response),
         'time_test': np.squeeze(time_test),
         'force_response_prediction_t': np.squeeze(force_response_prediction[0]),
@@ -197,82 +196,88 @@ def main():
         'force_response_n_iter': 0,
         'xi_mode': 'uniform',
         'length': 256,
+        'dataset': 4,
         'sample_rate': 32,
-        'input_noise_stdv': 0.,
+        'input_noise_stdv': 0.5,
         'response_noise_stdv': 0.,
         'suptitle': 'Basic Setup',
         'peak': (10, 0.5, 100)
     }
 
-    params = copy.deepcopy(params_basic)
-    _ = execute_gp_model(**params)
-
-    params = copy.deepcopy(params_basic)
-    params['suptitle'] = 'With Response Noise'
-    params['response_noise_stdv'] = 0.25
-    # params['initial_hyps']['noise_level'] = 0.25
-    _ = execute_gp_model(**params)
-
-    params = copy.deepcopy(params_basic)
-    params['suptitle'] = 'With Input Noise'
-    params['input_noise_stdv'] = 0.25
+    # params = copy.deepcopy(params_basic)
+    # _ = execute_gp_model(**params)
+    #
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'With Response Noise'
     # params['response_noise_stdv'] = 0.25
-    # params['initial_hyps']['noise_level'] = 0.25
-    _ = execute_gp_model(**params)
+    # # params['initial_hyps']['noise_level'] = 0.25
+    # _ = execute_gp_model(**params)
+    #
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'With Input Noise'
+    # params['input_noise_stdv'] = 0.25
+    # # params['response_noise_stdv'] = 0.25
+    # # params['initial_hyps']['noise_level'] = 0.25
+    # _ = execute_gp_model(**params)
+    #
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'With Cluster Peak'
+    # params['xi_mode'] = 'cluster_peak'
+    # _ = execute_gp_model(**params)
+    #
+    # params = copy.deepcopy(params_basic)
+    # N = 64
+    # params['suptitle'] = f'With Cluster Peak, Short: N = {N}'
+    # params['xi_mode'] = 'cluster_peak'
+    # params['length'] = N
+    # _ = execute_gp_model(**params)
+    #
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'With Response Noise, Input Noise and Cluster Peak'
+    # params['response_noise_stdv'] = 0.25
+    # params['input_noise_stdv'] = 0.25
+    # # params['initial_hyps']['noise_level'] = 0.25
+    # params['xi_mode'] = 'cluster_peak'
+    # _ = execute_gp_model(**params)
 
+    # Nyquist Limit Test
     params = copy.deepcopy(params_basic)
-    params['suptitle'] = 'With Cluster Peak'
-    params['xi_mode'] = 'cluster_peak'
-    _ = execute_gp_model(**params)
-
-    params = copy.deepcopy(params_basic)
-    N = 64
-    params['suptitle'] = f'With Cluster Peak, Short: N = {N}'
-    params['xi_mode'] = 'cluster_peak'
-    params['length'] = N
-    _ = execute_gp_model(**params)
-
-    params = copy.deepcopy(params_basic)
-    params['suptitle'] = 'With Response Noise, Input Noise and Cluster Peak'
-    params['response_noise_stdv'] = 0.25
-    params['input_noise_stdv'] = 0.25
-    # params['initial_hyps']['noise_level'] = 0.25
-    params['xi_mode'] = 'cluster_peak'
+    params['suptitle'] = 'Nyquist Limit Test'
+    params['dataset'] = 4
     _ = execute_gp_model(**params)
 
     end_time = timer.time()
     elapsed_time = end_time - start_time
     print(f"The code ran in {elapsed_time} seconds")
 
-def main_single():
-    start_time = timer.time()
-    date_time_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
-    params_basic = {
-        'date_time_formatted': date_time_formatted,
-        'initial_hyps': {
-            'kernel_type': 'squared_exponential',
-            'sigma': 0.56,
-            'l': 0.015,
-            'noise_level': 0.01
-        },
-        'force_response_n_iter': 50,
-        'xi_mode': 'uniform',
-        'length': 512,
-        'sample_rate': 32,
-        'input_noise_stdv': 0.,
-        'response_noise_stdv': 0.,
-        'suptitle': 'Basic Setup',
-        'peak': (10, 2, 100)
-    }
-
-    params = copy.deepcopy(params_basic)
-    _ = execute_gp_model(**params)
-
-    end_time = timer.time()
-    elapsed_time = end_time - start_time
-    print(f"The code ran in {elapsed_time} seconds")
+# def main_single():
+#     start_time = timer.time()
+#     date_time_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+#
+#     params_basic = {
+#         'date_time_formatted': date_time_formatted,
+#         'initial_hyps': {
+#             'kernel_type': 'squared_exponential',
+#             'sigma': 0.56,
+#             'l': 0.015,
+#             'noise_level': 0.01
+#         },
+#         'force_response_n_iter': 50,
+#         'xi_mode': 'uniform',
+#         'length': 512,
+#         'sample_rate': 32,
+#         'input_noise_stdv': 0.,
+#         'response_noise_stdv': 0.,
+#         'suptitle': 'Basic Setup',
+#         'peak': (10, 2, 100)
+#     }
+#
+#     params = copy.deepcopy(params_basic)
+#     _ = execute_gp_model(**params)
+#
+#     end_time = timer.time()
+#     elapsed_time = end_time - start_time
+#     print(f"The code ran in {elapsed_time} seconds")
 
 if __name__ == "__main__":
     main()
-    #main_single()

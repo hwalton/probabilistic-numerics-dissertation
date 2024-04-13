@@ -6,7 +6,8 @@ dotenv.load_dotenv()
 from jax.random import PRNGKey, split, normal
 
 
-def save_data(time, dataset = 4, input_noise_stdv= 0.4, response_noise_stdv= 0.25):
+def save_data(sample_rate, length, dataset = 4, input_noise_stdv= 10, response_noise_stdv= 0.25):
+    time = np.linspace(0, (length - 1) / sample_rate, length)[:, None]
     assert len(time) % 2 == 0, "Length must be even"
     try:
         if dataset == 0:
@@ -48,6 +49,30 @@ def save_data(time, dataset = 4, input_noise_stdv= 0.4, response_noise_stdv= 0.2
                              3 * np.sin(5 * time + 3) + sn2 * normal(key, shape=time.shape)
 
         elif dataset == 4:
+            key = PRNGKey(0)
+            m = float(os.getenv('M'))  # Mass
+            c = float(os.getenv('C'))  # Damping coefficient
+            k = float(os.getenv('K'))  # Stiffness
+
+            # Time array
+
+            time += input_noise_stdv * normal(key, shape=time.shape)
+
+            # Calculate natural frequency and damping ratio
+            omega_n = np.sqrt(k / m)
+            zeta = c / (2 * np.sqrt(m * k))
+
+            # Calculate damped natural frequency
+            omega_d = omega_n * np.sqrt(1 - zeta ** 2)
+
+            # Assume A=1 and phi=0 for simplicity, these should be determined based on initial conditions
+            A = 1
+            phi = 0
+
+            # Calculate the force response (displacement response) of the system
+            force_response = A * np.exp(-zeta * omega_n * time) * np.cos(omega_d * time + phi) + response_noise_stdv * normal(key, shape=time.shape)
+
+        elif dataset == 5:
             key = PRNGKey(0)
             m = float(os.getenv('M'))  # Mass
             c = float(os.getenv('C'))  # Damping coefficient
