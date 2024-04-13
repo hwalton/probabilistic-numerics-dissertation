@@ -298,27 +298,27 @@ class GPModel:
 
 
     def GP_STDV_5(self, xi):
-        '''
-        This is a vectorised version of GP_STDV_4, but the += in the line
-        self.var_fourier[n] += innn is replaced with -=. A mathematical reason for this has not been established, but it makes the output positive and real, as expected.
-        '''
-        A = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(len(self.X)))
-        X_squeezed = np.squeeze(self.X)
+        # '''
+        # This is a vectorised version of GP_STDV_4, but the += in the line
+        # self.var_fourier[n] += innn is replaced with -=. A mathematical reason for this has not been established, but it makes the output positive and real, as expected.
+        # '''
+        # A = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(len(self.X)))
+        # X_squeezed = np.squeeze(self.X)
         self.stdv_fourier = np.zeros(len(xi), dtype=complex)
-
-        for n, xi_n in enumerate(xi):
-            debug = (X_squeezed[:, None] - X_squeezed)
-            exponent_matrix = -1j * xi_n * debug
-            contributions = A * np.exp(exponent_matrix)
-            self.stdv_fourier[n] = -np.sum(contributions) # CHECK!!!: SHOULD THIS BE -? Maths says -, but positive and real values are expected, which occur with +????
-
-            kernel_fourier_sq = self.gp_kernel.compute_kernel_SE_fourier(xi_n) ** 2
-            kernel_fourier_neg = self.gp_kernel.compute_kernel(-xi_n, 0)
-
-            self.stdv_fourier[n] *= kernel_fourier_sq
-            self.stdv_fourier[n] += kernel_fourier_neg
-
-            sakdjf=1
+        #
+        # for n, xi_n in enumerate(xi):
+        #     debug = (X_squeezed[:, None] - X_squeezed)
+        #     exponent_matrix = -1j * xi_n * debug
+        #     contributions = A * np.exp(exponent_matrix)
+        #     self.stdv_fourier[n] = -np.sum(contributions) # CHECK!!!: SHOULD THIS BE -? Maths says -, but positive and real values are expected, which occur with +????
+        #
+        #     kernel_fourier_sq = self.gp_kernel.compute_kernel_SE_fourier(xi_n) ** 2
+        #     kernel_fourier_neg = self.gp_kernel.compute_kernel(-xi_n, 0)
+        #
+        #     self.stdv_fourier[n] *= kernel_fourier_sq
+        #     self.stdv_fourier[n] += kernel_fourier_neg
+        #
+        #     sakdjf=1
 
 
     def GP_Mu(self, xi):

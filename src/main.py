@@ -58,7 +58,8 @@ def execute_gp_model(date_time_formatted,
                      sample_rate,
                      input_noise_stdv,
                      response_noise_stdv,
-                     suptitle):
+                     suptitle,
+                     peak):
 
     print("\n\n")
     print("=" * 100)
@@ -74,7 +75,6 @@ def execute_gp_model(date_time_formatted,
     # force_response_n_iter = 0
     M_one_in = 1
     # xi_mode = ['uniform', 'cluster_peak'][1]
-    peak = (10, 0.25, 100)
     # comment = '' # start with underscore
 
     # length = 64
@@ -107,16 +107,38 @@ def execute_gp_model(date_time_formatted,
 
     force_response_model.hyperparameters_obj.update(initial_hyps)
 
+    start_time_gp = timer.time()
+
     model_2_nll = force_response_model.fit_model()
+
+    end_time_gp_hyp_fit = timer.time()
+    elapsed_time = end_time_gp_hyp_fit - start_time_gp
+    print(f"The GP hyps were fit at {elapsed_time} seconds")
+
     force_response_prediction = force_response_model.predict(time_test,
                                                              method=force_response_predict_type)
+
+    end_time_gp_time_predict = timer.time()
+    elapsed_time = end_time_gp_time_predict - start_time_gp
+    print(f"The GP time domain prediction was calculated at {elapsed_time} seconds")
 
     xi_cont = get_xi(time_test, mode=xi_mode, peak=peak)
     GP_FT_mu, GP_FT_stdv = force_response_model.predict_fourier(xi_cont, method=force_response_fourier_type)
 
+    end_time_gp_time_predict = timer.time()
+    elapsed_time = end_time_gp_time_predict - start_time_gp
+    print(f"The GP FT was calculated at {elapsed_time} seconds")
+
     xi_disc = get_xi(time_test, mode='uniform')
     response_interp = np.interp(np.squeeze(time_test), np.squeeze(time_nonuniform_input), np.squeeze(force_response))
+
+    start_time_dft = timer.time()
+
     DFT = DFT_hw(response_interp)
+
+    end_time_dft = timer.time()
+    elapsed_time = end_time_dft - start_time_dft
+    print(f"The DFT was calculated in {elapsed_time} seconds")
 
     analytical_FT = get_analytical_FT(xi_cont)
 
@@ -174,41 +196,78 @@ def main():
         },
         'force_response_n_iter': 0,
         'xi_mode': 'uniform',
-        'length': 512,
+        'length': 256,
         'sample_rate': 32,
         'input_noise_stdv': 0.,
         'response_noise_stdv': 0.,
-        'suptitle': 'Basic Setup'
+        'suptitle': 'Basic Setup',
+        'peak': (10, 0.5, 100)
     }
 
     params = copy.deepcopy(params_basic)
     _ = execute_gp_model(**params)
 
-    # params = copy.deepcopy(params_basic)
-    # params['suptitle'] = 'With Response Noise'
+    params = copy.deepcopy(params_basic)
+    params['suptitle'] = 'With Response Noise'
+    params['response_noise_stdv'] = 0.25
+    # params['initial_hyps']['noise_level'] = 0.25
+    _ = execute_gp_model(**params)
+
+    params = copy.deepcopy(params_basic)
+    params['suptitle'] = 'With Input Noise'
+    params['input_noise_stdv'] = 0.25
     # params['response_noise_stdv'] = 0.25
-    # # params['initial_hyps']['noise_level'] = 0.25
-    # _ = execute_gp_model(**params)
-    #
-    # params = copy.deepcopy(params_basic)
-    # params['suptitle'] = 'With Input Noise'
-    # params['input_noise_stdv'] = 0.25
-    # #params['response_noise_stdv'] = 0.25
-    # # params['initial_hyps']['noise_level'] = 0.25
-    # _ = execute_gp_model(**params)
-    #
-    # params = copy.deepcopy(params_basic)
-    # params['suptitle'] = 'With Cluster Peak'
-    # params['xi_mode'] = 'cluster_peak'
-    # _ = execute_gp_model(**params)
-    #
-    # params = copy.deepcopy(params_basic)
-    # params['suptitle'] = 'With Response Noise, Input Noise and Cluster Peak'
-    # params['response_noise_stdv'] = 0.25
-    # params['input_noise_stdv'] = 0.25
-    # # params['initial_hyps']['noise_level'] = 0.25
-    # params['xi_mode'] = 'cluster_peak'
-    # _ = execute_gp_model(**params)
+    # params['initial_hyps']['noise_level'] = 0.25
+    _ = execute_gp_model(**params)
+
+    params = copy.deepcopy(params_basic)
+    params['suptitle'] = 'With Cluster Peak'
+    params['xi_mode'] = 'cluster_peak'
+    _ = execute_gp_model(**params)
+
+    params = copy.deepcopy(params_basic)
+    N = 64
+    params['suptitle'] = f'With Cluster Peak, Short: N = {N}'
+    params['xi_mode'] = 'cluster_peak'
+    params['length'] = N
+    _ = execute_gp_model(**params)
+
+    params = copy.deepcopy(params_basic)
+    params['suptitle'] = 'With Response Noise, Input Noise and Cluster Peak'
+    params['response_noise_stdv'] = 0.25
+    params['input_noise_stdv'] = 0.25
+    # params['initial_hyps']['noise_level'] = 0.25
+    params['xi_mode'] = 'cluster_peak'
+    _ = execute_gp_model(**params)
+
+    end_time = timer.time()
+    elapsed_time = end_time - start_time
+    print(f"The code ran in {elapsed_time} seconds")
+
+def main_single():
+    start_time = timer.time()
+    date_time_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+    params_basic = {
+        'date_time_formatted': date_time_formatted,
+        'initial_hyps': {
+            'kernel_type': 'squared_exponential',
+            'sigma': 0.56,
+            'l': 0.015,
+            'noise_level': 0.01
+        },
+        'force_response_n_iter': 50,
+        'xi_mode': 'uniform',
+        'length': 512,
+        'sample_rate': 32,
+        'input_noise_stdv': 0.,
+        'response_noise_stdv': 0.,
+        'suptitle': 'Basic Setup',
+        'peak': (10, 2, 100)
+    }
+
+    params = copy.deepcopy(params_basic)
+    _ = execute_gp_model(**params)
 
     end_time = timer.time()
     elapsed_time = end_time - start_time
@@ -216,3 +275,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    #main_single()
