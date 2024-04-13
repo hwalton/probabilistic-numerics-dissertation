@@ -94,6 +94,9 @@ def execute_gp_model(date_time_formatted,
 
     time_test = np.linspace(0, (length - 1) / sample_rate, length)[:, None]
 
+    if xi_mode == 'nyquist_limit':
+        time_test = np.linspace(0, (length - 1) / sample_rate, 2 * length)[:, None]
+
     time_nonuniform_input = format_data(time_nonuniform_input)
     force_response = format_data(force_response)
     time_test = format_data(time_test)
@@ -123,7 +126,7 @@ def execute_gp_model(date_time_formatted,
     elapsed_time = end_time_gp_time_predict - start_time_gp
     print(f"The GP time domain prediction was calculated at {elapsed_time} seconds")
 
-    xi_cont = get_xi(time_test, mode=xi_mode, peak=peak)
+    xi_cont = get_xi(time_nonuniform_input, mode=xi_mode, peak=peak)
     GP_FT_mu, GP_FT_stdv = force_response_model.predict_fourier(xi_cont, method=force_response_fourier_type)
 
     end_time_gp_time_predict = timer.time()
@@ -197,7 +200,7 @@ def main():
         },
         'force_response_n_iter': 0,
         'xi_mode': 'uniform',
-        'length': 512,
+        'length': 1024,
         'dataset': 4,
         'sample_rate': 32,
         'input_noise_stdv': 0.0,
