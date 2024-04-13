@@ -94,8 +94,8 @@ def execute_gp_model(date_time_formatted,
 
     time_test = np.linspace(0, (length - 1) / sample_rate, length)[:, None]
 
-    if xi_mode == 'nyquist_limit':
-        time_test = np.linspace(0, (length - 1) / sample_rate, 2 * length)[:, None]
+    # if xi_mode == 'nyquist_limit':
+    #     time_test = np.linspace(0, (length - 1) / sample_rate, 2 * length)[:, None]
 
     time_nonuniform_input = format_data(time_nonuniform_input)
     force_response = format_data(force_response)
@@ -236,21 +236,21 @@ def main():
     # params['xi_mode'] = 'cluster_peak'
     # params['length'] = N
     # _ = execute_gp_model(**params)
-    #
-    # params = copy.deepcopy(params_basic)
-    # params['suptitle'] = 'With Response Noise, Input Noise and Cluster Peak'
-    # params['response_noise_stdv'] = 0.25
-    # params['input_noise_stdv'] = 0.25
-    # # params['initial_hyps']['noise_level'] = 0.25
-    # params['xi_mode'] = 'cluster_peak'
-    # _ = execute_gp_model(**params)
 
-    # Nyquist Limit Test
     params = copy.deepcopy(params_basic)
-    params['suptitle'] = 'Nyquist Limit Test'
-    params['xi_mode'] = 'nyquist_limit'
-    params['dataset'] = 5
+    params['suptitle'] = 'With Response Noise, Input Noise and Cluster Peak'
+    params['response_noise_stdv'] = 0.25
+    params['input_noise_stdv'] = 0.25
+    # params['initial_hyps']['noise_level'] = 0.25
+    params['xi_mode'] = 'cluster_peak'
     _ = execute_gp_model(**params)
+
+    # # Nyquist Limit Test
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'Nyquist Limit Test'
+    # params['xi_mode'] = 'nyquist_limit'
+    # params['dataset'] = 5
+    # _ = execute_gp_model(**params)
 
     end_time = timer.time()
     elapsed_time = end_time - start_time

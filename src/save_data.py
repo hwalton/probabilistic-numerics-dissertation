@@ -48,7 +48,7 @@ def save_data(sample_rate=32, length=256, dataset=4, input_noise_stdv=10, respon
                              3 * np.sin(5 * time + 3) + sn2 * normal(key, shape=time.shape)
 
         elif dataset == 4:
-            time = np.linspace(0, (length - 1) / sample_rate, length)[:, None]
+            time = np.linspace(0, (length - 1) / sample_rate, length)
 
             key = PRNGKey(0)
             m = float(os.getenv('M'))  # Mass
@@ -58,6 +58,7 @@ def save_data(sample_rate=32, length=256, dataset=4, input_noise_stdv=10, respon
             # Time array
 
             time += input_noise_stdv * normal(key, shape=time.shape)
+            time = np.sort(time)[:, None]
 
             # Calculate natural frequency and damping ratio
             omega_n = np.sqrt(k / m)
