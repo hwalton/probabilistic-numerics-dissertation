@@ -121,7 +121,7 @@ def plot_data(data_dir):
     # plt.subplot(3, 1, 1)  # a rows, b columns, plot c
     ax1 = plt.subplot2grid((5, 3), (0, 0), colspan=3)
     ax1.scatter(time, force_response, label='Force Response', color='green')
-    ax1.plot(time_test, force_response_prediction_t, label='Prediction Mean', color='red', )
+    ax1.plot(time_test, force_response_prediction_t, label='Prediction Mean', color='red', marker='o')
 
     # Assuming prediction_f is the standard deviation
     upper_bound = force_response_prediction_t + force_response_prediction_diag
