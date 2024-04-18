@@ -337,21 +337,24 @@ class GPModel:
             sakdjf=1
 
     def GP_STDV_6(self, xi):
-        self.var_fourier = np.zeros(len(xi), dtype=complex)
-        jitter = 1E-5
-        A = np.linalg.inv(np.squeeze(self.K_X_X) + (self.hyperparameters_obj.dict()['noise_level'] + jitter)* np.eye(len(self.X)))
+        A = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(len(self.X)))
+        X_squeezed = np.squeeze(self.X)
+        self.stdv_fourier = np.zeros(len(xi), dtype=complex)
+
         for n, xi_n in enumerate(xi):
-            debug_print(f"n = {n}")
-            for j in range(len(self.X)):
-                for k in range(len(self.X)):
-                    innn = A[j][k] * np.exp(-1j * xi_n * (np.squeeze(self.X)[j] - np.squeeze(self.X)[k]))
-                    self.var_fourier[n] -= innn
-            self.var_fourier[n] *= self.gp_kernel.compute_kernel_SE_fourier(xi_n) ** 2
+            debug = (X_squeezed[:, None] - X_squeezed)
+            exponent_matrix = -1j * xi_n * debug
+            contributions = A * np.exp(exponent_matrix)
+            self.stdv_fourier[n] = -np.sum(contributions) # CHECK!!!: SHOULD THIS BE -? Maths says -, but positive and real values are expected, which occur with +????
+
+            kernel_fourier_sq = self.gp_kernel.compute_kernel_SE_fourier(xi_n) ** 2
+            kernel_fourier_neg = self.gp_kernel.compute_kernel(-xi_n, 0) / (2 * np.pi)
+
+            self.stdv_fourier[n] *= kernel_fourier_sq
 
 
             debug = self.hyperparameters_obj.dict()['sigma'] ** 2  / (2 * np.pi) * np.exp(self.gp_kernel.compute_kernel_SE_exponent(xi_n) - 1j * (xi_n ** 2))
-            self.var_fourier[n] += debug
-            self.stdv_fourier = self.var_fourier
+            self.stdv_fourier[n] += debug
 
 
     def GP_Mu(self, xi):
