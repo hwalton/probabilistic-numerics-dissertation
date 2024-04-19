@@ -200,7 +200,7 @@ def main():
         },
         'force_response_n_iter': 0,
         'xi_mode': 'uniform',
-        'length': 32,
+        'length': 256,
         'dataset': 4,
         'sample_rate': 32,
         'input_noise_stdv': 0.0,
@@ -209,14 +209,14 @@ def main():
         'peak': (10, 0.5, 100)
     }
 
-    # params = copy.deepcopy(params_basic)
-    # _ = execute_gp_model(**params)
-
     params = copy.deepcopy(params_basic)
-    params['suptitle'] = 'With Response Noise'
-    params['response_noise_stdv'] = 0.25
-    # params['initial_hyps']['noise_level'] = 0.25
     _ = execute_gp_model(**params)
+
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'With Response Noise'
+    # params['response_noise_stdv'] = 0.25
+    # # params['initial_hyps']['noise_level'] = 0.25
+    # _ = execute_gp_model(**params)
     #
     # params = copy.deepcopy(params_basic)
     # params['suptitle'] = 'With Input Noise'

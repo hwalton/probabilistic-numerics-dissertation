@@ -309,7 +309,7 @@ class GPModel:
             self.var_fourier[n] *= self.gp_kernel.compute_kernel_SE_fourier(xi_n) * np.conj(self.gp_kernel.compute_kernel_SE_fourier(- xi_n))
             debug_k = self.gp_kernel.compute_kernel(-xi_n, 0)
             self.var_fourier[n] += self.gp_kernel.compute_kernel(-xi_n, 0)
-            self.stdv_fourier = self.var_fourier
+            self.stdv_fourier = np.sqrt(self.var_fourier)
 
 
 
@@ -333,8 +333,7 @@ class GPModel:
 
             self.stdv_fourier[n] *= kernel_fourier_sq
             self.stdv_fourier[n] += kernel_fourier_neg
-
-            sakdjf=1
+        self.stdv_fourier = np.sqrt(np.abs(self.stdv_fourier))
 
     def GP_STDV_6(self, xi):
         A = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(len(self.X)))
@@ -355,6 +354,7 @@ class GPModel:
 
             debug = self.hyperparameters_obj.dict()['sigma'] ** 2  / (2 * np.pi) * np.exp(self.gp_kernel.compute_kernel_SE_exponent(xi_n) - 1j * (xi_n ** 2))
             self.stdv_fourier[n] += debug
+        self.stdv_fourier = np.sqrt(np.abs(self.stdv_fourier))
 
 
     def GP_Mu(self, xi):

@@ -154,14 +154,14 @@ def plot_data(data_dir):
     ax.set_title('GP Fourier Transform')
     upper_bound_angle = np.angle(GP_FT_mu) + np.angle(GP_FT_stdv)
     lower_bound_angle = np.angle(GP_FT_mu) - np.angle(GP_FT_stdv)
-    max_mag = 1.1 * max(np.max(np.abs(analytical_FT)), np.max(np.abs(DFT)), np.max(np.abs(GP_FT_mu)), np.max(np.abs(GP_FT_stdv)))
+    max_mag = 1.1 * max(np.max(np.abs(analytical_FT)), np.max(np.abs(DFT)), np.max(np.abs(GP_FT_mu)), np.max(np.abs(GP_FT_stdv)), np.max(np.abs(upper_bound_abs)), np.max(np.abs(lower_bound_abs)))
     min_mag = - 1.1 * max(np.abs(GP_FT_stdv))
     ax.set_ylim(min_mag, max_mag)
 
 
     ax = plt.subplot2grid((5, 3), (2, 2))
     ax.plot(xi_cont, np.angle(GP_FT_mu), label='Mean', color='red', marker='o')
-    #ax.fill_between(np.squeeze(xi_cont), lower_bound_angle, upper_bound_angle, color='blue', alpha=0.2, label='Std Dev')
+    ax.fill_between(np.squeeze(xi_cont), lower_bound_angle, upper_bound_angle, color='blue', alpha=0.2, label='Std Dev')
     ax.set_xlabel('Freq [Rad/s]')
     ax.set_ylabel('Phase [Rad]')
     max_phase = (1.1 * np.pi)
