@@ -134,11 +134,18 @@ def execute_gp_model(date_time_formatted,
     print(f"The GP FT was calculated at {elapsed_time} seconds")
 
     xi_disc = get_xi(time_test, mode='uniform')
-    response_interp = np.interp(np.squeeze(time_test), np.squeeze(time_nonuniform_input), np.squeeze(force_response))
+    force_response_interp = np.interp(np.squeeze(time_test), np.squeeze(time_nonuniform_input), np.squeeze(force_response))
+
+    if xi_mode == 'nyquist_limit':
+        save_data(sample_rate, length, 6, input_noise_stdv, response_noise_stdv)
+        force_response_interp, time_nonuniform_input = load_data()
+        time_nonuniform_input = format_data(time_nonuniform_input)
+        force_response_interp = format_data(force_response_interp)
+
 
     start_time_dft = timer.time()
 
-    DFT = DFT_hw(response_interp)
+    DFT = DFT_hw(force_response_interp)
 
     end_time_dft = timer.time()
     elapsed_time = end_time_dft - start_time_dft
@@ -200,7 +207,7 @@ def main():
         },
         'force_response_n_iter': 0,
         'xi_mode': 'uniform',
-        'length': 256,
+        'length': 512,
         'dataset': 4,
         'sample_rate': 32,
         'input_noise_stdv': 0.0,
@@ -209,14 +216,14 @@ def main():
         'peak': (10, 0.5, 100)
     }
 
-    params = copy.deepcopy(params_basic)
-    _ = execute_gp_model(**params)
-
     # params = copy.deepcopy(params_basic)
-    # params['suptitle'] = 'With Response Noise'
-    # params['response_noise_stdv'] = 0.25
-    # # params['initial_hyps']['noise_level'] = 0.25
     # _ = execute_gp_model(**params)
+    #
+    params = copy.deepcopy(params_basic)
+    params['suptitle'] = 'With Response Noise'
+    params['response_noise_stdv'] = 0.25
+    # params['initial_hyps']['noise_level'] = 0.25
+    _ = execute_gp_model(**params)
     #
     # params = copy.deepcopy(params_basic)
     # params['suptitle'] = 'With Input Noise'
@@ -244,7 +251,7 @@ def main():
     # # params['initial_hyps']['noise_level'] = 0.25
     # params['xi_mode'] = 'cluster_peak'
     # _ = execute_gp_model(**params)
-    #
+
     # # Nyquist Limit Test
     # params = copy.deepcopy(params_basic)
     # params['suptitle'] = 'Nyquist Limit Test'

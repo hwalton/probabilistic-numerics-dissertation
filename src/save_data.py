@@ -101,6 +101,33 @@ def save_data(sample_rate=32, length=256, dataset=4, input_noise_stdv=10, respon
             force_response = A_2 * np.exp(-zeta_2 * omega_n_2 * time) * np.cos(omega_d_2 * time + phi_2) \
                            + response_noise_stdv * normal(key, shape=time.shape)
 
+        elif dataset == 6:
+            time = np.linspace(0, (length - 1) / sample_rate, length)
+
+            key = PRNGKey(0)
+            m = float(os.getenv('M_2'))  # Mass
+            c = float(os.getenv('C_2'))  # Damping coefficient
+            k = float(os.getenv('K_2'))  # Stiffness
+
+            # Time array
+
+            time += input_noise_stdv * normal(key, shape=time.shape)
+            time = np.sort(time)[:, None]
+
+            # Calculate natural frequency and damping ratio
+            omega_n = np.sqrt(k / m)
+            zeta = c / (2 * np.sqrt(m * k))
+
+            # Calculate damped natural frequency
+            omega_d = omega_n * np.sqrt(1 - zeta ** 2)
+
+            # Assume A=1 and phi=0 for simplicity, these should be determined based on initial conditions
+            A = 1
+            phi = 0
+
+            # Calculate the force response (displacement response) of the system
+            force_response = A * np.exp(-zeta * omega_n * time) * np.cos(omega_d * time + phi) + response_noise_stdv * normal(key, shape=time.shape)
+
 
 
         # Save to CSV files

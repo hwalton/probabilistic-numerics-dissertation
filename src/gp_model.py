@@ -1,5 +1,6 @@
 import numpy as np
 import scipy
+from scipy.linalg import cholesky, cho_solve
 #import freelunch
 from numpy import linalg as npla
 from gp_nll_FITC import GP_NLL_FITC
@@ -336,7 +337,7 @@ class GPModel:
         self.stdv_fourier = np.sqrt(np.abs(self.stdv_fourier))
 
     def GP_STDV_6(self, xi):
-        A = np.linalg.inv(np.squeeze(self.K_X_X) + self.hyperparameters_obj.dict()['noise_level'] * np.eye(len(self.X)))
+        A = np.linalg.inv(np.squeeze(self.K_X_X) + (self.hyperparameters_obj.dict()['noise_level'] +1E-5 ) * np.eye(len(self.X)))
         X_squeezed = np.squeeze(self.X)
         self.stdv_fourier = np.zeros(len(xi), dtype=complex)
 
@@ -354,7 +355,37 @@ class GPModel:
 
             debug = self.hyperparameters_obj.dict()['sigma'] ** 2  / (2 * np.pi) * np.exp(self.gp_kernel.compute_kernel_SE_exponent(xi_n) - 1j * (xi_n ** 2))
             self.stdv_fourier[n] += debug
-        self.stdv_fourier = np.sqrt(np.abs(self.stdv_fourier))
+        self.stdv_fourier = np.sqrt(np.abs(np.maximum(0.0, self.stdv_fourier)))
+
+    # def GP_STDV_6(self, xi):
+    #     '''
+    #     This version uses the Cholesky decomposition, but produces negative values
+    #     '''
+
+    #     # Compute the Cholesky decomposition of K + sigma_noise*I
+    #     L = cholesky(np.squeeze(self.K_X_X) + (self.hyperparameters_obj.dict()['noise_level'] + 1E-5) * np.eye(len(self.X)), lower=True)
+    #
+    #     X_squeezed = np.squeeze(self.X)
+    #     self.stdv_fourier = np.zeros(len(xi), dtype=complex)
+    #
+    #     for n, xi_n in enumerate(xi):
+    #         debug = (X_squeezed[:, None] - X_squeezed)
+    #         exponent_matrix = -1j * xi_n * debug
+    #         contributions = cho_solve((L, True), np.exp(exponent_matrix))  # Use cho_solve for solving L*L.H*x = exp(...)
+    #
+    #         # Summing contributions (check the sign based on your mathematical derivation)
+    #         self.stdv_fourier[n] = -np.sum(contributions)
+    #
+    #         kernel_fourier_sq = self.gp_kernel.compute_kernel_SE_fourier(xi_n) ** 2
+    #         kernel_fourier_neg = self.gp_kernel.compute_kernel(-xi_n, 0) / (2 * np.pi)
+    #
+    #         self.stdv_fourier[n] *= kernel_fourier_sq
+    #
+    #         debug = self.hyperparameters_obj.dict()['sigma'] ** 2 / (2 * np.pi) * np.exp(self.gp_kernel.compute_kernel_SE_exponent(xi_n) - 1j * (xi_n ** 2))
+    #         self.stdv_fourier[n] += debug
+    #
+    #     # self.stdv_fourier = np.sqrt(np.abs(np.maximum(0.0, self.stdv_fourier)))
+    #     self.stdv_fourier = np.sqrt(np.abs(self.stdv_fourier))
 
 
     def GP_Mu(self, xi):

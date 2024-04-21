@@ -32,11 +32,16 @@ def print_MSE(analytical_FT, DFT, GP_FT_mu):
     print(f"MSE GP FT Imaginary: {mse_GP_FT_imag}\n")
 
 
-def print_wd(analytical_FT, DFT, GP_FT_mu, xi_cont, xi_disc):
+def print_wd(analytical_FT, DFT, GP_FT_mu, xi_cont, xi_disc, xi_mode):
 
-    m = float(os.getenv('M')) #=1.0
-    c = float(os.getenv('C')) #=0.1
-    k = float(os.getenv('K')) #=100.0
+    if xi_mode == 'nyquist_limit':
+        m = float(os.getenv('M_2'))
+        c = float(os.getenv('C_2'))
+        k = float(os.getenv('K_2'))
+    else:
+        m = float(os.getenv('M')) #=1.0
+        c = float(os.getenv('C')) #=0.1
+        k = float(os.getenv('K')) #=100.0
 
     wn = np.sqrt(k/m)
     zeta = c / (2 * np.sqrt(m * k))
@@ -242,7 +247,7 @@ def plot_data(data_dir):
     if xi_mode == 'uniform':
         print_MSE(analytical_FT, DFT, GP_FT_mu)
 
-    print_wd(analytical_FT, DFT, GP_FT_mu, xi_cont, xi_disc)
+    print_wd(analytical_FT, DFT, GP_FT_mu, xi_cont, xi_disc, xi_mode)
 
     fig.suptitle(suptitle, fontsize=32, ha='left', x=0.1)
     plt.tight_layout()
