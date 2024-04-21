@@ -35,6 +35,7 @@ def get_xi(X_star, mode='uniform', peak=(10, 2, 100)):
     xi *= 2 * np.pi  # convert from Hz to rad/s
     if mode == 'cluster_peak':
         cluster = np.linspace(peak[0] - peak[1], peak[0] + peak[1], peak[2])
+        # cluster = np.linspace(0 - peak[1], 0 + peak[1], peak[2])
         debug = np.concatenate((xi, cluster))
         xi = np.concatenate((xi, cluster))
         xi.sort()
@@ -216,48 +217,48 @@ def main():
         'peak': (10, 0.5, 100)
     }
 
-    # params = copy.deepcopy(params_basic)
-    # _ = execute_gp_model(**params)
-    #
+    params = copy.deepcopy(params_basic)
+    _ = execute_gp_model(**params)
+
     params = copy.deepcopy(params_basic)
     params['suptitle'] = 'With Response Noise'
     params['response_noise_stdv'] = 0.25
-    # params['initial_hyps']['noise_level'] = 0.25
+    params['initial_hyps']['noise_level'] = 0.25
     _ = execute_gp_model(**params)
     #
-    # params = copy.deepcopy(params_basic)
-    # params['suptitle'] = 'With Input Noise'
-    # params['input_noise_stdv'] = 0.25
-    # # params['response_noise_stdv'] = 0.25
-    # # params['initial_hyps']['noise_level'] = 0.25
-    # _ = execute_gp_model(**params)
-    #
-    # params = copy.deepcopy(params_basic)
-    # params['suptitle'] = 'With Cluster Peak'
-    # params['xi_mode'] = 'cluster_peak'
-    # _ = execute_gp_model(**params)
-    #
-    # params = copy.deepcopy(params_basic)
-    # N = 64
-    # params['suptitle'] = f'With Cluster Peak, Short: N = {N}'
-    # params['xi_mode'] = 'cluster_peak'
-    # params['length'] = N
-    # _ = execute_gp_model(**params)
-    #
-    # params = copy.deepcopy(params_basic)
-    # params['suptitle'] = 'With Response Noise, Input Noise and Cluster Peak'
+    params = copy.deepcopy(params_basic)
+    params['suptitle'] = 'With Input Noise'
+    params['input_noise_stdv'] = 0.25
     # params['response_noise_stdv'] = 0.25
-    # params['input_noise_stdv'] = 0.25
-    # # params['initial_hyps']['noise_level'] = 0.25
-    # params['xi_mode'] = 'cluster_peak'
-    # _ = execute_gp_model(**params)
+    # params['initial_hyps']['noise_level'] = 0.25
+    _ = execute_gp_model(**params)
 
-    # # Nyquist Limit Test
-    # params = copy.deepcopy(params_basic)
-    # params['suptitle'] = 'Nyquist Limit Test'
-    # params['xi_mode'] = 'nyquist_limit'
-    # params['dataset'] = 5
-    # _ = execute_gp_model(**params)
+    params = copy.deepcopy(params_basic)
+    params['suptitle'] = 'With Cluster Peak'
+    params['xi_mode'] = 'cluster_peak'
+    _ = execute_gp_model(**params)
+
+    params = copy.deepcopy(params_basic)
+    N = 64
+    params['suptitle'] = f'With Cluster Peak, Short: N = {N}'
+    params['xi_mode'] = 'cluster_peak'
+    params['length'] = N
+    _ = execute_gp_model(**params)
+
+    params = copy.deepcopy(params_basic)
+    params['suptitle'] = 'With Response Noise, Input Noise and Cluster Peak'
+    params['response_noise_stdv'] = 0.25
+    params['input_noise_stdv'] = 0.25
+    # params['initial_hyps']['noise_level'] = 0.25
+    params['xi_mode'] = 'cluster_peak'
+    _ = execute_gp_model(**params)
+
+    # Nyquist Limit Test
+    params = copy.deepcopy(params_basic)
+    params['suptitle'] = 'Nyquist Limit Test'
+    params['xi_mode'] = 'nyquist_limit'
+    params['dataset'] = 5
+    _ = execute_gp_model(**params)
 
     end_time = timer.time()
     elapsed_time = end_time - start_time
