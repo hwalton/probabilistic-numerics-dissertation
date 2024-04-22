@@ -202,13 +202,13 @@ def main():
         'date_time_formatted': date_time_formatted,
         'initial_hyps': {
             'kernel_type': 'squared_exponential',
-            'sigma': 0.56,
+            'sigma': 1.0,
             'l': 0.015,
             'noise_level': 0.001
         },
         'force_response_n_iter': 0,
         'xi_mode': 'uniform',
-        'length': 1024,
+        'length': 256,
         'dataset': 4,
         'sample_rate': 32,
         'input_noise_stdv': 0.0,

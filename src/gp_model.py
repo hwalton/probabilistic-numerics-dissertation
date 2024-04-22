@@ -393,11 +393,10 @@ class GPModel:
     #     self.stdv_fourier = np.sqrt(np.abs(self.stdv_fourier))
 
     def GP_STDV_7(self, xi):
-        A = np.linalg.inv(np.squeeze(self.K_X_X) + (self.hyperparameters_obj.dict()['noise_level'] +1E-5 ) * np.eye(len(self.X)))
+        A = np.linalg.inv(np.squeeze(self.K_X_X) + (self.hyperparameters_obj.dict()['noise_level'] + 1E-9 ) * np.eye(len(self.X)))
         X_squeezed = np.squeeze(self.X)
         stdv_contributions = np.zeros(len(xi), dtype=complex)
         kernel_fourier_sq = np.zeros(len(xi), dtype=complex)
-        kernel_fourier_neg = np.zeros(len(xi), dtype=complex)
 
         for n, xi_n in enumerate(xi):
             debug = (X_squeezed[:, None] - X_squeezed)
@@ -406,9 +405,12 @@ class GPModel:
             stdv_contributions[n] = -np.sum(contributions) # CHECK!!!: SHOULD THIS BE -? Maths says -, but positive and real values are expected, which occur with +????
 
         kernel_fourier_sq = np.squeeze(self.gp_kernel.compute_kernel_SE_fourier(np.squeeze(xi)) ** 2)
-        kernel_fourier_neg = np.squeeze(self.gp_kernel.compute_kernel(np.array([1.0]), np.array([1.0]))) / ((2 * np.pi) **2)
 
-        self.stdv_fourier = stdv_contributions * kernel_fourier_sq + kernel_fourier_neg
+        LHS = np.squeeze(self.gp_kernel.compute_kernel(np.array([1.0]), np.array([1.0]))) / ((2 * np.pi) ** 2)
+
+        RHS = stdv_contributions * kernel_fourier_sq
+
+        self.stdv_fourier = LHS + RHS
 
         # self.stdv_fourier = np.sqrt(np.abs(np.maximum(0.0, self.stdv_fourier)))
         self.stdv_fourier = np.sqrt(np.abs(self.stdv_fourier))
