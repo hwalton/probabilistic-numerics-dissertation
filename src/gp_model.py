@@ -405,8 +405,8 @@ class GPModel:
             contributions = A * np.exp(exponent_matrix)
             stdv_contributions[n] = -np.sum(contributions) # CHECK!!!: SHOULD THIS BE -? Maths says -, but positive and real values are expected, which occur with +????
 
-            kernel_fourier_sq[n] = self.gp_kernel.compute_kernel_SE_fourier(xi_n) ** 2
-            kernel_fourier_neg[n] = self.gp_kernel.compute_kernel(-xi_n, -xi_n) / ((2 * np.pi) **2)
+        kernel_fourier_sq = np.squeeze(self.gp_kernel.compute_kernel_SE_fourier(np.squeeze(xi)) ** 2)
+        kernel_fourier_neg = np.squeeze(self.gp_kernel.compute_kernel(np.array([1.0]), np.array([1.0]))) / ((2 * np.pi) **2)
 
         self.stdv_fourier = stdv_contributions * kernel_fourier_sq + kernel_fourier_neg
 
