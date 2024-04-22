@@ -234,8 +234,17 @@ class GPModel:
 
             return self.mu_fourier, self.stdv_fourier
 
+        elif method == 'GP_8':
+            hyp_l, w = self.GP_Mu(xi)
+
+            self.GP_STDV_8(xi)
+
+            return self.mu_fourier, self.stdv_fourier
+
         else:
             assert 0, "Not yet implemented"
+
+
 
 
     def GP_STDV_NULL(self, xi):
@@ -414,6 +423,31 @@ class GPModel:
 
         # self.stdv_fourier = np.sqrt(np.abs(np.maximum(0.0, self.stdv_fourier)))
         self.stdv_fourier = np.sqrt(np.abs(self.stdv_fourier))
+
+    def GP_STDV_8(self, xi):
+        A = np.linalg.inv(np.squeeze(self.K_X_X) + (self.hyperparameters_obj.dict()['noise_level'] + 1E-9 ) * np.eye(len(self.X)))
+        X_squeezed = np.squeeze(self.X)
+        stdv_contributions = np.zeros(len(xi), dtype=complex)
+        kernel_fourier_sq = np.zeros(len(xi), dtype=complex)
+
+        for n, xi_n in enumerate(xi):
+            debug = (X_squeezed[:, None] - X_squeezed)
+            exponent_matrix = -1j * xi_n * debug
+            contributions = A * np.exp(exponent_matrix)
+            stdv_contributions[n] = -np.sum(contributions) # CHECK!!!: SHOULD THIS BE -? Maths says -, but positive and real values are expected, which occur with +????
+
+        kernel_fourier_sq = np.squeeze(self.gp_kernel.compute_kernel_SE_fourier(np.squeeze(xi)) ** 2)
+
+        LHS = np.squeeze(self.gp_kernel.compute_kernel_SE_fourier(np.squeeze(xi)))
+
+        RHS = stdv_contributions * kernel_fourier_sq
+
+        self.stdv_fourier = LHS + RHS
+
+        # self.stdv_fourier = np.sqrt(np.abs(np.maximum(0.0, self.stdv_fourier)))
+        self.stdv_fourier = np.sqrt(np.abs(self.stdv_fourier))
+
+
 
 
     def GP_Mu(self, xi):
