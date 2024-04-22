@@ -86,7 +86,7 @@ def execute_gp_model(date_time_formatted,
     force_response_predict_type = ['cholesky', 'FITC'][0]
     force_response_nll_method = ['cholesky', 'FITC_18_134'][0]
     force_response_U_induced_method = ['k_means', 'even'][1]
-    force_response_fourier_type = ['GP_NULL', 'GP', 'GP_2', 'GP_3', 'GP_4', 'GP_5', 'GP_6', 'GP_7', 'GP_8', 'DFT', 'set'][1]
+    force_response_fourier_type = ['GP_NULL', 'GP', 'GP_2', 'GP_3', 'GP_4', 'GP_5', 'GP_6', 'GP_7', 'GP_8', 'GP_9', 'DFT', 'set'][9]
     M_one_in = 1
 
 
@@ -208,7 +208,7 @@ def main():
         },
         'force_response_n_iter': 0,
         'xi_mode': 'uniform',
-        'length': 128,
+        'length': 1024,
         'dataset': 4,
         'sample_rate': 32,
         'input_noise_stdv': 0.0,
@@ -252,8 +252,7 @@ def main():
     # # params['initial_hyps']['noise_level'] = 0.25
     # params['xi_mode'] = 'cluster_peak'
     # _ = execute_gp_model(**params)
-    #
-    # Nyquist Limit Test
+
     # params = copy.deepcopy(params_basic)
     # params['suptitle'] = 'Nyquist Limit Test'
     # params['xi_mode'] = 'nyquist_limit'
