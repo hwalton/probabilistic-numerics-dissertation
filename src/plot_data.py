@@ -19,7 +19,7 @@ def print_MSE(analytical_FT, DFT, GP_FT_mu):
     mse_DFT_imag = np.mean((np.imag(analytical_FT) - np.imag(DFT)) ** 2)
     mse_GP_FT_imag = np.mean((np.imag(analytical_FT) - np.imag(GP_FT_mu)) ** 2)
 
-    print(f"MSE DFT Magnitude: {mse_DFT_mag}")
+    print(f"\nMSE DFT Magnitude: {mse_DFT_mag}")
     print(f"MSE GP FT Magnitude: {mse_GP_FT_mag}\n")
 
     print(f"MSE DFT Phase: {mse_DFT_phase}")
@@ -125,8 +125,8 @@ def plot_data(data_dir):
 
     # plt.subplot(3, 1, 1)  # a rows, b columns, plot c
     ax1 = plt.subplot2grid((5, 3), (0, 1), colspan=2)
-    ax1.scatter(time, force_response, label='Training Data', color='green')
-    ax1.plot(time, force_response_prediction_t, label='Prediction Mean', color='red', marker='o')
+    ax1.plot(time, force_response_prediction_t, label='Prediction Mean', color='red', marker='o', zorder=1)
+    ax1.scatter(time, force_response, label='Training Data', color='green', zorder=2)
 
     # Assuming prediction_f is the standard deviation
     upper_bound = force_response_prediction_t + force_response_prediction_diag
