@@ -208,7 +208,7 @@ def main():
         },
         'force_response_n_iter': 0,
         'xi_mode': 'uniform',
-        'length': 1024,
+        'length': 256,
         'dataset': 4,
         'sample_rate': 32,
         'input_noise_stdv': 0.0,

@@ -457,7 +457,8 @@ class GPModel:
         self.stdv_fourier = np.sqrt(np.abs(self.stdv_fourier))
 
     def GP_STDV_9(self, xi):
-        A = np.linalg.inv(np.squeeze(self.K_X_X) + (self.hyperparameters_obj.dict()['noise_level'] + 1E-9 ) * np.eye(len(self.X)))
+        L = cholesky(np.linalg.inv(np.squeeze(self.K_X_X) + (self.hyperparameters_obj.dict()['noise_level'] + 1E-9 ) * np.eye(len(self.X))))
+        A = cho_solve((L, True), np.eye(L.shape[0]))
         X_squeezed = np.squeeze(self.X)
         stdv_contributions = np.zeros(len(xi), dtype=complex)
         kernel_fourier_sq = np.zeros(len(xi), dtype=complex)
