@@ -125,7 +125,7 @@ def plot_data(data_dir):
 
     # plt.subplot(3, 1, 1)  # a rows, b columns, plot c
     ax1 = plt.subplot2grid((5, 3), (0, 1), colspan=1)
-    ax1.plot(time, force_response_prediction_t, label='Prediction Mean', color='red', marker='o', zorder=1, markersize=4)
+    ax1.plot(time, force_response_prediction_t, label='Prediction Mean', color='red', marker='o', zorder=1, markersize=6)
     ax1.scatter(time, force_response, label='Training Data', color='green', zorder=2, s=6)
 
     # Assuming prediction_f is the standard deviation
@@ -142,8 +142,8 @@ def plot_data(data_dir):
     ax1.set_xlabel('Time [s]')
     ax1.set_ylabel('Acceleration [ms$^{-2}$]')
     ax1.set_title('Simulated SDOF System')
-
-    ax1.legend()
+    ax1.set_ylim(-1.6, 1.9)
+    ax1.legend(ncol=3)
     ax1.grid(True)
 
     upper_bound_abs = np.abs(GP_FT_mu) + np.abs(GP_FT_stdv)

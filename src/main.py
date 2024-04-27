@@ -64,9 +64,11 @@ def get_analytical_FT(xi, xi_mode):
         k = float(os.getenv('K'))  # Stiffness
         A = float(os.getenv('A'))  # Amplitude
 
-    phi_hardcoded= 0 * (2 * np.pi / 8)
+    phi_hardcoded= 2 * (2 * np.pi / 8)
     ft = np.squeeze(A * np.exp(1j * phi_hardcoded) / ((k - m * xi ** 2) + 1j * c * xi))
 
+    zero_index = len(xi[xi <= 0])
+    ft[:zero_index] *= np.exp(1j * np.pi)
 
 
     # wn = np.sqrt(k / m)
@@ -181,7 +183,6 @@ def execute_gp_model(date_time_formatted,
     end_time_dft = timer.time()
     elapsed_time = end_time_dft - start_time_dft
     print(f"The DFT was calculated in {elapsed_time} seconds")
-
     analytical_FT = get_analytical_FT(xi_cont, xi_mode)
 
     plot_df_dict = {
@@ -224,6 +225,10 @@ def execute_gp_model(date_time_formatted,
 
     return model_2_nll
 
+
+
+
+
 def main():
     start_time = timer.time()
     date_time_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -238,7 +243,7 @@ def main():
         },
         'force_response_n_iter': 0,
         'xi_mode': 'uniform',
-        'length': 512,
+        'length': 128,
         'dataset': 4,
         'sample_rate': 32,
         'input_noise_stdv': 0.0,
@@ -249,7 +254,7 @@ def main():
 
     params = copy.deepcopy(params_basic)
     _ = execute_gp_model(**params)
-    #
+
     # params = copy.deepcopy(params_basic)
     # params['suptitle'] = 'With Response Noise'
     # params['response_noise_stdv'] = 0.25
@@ -282,16 +287,16 @@ def main():
     # # params['initial_hyps']['noise_level'] = 0.25
     # params['xi_mode'] = 'cluster_peak'
     # _ = execute_gp_model(**params)
-
+    #
     # params = copy.deepcopy(params_basic)
     # params['suptitle'] = 'Nyquist Limit Test'
     # params['xi_mode'] = 'nyquist_limit'
     # params['dataset'] = 5
     # _ = execute_gp_model(**params)
-
-    end_time = timer.time()
-    elapsed_time = end_time - start_time
-    print(f"The code ran in {elapsed_time} seconds")
+    #
+    # end_time = timer.time()
+    # elapsed_time = end_time - start_time
+    # print(f"The code ran in {elapsed_time} seconds")
 
 # def main_single():
 #     start_time = timer.time()
