@@ -57,11 +57,11 @@ def print_wd(analytical_FT, DFT, GP_FT_mu, xi_cont, xi_disc, xi_mode):
     peak_analytical_FT = np.abs(np.squeeze(1 / ((k - m * (wd_analytical_FT) ** 2) + 1j * c * (wd_analytical_FT))))
 
     print("~" * 100)
-    print(f"\u03C9_d analytical FT: {wd_analytical_FT}")
-    print(f"\u03C9_d DFT: {wd_DFT}")
-    print(f"\u03C9_d GP FT: {wd_GP_FT}\n")
-    print(f"Error in \u03C9_d DFT: {np.abs(wd_analytical_FT - wd_DFT)}")
-    print(f"Error in \u03C9_d GP FT: {np.abs(wd_analytical_FT - wd_GP_FT)}")
+    print(f"\u03C9_d analytical FT: {np.abs(wd_analytical_FT)}")
+    print(f"\u03C9_d DFT: {np.abs(wd_DFT)}")
+    print(f"\u03C9_d GP FT: {np.abs(wd_GP_FT)}\n")
+    print(f"Error in \u03C9_d DFT: {np.abs(wd_analytical_FT) - np.abs(wd_DFT)}")
+    print(f"Error in \u03C9_d GP FT: {np.abs(wd_analytical_FT) - np.abs(wd_GP_FT)}")
     print("~" * 100)
     print(f"Peak analytical FT: {peak_analytical_FT}")
     print(f"Peak DFT: {max(np.abs(DFT))}")
@@ -74,7 +74,7 @@ def plot_data(data_dir):
     plot_df = pd.read_csv(data_dir)
 
 
-    fig = plt.figure(figsize=(33.1, 23.4), dpi=150)
+    fig = plt.figure(figsize=(33.1, 29.25), dpi=150)
     plt.rcParams.update({'font.size': 16})
 
     arrays = {col: np.array(plot_df[col].dropna()) for col in plot_df.columns}
@@ -124,9 +124,9 @@ def plot_data(data_dir):
         force_response_prediction_diag = np.array(force_response_prediction_f)
 
     # plt.subplot(3, 1, 1)  # a rows, b columns, plot c
-    ax1 = plt.subplot2grid((5, 3), (0, 1), colspan=2)
-    ax1.plot(time, force_response_prediction_t, label='Prediction Mean', color='red', marker='o', zorder=1)
-    ax1.scatter(time, force_response, label='Training Data', color='green', zorder=2)
+    ax1 = plt.subplot2grid((5, 3), (0, 1), colspan=1)
+    ax1.plot(time, force_response_prediction_t, label='Prediction Mean', color='red', marker='o', zorder=1, markersize=4)
+    ax1.scatter(time, force_response, label='Training Data', color='green', zorder=2, s=6)
 
     # Assuming prediction_f is the standard deviation
     upper_bound = force_response_prediction_t + force_response_prediction_diag
@@ -150,6 +150,8 @@ def plot_data(data_dir):
     lower_bound_abs = np.abs(GP_FT_mu) - np.abs(GP_FT_stdv)
 
 
+    plt.rcParams.update({'font.size': 24})
+
     ax = plt.subplot2grid((5, 3), (1, 2))
     ax.plot(xi_cont, np.abs(GP_FT_mu), label='Prediction Mean', color='red', marker='o')
     # ax.fill_between(np.squeeze(xi_cont), lower_bound_abs, upper_bound_abs, alpha=0.2, label='Prediction Std Dev')
@@ -159,9 +161,10 @@ def plot_data(data_dir):
     upper_bound_angle = np.angle(GP_FT_mu) + np.angle(GP_FT_stdv)
     lower_bound_angle = np.angle(GP_FT_mu) - np.angle(GP_FT_stdv)
     max_mag = 1.1 * max(np.max(np.abs(analytical_FT)), np.max(np.abs(DFT)), np.max(np.abs(GP_FT_mu)), np.max(np.abs(GP_FT_stdv)), np.max(np.abs(upper_bound_abs)), np.max(np.abs(lower_bound_abs)))
-    min_mag = - 1.1 * max(np.abs(GP_FT_stdv))
+    min_mag = np.minimum(- 1.1 * max(np.abs(GP_FT_stdv)), -0.1)
     ax.set_ylim(min_mag, max_mag)
     ax.legend()
+    ax.grid(True)
 
 
     ax = plt.subplot2grid((5, 3), (2, 2))
@@ -173,6 +176,7 @@ def plot_data(data_dir):
     max_phase = (1.1 * np.pi)
     ax.set_ylim(-max_phase, max_phase)
     ax.legend()
+    ax.grid(True)
 
     ax = plt.subplot2grid((5, 3), (3, 2))
     ax.plot(xi_cont, np.real(GP_FT_mu), label='Prediction Mean', color='red', marker='o')
@@ -182,6 +186,7 @@ def plot_data(data_dir):
     max_re = 1.1 * max(np.max(np.abs(np.real(analytical_FT))), np.max(np.abs(np.real(DFT))), np.max(np.abs(np.real(GP_FT_mu))))
     ax.set_ylim(-max_re, max_re)
     ax.legend()
+    ax.grid(True)
 
     ax = plt.subplot2grid((5, 3), (4, 2))
     ax.plot(xi_cont, np.imag(GP_FT_mu), label='Prediction Mean', color='red', marker='o')
@@ -191,38 +196,43 @@ def plot_data(data_dir):
     max_imag = 1.1 * max(np.max(np.abs(np.imag(analytical_FT))), np.max(np.abs(np.imag(DFT))), np.max(np.abs(np.imag(GP_FT_mu))))
     ax.set_ylim(-max_imag, max_imag)
     ax.legend()
+    ax.grid(True)
 
 
     ax = plt.subplot2grid((5, 3), (1, 1))
     ax.scatter(xi_disc, np.abs(DFT), color='red')
     ax.set_xlabel('Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Magnitude [ms$^{-2}$]')
-    ax.set_title('Discrete Fourier Transform')
+    ax.set_title('Fast Fourier Transform')
     ax.set_ylim(min_mag, max_mag)
+    ax.grid(True)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (2, 1))
     ax.scatter(xi_disc, np.angle(DFT), color='red')
     ax.set_xlabel('Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Phase [rad]')
-    ax.set_title('Discrete Fourier Transform')
+    ax.set_title('Fast Fourier Transform')
     ax.set_ylim(-max_phase, max_phase)
+    ax.grid(True)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (3, 1))
     ax.scatter(xi_disc, np.real(DFT), color='red')
     ax.set_xlabel('Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Real Part [ms$^{-2}$]')
-    ax.set_title('Discrete Fourier Transform')
+    ax.set_title('Fast Fourier Transform')
     ax.set_ylim(-max_re, max_re)
+    ax.grid(True)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (4, 1))
     ax.scatter(xi_disc, np.imag(DFT), color='red')
     ax.set_xlabel('Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Imaginary Part [ms$^{-2}$]')
-    ax.set_title('Discrete Fourier Transform')
+    ax.set_title('Fast Fourier Transform')
     ax.set_ylim(-max_imag, max_imag)
+    ax.grid(True)
 
 
     ax = plt.subplot2grid((5, 3), (1, 0))
@@ -231,6 +241,7 @@ def plot_data(data_dir):
     ax.set_ylabel('Magnitude [ms$^{-2}$]')
     ax.set_title('Analytical Fourier Transform')
     ax.set_ylim(min_mag, max_mag)
+    ax.grid(True)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (2, 0))
@@ -239,6 +250,7 @@ def plot_data(data_dir):
     ax.set_ylabel('Phase [rad]')
     ax.set_title('Analytical Fourier Transform')
     ax.set_ylim(-max_phase, max_phase)
+    ax.grid(True)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (3, 0))
@@ -247,6 +259,7 @@ def plot_data(data_dir):
     ax.set_ylabel('Real Part [ms$^{-2}$]')
     ax.set_title('Analytical Fourier Transform')
     ax.set_ylim(-max_re, max_re)
+    ax.grid(True)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (4, 0))
@@ -255,11 +268,14 @@ def plot_data(data_dir):
     ax.set_ylabel('Imaginary Part [ms$^{-2}$]')
     ax.set_title('Analytical Fourier Transform')
     ax.set_ylim(-max_imag, max_imag)
+    ax.grid(True)
 
     if xi_mode == 'uniform':
         print_MSE(analytical_FT, DFT, GP_FT_mu)
 
     print_wd(analytical_FT, DFT, GP_FT_mu, xi_cont, xi_disc, xi_mode)
+
+
 
     fig.suptitle(suptitle, fontsize=24, ha='left', x=0.1)
     plt.tight_layout()

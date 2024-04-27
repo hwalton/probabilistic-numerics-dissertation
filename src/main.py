@@ -11,6 +11,7 @@ from save_data import save_data
 import os
 import dotenv
 dotenv.load_dotenv()
+import sympy as sp
 
 import copy
 
@@ -42,25 +43,54 @@ def get_xi(X_star, mode='uniform', peak=(10, 2, 100)):
     return xi
 
 def DFT_hw(y):
-    DFT = np.fft.fft(np.squeeze(y) * np.hanning(len(np.squeeze(y)))) / (len(np.squeeze(y)) / 2)
+    DFT = - 2 * np.pi * np.fft.fft(np.squeeze(y) * np.hanning(len(np.squeeze(y)))) / (len(np.squeeze(y)) / 2) # scale by 2 pi because frequency is in rad/s
     N = len(DFT)
     DFT = np.concatenate((DFT[(N // 2 + 1):], DFT[:(N // 2 + 1)]))
     return DFT
 
 def get_analytical_FT(xi, xi_mode):
-    m = float(os.getenv('M'))  # Mass
-    c = float(os.getenv('C'))  # Damping coefficient
-    k = float(os.getenv('K'))  # Stiffness
-    A = float(os.getenv('A'))  # Amplitude
-    ft = np.squeeze(A / ((k - m * xi ** 2) + 1j * c * xi))
+
+    phi = float(os.getenv('PHI'))
 
     if xi_mode == 'nyquist_limit':
-        m_2 = float(os.getenv('M_2'))  # Mass
-        c_2 = float(os.getenv('C_2'))
-        k_2 = float(os.getenv('K_2'))
-        A_2 = float(os.getenv('A_2'))
+        m = float(os.getenv('M_2'))  # Mass
+        c = float(os.getenv('C_2'))
+        k = float(os.getenv('K_2'))
+        A = float(os.getenv('A_2'))
 
-        ft += np.squeeze(A_2 / ((k_2 - m_2 * xi ** 2) + 1j * c_2 * xi))
+    else:
+        m = float(os.getenv('M'))  # Mass
+        c = float(os.getenv('C'))  # Damping coefficient
+        k = float(os.getenv('K'))  # Stiffness
+        A = float(os.getenv('A'))  # Amplitude
+
+    phi_hardcoded= 0 * (2 * np.pi / 8)
+    ft = np.squeeze(A * np.exp(1j * phi_hardcoded) / ((k - m * xi ** 2) + 1j * c * xi))
+
+
+
+    # wn = np.sqrt(k / m)
+    # zeta = c / (2 * np.sqrt(m * k))
+    # wd = wn * np.sqrt(1 - zeta ** 2)
+    # #
+    # ft = 2 * np.pi * A * (np.exp(-1j * phi) * (zeta * wn + 1j * xi) + np.exp(1j * phi) * (zeta * wn - 1j * xi)) / (2 * ((zeta * wn + 1j * xi)) ** 2 + wd ** 2)
+
+
+
+
+    # # Define the symbolic variables
+    # t, xi = sp.symbols('t xi', real=True)  # Time and frequency
+    # A, zeta, wn, wd, phi = sp.symbols('A zeta wn wd phi', real=True, positive=True)
+    #
+    # # Define the time-domain function x(t)
+    # x_t = A * sp.exp(-zeta * wn * t) * sp.cos(wd * t + phi)
+    #
+    # # Compute the Fourier Transform of x(t)
+    # ft = sp.fourier_transform(x_t, t, xi)
+    #
+    # # Simplify the result
+    # ft = sp.simplify(ft)
+
     return ft
 
 
@@ -208,7 +238,7 @@ def main():
         },
         'force_response_n_iter': 0,
         'xi_mode': 'uniform',
-        'length': 1024,
+        'length': 512,
         'dataset': 4,
         'sample_rate': 32,
         'input_noise_stdv': 0.0,
@@ -219,45 +249,45 @@ def main():
 
     params = copy.deepcopy(params_basic)
     _ = execute_gp_model(**params)
-
-    params = copy.deepcopy(params_basic)
-    params['suptitle'] = 'With Response Noise'
-    params['response_noise_stdv'] = 0.25
-    params['initial_hyps']['noise_level'] = 0.25
-    _ = execute_gp_model(**params)
     #
-    params = copy.deepcopy(params_basic)
-    params['suptitle'] = 'With Input Noise'
-    params['input_noise_stdv'] = 0.25
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'With Response Noise'
     # params['response_noise_stdv'] = 0.25
     # params['initial_hyps']['noise_level'] = 0.25
-    _ = execute_gp_model(**params)
+    # _ = execute_gp_model(**params)
+    # #
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'With Input Noise'
+    # params['input_noise_stdv'] = 0.25
+    # # params['response_noise_stdv'] = 0.25
+    # # params['initial_hyps']['noise_level'] = 0.25
+    # _ = execute_gp_model(**params)
+    #
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'With Cluster Peak'
+    # params['xi_mode'] = 'cluster_peak'
+    # _ = execute_gp_model(**params)
+    #
+    # params = copy.deepcopy(params_basic)
+    # N = 64
+    # params['suptitle'] = f'With Cluster Peak, Short: N = {N}'
+    # params['xi_mode'] = 'cluster_peak'
+    # params['length'] = N
+    # _ = execute_gp_model(**params)
+    #
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'With Response Noise, Input Noise and Cluster Peak'
+    # params['response_noise_stdv'] = 0.25
+    # params['input_noise_stdv'] = 0.25
+    # # params['initial_hyps']['noise_level'] = 0.25
+    # params['xi_mode'] = 'cluster_peak'
+    # _ = execute_gp_model(**params)
 
-    params = copy.deepcopy(params_basic)
-    params['suptitle'] = 'With Cluster Peak'
-    params['xi_mode'] = 'cluster_peak'
-    _ = execute_gp_model(**params)
-
-    params = copy.deepcopy(params_basic)
-    N = 64
-    params['suptitle'] = f'With Cluster Peak, Short: N = {N}'
-    params['xi_mode'] = 'cluster_peak'
-    params['length'] = N
-    _ = execute_gp_model(**params)
-
-    params = copy.deepcopy(params_basic)
-    params['suptitle'] = 'With Response Noise, Input Noise and Cluster Peak'
-    params['response_noise_stdv'] = 0.25
-    params['input_noise_stdv'] = 0.25
-    # params['initial_hyps']['noise_level'] = 0.25
-    params['xi_mode'] = 'cluster_peak'
-    _ = execute_gp_model(**params)
-
-    params = copy.deepcopy(params_basic)
-    params['suptitle'] = 'Nyquist Limit Test'
-    params['xi_mode'] = 'nyquist_limit'
-    params['dataset'] = 5
-    _ = execute_gp_model(**params)
+    # params = copy.deepcopy(params_basic)
+    # params['suptitle'] = 'Nyquist Limit Test'
+    # params['xi_mode'] = 'nyquist_limit'
+    # params['dataset'] = 5
+    # _ = execute_gp_model(**params)
 
     end_time = timer.time()
     elapsed_time = end_time - start_time
