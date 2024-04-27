@@ -54,7 +54,7 @@ def print_wd(analytical_FT, DFT, GP_FT_mu, xi_cont, xi_disc, xi_mode):
     j = np.squeeze(np.argwhere(np.abs(GP_FT_mu) == max(np.abs(GP_FT_mu)))[-1])
     wd_GP_FT = np.squeeze(xi_cont[j])
 
-    peak_analytical_FT = np.abs(np.squeeze(1 / ((k - m * (wd_analytical_FT) ** 2) + 1j * c * (wd_analytical_FT))))
+    peak_analytical_FT = np.abs(np.squeeze(- wn ** 2 / ((k - m * (wd_analytical_FT) ** 2) + 1j * c * (wd_analytical_FT))))
 
     print("~" * 100)
     print(f"\u03C9_d analytical FT: {np.abs(wd_analytical_FT)}")
@@ -142,7 +142,7 @@ def plot_data(data_dir):
     ax1.set_xlabel('Time [s]')
     ax1.set_ylabel('Acceleration [ms$^{-2}$]')
     ax1.set_title('Simulated SDOF System')
-    ax1.set_ylim(-1.6, 1.9)
+    # ax1.set_ylim(-1.6, 1.9)
     ax1.legend(ncol=3)
     ax1.grid(True)
 
@@ -161,8 +161,8 @@ def plot_data(data_dir):
     upper_bound_angle = np.angle(GP_FT_mu) + np.angle(GP_FT_stdv)
     lower_bound_angle = np.angle(GP_FT_mu) - np.angle(GP_FT_stdv)
     max_mag = 1.1 * max(np.max(np.abs(analytical_FT)), np.max(np.abs(DFT)), np.max(np.abs(GP_FT_mu)), np.max(np.abs(GP_FT_stdv)), np.max(np.abs(upper_bound_abs)), np.max(np.abs(lower_bound_abs)))
-    min_mag = np.minimum(- 1.1 * max(np.abs(GP_FT_stdv)), -0.1)
-    ax.set_ylim(min_mag, max_mag)
+    # min_mag = np.minimum(- 1.1 * max(np.abs(GP_FT_stdv)), -0.1)
+    ax.set_ylim(-10, max_mag)
     ax.legend()
     ax.grid(True)
 
@@ -204,7 +204,7 @@ def plot_data(data_dir):
     ax.set_xlabel('Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Magnitude [ms$^{-2}$]')
     ax.set_title('Fast Fourier Transform')
-    ax.set_ylim(min_mag, max_mag)
+    ax.set_ylim(-10, max_mag)
     ax.grid(True)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
@@ -240,7 +240,7 @@ def plot_data(data_dir):
     ax.set_xlabel('Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Magnitude [ms$^{-2}$]')
     ax.set_title('Analytical Fourier Transform')
-    ax.set_ylim(min_mag, max_mag)
+    ax.set_ylim(-10, max_mag)
     ax.grid(True)
 
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c

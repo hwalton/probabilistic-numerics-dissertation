@@ -72,7 +72,7 @@ def save_data(sample_rate=32, length=256, dataset=4, input_noise_stdv=10, respon
             phi = 0
 
             # Calculate the force response (displacement response) of the system
-            force_response = A * np.exp(-zeta * omega_n * time) * np.cos(omega_d * time + phi) + response_noise_stdv * normal(key, shape=time.shape)
+            force_response = A * omega_n ** 2 * np.exp(-zeta * omega_n * time) * np.sin(omega_d * time + phi) + response_noise_stdv * normal(key, shape=time.shape)
 
         elif dataset == 5:
             # time = np.random.uniform(0, (length - 1) / sample_rate, size=length)
@@ -98,7 +98,7 @@ def save_data(sample_rate=32, length=256, dataset=4, input_noise_stdv=10, respon
             phi_2 = phi
 
             # Calculate the force response (displacement response) of the system
-            force_response = A_2 * np.exp(-zeta_2 * omega_n_2 * time) * np.cos(omega_d_2 * time + phi_2) \
+            force_response = A_2 * omega_n_2 ** 2 * np.exp(-zeta_2 * omega_n_2 * time) * np.sin(omega_d_2 * time + phi_2) \
                            + response_noise_stdv * normal(key, shape=time.shape)
 
         elif dataset == 6:
@@ -126,7 +126,7 @@ def save_data(sample_rate=32, length=256, dataset=4, input_noise_stdv=10, respon
             phi = 0
 
             # Calculate the force response (displacement response) of the system
-            force_response = A * np.exp(-zeta * omega_n * time) * np.cos(omega_d * time + phi) + response_noise_stdv * normal(key, shape=time.shape)
+            force_response = A * omega_n ** 2 * np.exp(-zeta * omega_n * time) * np.sin(omega_d * time + phi) + response_noise_stdv * normal(key, shape=time.shape)
 
 
 
