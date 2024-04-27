@@ -142,7 +142,7 @@ def plot_data(data_dir):
     ax1.set_xlabel('Time [s]')
     ax1.set_ylabel('Acceleration [ms$^{-2}$]')
     ax1.set_title('Simulated SDOF System')
-    # ax1.set_ylim(-1.6, 1.9)
+    ax1.set_ylim(-150, 190)
     ax1.legend(ncol=3)
     ax1.grid(True)
 
@@ -155,7 +155,7 @@ def plot_data(data_dir):
     ax = plt.subplot2grid((5, 3), (1, 2))
     ax.plot(xi_cont, np.abs(GP_FT_mu), label='Prediction Mean', color='red', marker='o')
     # ax.fill_between(np.squeeze(xi_cont), lower_bound_abs, upper_bound_abs, alpha=0.2, label='Prediction Std Dev')
-    ax.set_xlabel('Frequency [rad s$^{-1}$]')
+    ax.set_xlabel('Angular Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Magnitude [ms$^{-2}$]')
     ax.set_title('GP Fourier Transform')
     upper_bound_angle = np.angle(GP_FT_mu) + np.angle(GP_FT_stdv)
@@ -170,7 +170,7 @@ def plot_data(data_dir):
     ax = plt.subplot2grid((5, 3), (2, 2))
     ax.plot(xi_cont, np.angle(GP_FT_mu), label='Prediction Mean', color='red', marker='o')
     # ax.fill_between(np.squeeze(xi_cont), lower_bound_angle, upper_bound_angle, color='blue', alpha=0.2, label='Prediction Std Dev')
-    ax.set_xlabel('Frequency [rad s$^{-1}$]')
+    ax.set_xlabel('Angular Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Phase [rad]')
     ax.set_title('GP Fourier Transform')
     max_phase = (1.1 * np.pi)
@@ -180,7 +180,7 @@ def plot_data(data_dir):
 
     ax = plt.subplot2grid((5, 3), (3, 2))
     ax.plot(xi_cont, np.real(GP_FT_mu), label='Prediction Mean', color='red', marker='o')
-    ax.set_xlabel('Frequency [rad s$^{-1}$]')
+    ax.set_xlabel('Angular Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Real Part [ms$^{-2}$]')
     ax.set_title('GP Fourier Transform')
     max_re = 1.1 * max(np.max(np.abs(np.real(analytical_FT))), np.max(np.abs(np.real(DFT))), np.max(np.abs(np.real(GP_FT_mu))))
@@ -190,7 +190,7 @@ def plot_data(data_dir):
 
     ax = plt.subplot2grid((5, 3), (4, 2))
     ax.plot(xi_cont, np.imag(GP_FT_mu), label='Prediction Mean', color='red', marker='o')
-    ax.set_xlabel('Frequency [rad s$^{-1}$]')
+    ax.set_xlabel('Angular Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Imaginary Part [ms$^{-2}$]')
     ax.set_title('GP Fourier Transform')
     max_imag = 1.1 * max(np.max(np.abs(np.imag(analytical_FT))), np.max(np.abs(np.imag(DFT))), np.max(np.abs(np.imag(GP_FT_mu))))
@@ -201,7 +201,7 @@ def plot_data(data_dir):
 
     ax = plt.subplot2grid((5, 3), (1, 1))
     ax.scatter(xi_disc, np.abs(DFT), color='red')
-    ax.set_xlabel('Frequency [rad s$^{-1}$]')
+    ax.set_xlabel('Angular Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Magnitude [ms$^{-2}$]')
     ax.set_title('Fast Fourier Transform')
     ax.set_ylim(-10, max_mag)
@@ -210,7 +210,7 @@ def plot_data(data_dir):
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (2, 1))
     ax.scatter(xi_disc, np.angle(DFT), color='red')
-    ax.set_xlabel('Frequency [rad s$^{-1}$]')
+    ax.set_xlabel('Angular Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Phase [rad]')
     ax.set_title('Fast Fourier Transform')
     ax.set_ylim(-max_phase, max_phase)
@@ -219,7 +219,7 @@ def plot_data(data_dir):
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (3, 1))
     ax.scatter(xi_disc, np.real(DFT), color='red')
-    ax.set_xlabel('Frequency [rad s$^{-1}$]')
+    ax.set_xlabel('Angular Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Real Part [ms$^{-2}$]')
     ax.set_title('Fast Fourier Transform')
     ax.set_ylim(-max_re, max_re)
@@ -228,7 +228,7 @@ def plot_data(data_dir):
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (4, 1))
     ax.scatter(xi_disc, np.imag(DFT), color='red')
-    ax.set_xlabel('Frequency [rad s$^{-1}$]')
+    ax.set_xlabel('Angular Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Imaginary Part [ms$^{-2}$]')
     ax.set_title('Fast Fourier Transform')
     ax.set_ylim(-max_imag, max_imag)
@@ -237,7 +237,7 @@ def plot_data(data_dir):
 
     ax = plt.subplot2grid((5, 3), (1, 0))
     ax.plot(xi_cont, np.abs(analytical_FT), color='green', marker='o')
-    ax.set_xlabel('Frequency [rad s$^{-1}$]')
+    ax.set_xlabel('Angular Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Magnitude [ms$^{-2}$]')
     ax.set_title('Analytical Fourier Transform')
     ax.set_ylim(-10, max_mag)
@@ -246,7 +246,7 @@ def plot_data(data_dir):
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (2, 0))
     ax.plot(xi_cont, np.angle(analytical_FT), color='green', marker='o')
-    ax.set_xlabel('Frequency [rad s$^{-1}$]')
+    ax.set_xlabel('Angular Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Phase [rad]')
     ax.set_title('Analytical Fourier Transform')
     ax.set_ylim(-max_phase, max_phase)
@@ -255,7 +255,7 @@ def plot_data(data_dir):
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (3, 0))
     ax.plot(xi_cont, np.real(analytical_FT), color='green', marker='o')
-    ax.set_xlabel('Frequency [rad s$^{-1}$]')
+    ax.set_xlabel('Angular Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Real Part [ms$^{-2}$]')
     ax.set_title('Analytical Fourier Transform')
     ax.set_ylim(-max_re, max_re)
@@ -264,7 +264,7 @@ def plot_data(data_dir):
     # plt.subplot(3, 1, 3)  # a rows, b columns, plot c
     ax = plt.subplot2grid((5, 3), (4, 0))
     ax.plot(xi_cont, np.imag(analytical_FT), color='green', marker='o')
-    ax.set_xlabel('Frequency [rad s$^{-1}$]')
+    ax.set_xlabel('Angular Frequency [rad s$^{-1}$]')
     ax.set_ylabel('Imaginary Part [ms$^{-2}$]')
     ax.set_title('Analytical Fourier Transform')
     ax.set_ylim(-max_imag, max_imag)
