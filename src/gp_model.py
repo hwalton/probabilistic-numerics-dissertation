@@ -440,7 +440,7 @@ class GPModel:
         kernel_fourier_sq = np.zeros(len(xi), dtype=complex)
 
         for n, xi_n in enumerate(xi):
-            debug = (X_squeezed[:, None] - X_squeezed)
+            debug = (X_squeezed[:, None] + X_squeezed)
             exponent_matrix = -1j * xi_n * debug
             contributions = A * np.exp(exponent_matrix)
             stdv_contributions[n] = -np.sum(contributions) # CHECK!!!: SHOULD THIS BE -? Maths says -, but positive and real values are expected, which occur with +????
